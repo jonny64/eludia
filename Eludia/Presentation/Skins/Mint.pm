@@ -417,16 +417,27 @@ sub draw_form_field {
 	my ($_SKIN, $field, $data) = @_;
 
 	if ($field -> {type} eq 'banner') {
+
+		my $a = {
+			colspan => $field -> {colspan} + 1,
+			class  => join (' ', grep {$_} "form-$$field{state}-banner", $field -> {class}, $field -> {label_class}),
+			nowrap => !$field -> {no_nowrap},
+			align  => 'center',
+			%{$field -> {label_attributes}}
+		};
+
+		return dump_tag (td => $a, $field -> {html});
+
+	} elsif ($field -> {type} eq 'article') {
+
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
-		my $class = join ' ', grep {$_} "form-$$field{state}-banner", $field -> {class};
-		return qq{<td class='$class' $colspan nowrap align=center>$$field{html}</td>};
-	}
-	elsif ($field -> {type} eq 'article') {
-		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
+
 		return qq{<td $colspan class='form-article'>$$field{html}</td>};
-	}
-	elsif ($field -> {type} eq 'hidden') {
+
+	} elsif ($field -> {type} eq 'hidden') {
+
 		return $field -> {html};
+
 	}
 
 	if ($field -> {plus}) {
@@ -463,9 +474,10 @@ sub draw_form_field {
 	unless ($field -> {label_off}) {
 
 		my $a = {
-			class  => $class . 'label',
-			nowrap => 1,
+			class  => $class . 'label ' . $field -> {label_class},
+			nowrap => !$field -> {no_nowrap},
 			align  => 'right',
+			%{$field -> {label_attributes}}
 		};
 
 		$a -> {colspan} = $field -> {colspan_label} if $field -> {colspan_label};
