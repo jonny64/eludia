@@ -2047,7 +2047,8 @@ function treeview_onexpand (e) {
 
 	setCookie ("co_" + request ['type'], Object.keys(expanded_nodes).join('.'));
 
-	$( document ).on ('contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu);
+	$( document ).off ('contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu);
+	$( document ).on  ('contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu);
 }
 
 
