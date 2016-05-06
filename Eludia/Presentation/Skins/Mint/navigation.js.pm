@@ -1988,6 +1988,9 @@ function treeview_oncontextmenu (e) {
 	if (e.pageY + menuDiv.height () > tree_div.height ())
 		top = tree_div.height () - menuDiv.height () - 10;
 
+	var top_iframe = $('#outer_tree_window_top').height() || 0;
+	top = top - top_iframe;
+
 	if (top < 0)
 		top = 0;
 

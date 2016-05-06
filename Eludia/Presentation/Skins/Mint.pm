@@ -3706,7 +3706,10 @@ EOJS
 						url      : "/?sid=$_REQUEST{sid}&type=$_REQUEST{type}&__ajax_load=1&$keep_params",
 						dataType : "json",
 						cache    : false,
-					}
+						data: function () {
+							return window.eludia_tree_filter;
+						}
+					},
 				},
 
 				schema: {
@@ -3720,11 +3723,15 @@ EOJS
 			});
 		};
 	}
-
 	$options -> {expand_on_select} ||= 0;
 
 	$js .= qq {
 
+
+		kendo.ui.TreeView.fn.eludia_filter = function (filter) {
+			window.eludia_tree_filter = filter;
+			this.dataSource.read();
+		};
 
 		\$("#splitted_tree_window_left").data("active", $$options{active}).kendoTreeView({
 			dataSource : dataSource,
