@@ -1967,7 +1967,8 @@ function treeview_oncontextmenu (e) {
 
 	var a = [];
 	for (i = 0; i < menu.length; i ++) a [i] = menu [i];
-	var menuDiv = $('<ul class="menuFonDark" style="position:absolute;z-index:200" />').appendTo (tree_div);
+	tree_div.find('.treeview_contextmenu').remove();
+	var menuDiv = $('<ul class="menuFonDark treeview_contextmenu" style="position:absolute;z-index:200" />').appendTo (tree_div);
 
 	menuDiv.kendoMenu ({
 		dataSource  : a,
