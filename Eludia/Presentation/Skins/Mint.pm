@@ -3618,7 +3618,7 @@ sub draw_tree {
 
 		};
 
-		return {items => $list};
+		return {items => $list, no_expand_root => $options -> {no_expand_root}};
 	}
 
 	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
