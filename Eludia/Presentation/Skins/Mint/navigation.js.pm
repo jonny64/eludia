@@ -1153,33 +1153,21 @@ function setSelectOption (select, id, label) {
 	var drop_down_list = $(select).data('kendoDropDownList');
 
 	for (var i = 0; i < select.options.length; i++) {
-		if (select.options [i].value == id) {
-			select.options [i].innerText = label;
-			select.selectedIndex = i;
-			drop_down_list.select (i);
-			drop_down_list.focus ();
+		if (select.options[i].value == id) {
+			select.options[i].innerText = label;
+			drop_down_list.select(i);
+			drop_down_list.focus();
 			drop_down_list.refresh();
 			$(select).change();
 			return;
 		}
 	}
 
-	var option = document.createElement ("OPTION");
-	select.options.add (option);
-	option.value = id;
-
-	if ("textContent" in option) {
-		option.textContent = label;
-	}
-	else {
-		option.innerText = label;
-	}
-
-	select.selectedIndex = select.options.length - 1;
-
-	drop_down_list.select (i);
-	drop_down_list.focus ();
+	drop_down_list.dataSource.add({ text: label, value: id });
+	drop_down_list.value(id);
+	drop_down_list.focus();
 	$(select).change();
+
 };
 
 function blur_all_inputs () {
