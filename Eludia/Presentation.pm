@@ -1534,6 +1534,7 @@ sub draw_cells {
 		check_href ($options) ;
 		$options -> {a_class} ||= 'row-cell';
 	}
+
 	push @{$i -> {__href}}, $options -> {href};
 	push @{$i -> {__target}}, $options -> {target};
 
