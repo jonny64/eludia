@@ -1901,7 +1901,7 @@ function treeview_convert_plain_response (response) {
 		// schema.model.id added to request when loading children
 		item.__parent = item.id;
 
-		if (item.parent == 0 || item.expanded) {
+		if (item.expanded || !response.no_expand_root && item.parent == 0) {
 			expanded_nodes [item.id] = true;
 		}
 
