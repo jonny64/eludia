@@ -3243,7 +3243,7 @@ sub draw_page {
 		<script src="/i/mint/libs/require.min.js"></script>
 		<script src="/i/mint/libs/KendoUI/js/jquery.min.js"></script>
 
-		<script src="$_REQUEST{__static_url}/navigation.js"></script>
+		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}"></script>
 		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js" async></script>
 
 
