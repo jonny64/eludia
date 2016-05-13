@@ -2735,3 +2735,9 @@ if (!Array.prototype.find) {
     return undefined;
   	};
 }
+
+if (!window.getSelection) {
+	window.getSelection = function() {
+		return document.selection.createRange();
+	}
+}
