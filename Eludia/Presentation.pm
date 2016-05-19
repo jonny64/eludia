@@ -1534,6 +1534,7 @@ sub draw_cells {
 		check_href ($options) ;
 		$options -> {a_class} ||= 'row-cell';
 	}
+
 	push @{$i -> {__href}}, $options -> {href};
 	push @{$i -> {__target}}, $options -> {target};
 
@@ -2719,6 +2720,8 @@ sub draw_node {
 
 	my @buttons;
 
+	my $any_buttons = 0;
+
 	foreach my $button (@{$_ [0]}) {
 
 		next if $button -> {off};
@@ -2739,9 +2742,10 @@ sub draw_node {
 
 		push @buttons, $button;
 
+		$any_buttons ||= $button && $button ne 'BREAK';
 	}
 
-	$i -> {__menu} = draw_vert_menu ($i, \@buttons) if ((grep {$_ ne BREAK} @buttons) > 0);
+	$i -> {__menu} = draw_vert_menu ($i, \@buttons) if $any_buttons;
 
 	return 	$_SKIN -> draw_node ($options, $i);
 

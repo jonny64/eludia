@@ -2735,3 +2735,17 @@ if (!Array.prototype.find) {
     return undefined;
   	};
 }
+
+if (!String.prototype.trim) {
+	(function() {
+    	String.prototype.trim = function() {
+      		return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
+    	};
+  	})();
+}
+
+if (!window.getSelection) {
+	window.getSelection = function() {
+		return document.selection.createRange();
+	}
+}

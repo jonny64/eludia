@@ -1010,7 +1010,7 @@ EOJS
 		<select
 			name="_$$options{name}"
 			$attributes
-			onChange="is_dirty=true; $$options{onChange}"
+			onChange="is_dirty=true; console.log('change');$$options{onChange}"
 			onKeyUp="var keyCode = event.keyCode || event.which; if (keyCode == 38 || keyCode == 40) this.onchange();"
 		>
 EOH
@@ -1662,7 +1662,7 @@ EOH
 	if (@{$options -> {items}} > 0) {
 
 		$btn_r = <<EOH;
-			<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:top;" border="0" hspace="0">
+			<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:top;" border="0" hspace="0" class="toolbar_button_multi_img">
 EOH
 
 		$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
@@ -1671,7 +1671,7 @@ EOH
 
 		$html .= "<div style='display:none;'>";
 		map { $html .= <<EOH if $_ -> {hotkey};
-			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title=''>
+			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title='' class='toolbar_button'>
 EOH
 		} @{$options -> {items}};
 		$html .= "</div>";
@@ -1691,7 +1691,7 @@ EOH
 
 		$html .= <<EOH;
 
-			<a tabindex=$options->{tabindex} class="k-button" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button toolbar_button_multi" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
 
 			<script>
 
@@ -1701,7 +1701,7 @@ EOH
 EOH
 	} else {
 		$html .= <<EOH;
-			<a tabindex=$options->{tabindex} class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button toolbar_button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
 EOH
 	}
 
@@ -1812,7 +1812,7 @@ sub draw_toolbar_input_select {
 		if ($options -> {onChange} =~ s/(submit\(\);)$//) {
 			$submit = $1;
 		}
-
+		
 		$options -> {onChange} .= <<EOJS;
 			if (this.options[this.selectedIndex].value == -1) {
 
@@ -1828,15 +1828,17 @@ sub draw_toolbar_input_select {
 				);
 
 			} else {
-
-				if (\$.data (this, 'prev_value') != this.selectedIndex) {
+				if (\$.data (this, 'prev_value') !== this.selectedIndex) {
 					$submit;
 				}
-
 			}
 EOJS
 
 	} # defined $options -> {other}
+
+	if ($options -> {onChange} =~ s/(submit\(\);)$//) {
+		$options -> {onChange} = q|if ($.data(this, 'prev_value') !== this.selectedIndex) submit();|;
+	}
 
 	$options -> {attributes} ||= {};
 
@@ -2457,7 +2459,10 @@ sub draw_text_cell {
 	$data -> {attributes} -> {class} .= ' row-cell-nowrap'
 		if $data -> {attributes} -> {title} =~ /^\d+(\.\d+)?$/ || $data -> {attributes} -> {title} =~ /^\d{2}\.\d{2}\.\d{4} \d{1,2}\:\d{1,2}\:\d{1,2}/;
 
-	$data -> {a_class} and $data -> {attributes} -> {class} .= ' ' . $data -> {a_class};
+	if ($data -> {a_class} && $data -> {a_class} ne 'row-cell') {
+		$data -> {attributes} -> {class} .= ' ' . $data -> {a_class};
+	}
+
 
 	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
 
