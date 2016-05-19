@@ -1010,7 +1010,7 @@ EOJS
 		<select
 			name="_$$options{name}"
 			$attributes
-			onChange="is_dirty=true; $$options{onChange}"
+			onChange="is_dirty=true; console.log('change');$$options{onChange}"
 			onKeyUp="var keyCode = event.keyCode || event.which; if (keyCode == 38 || keyCode == 40) this.onchange();"
 		>
 EOH
@@ -1812,7 +1812,7 @@ sub draw_toolbar_input_select {
 		if ($options -> {onChange} =~ s/(submit\(\);)$//) {
 			$submit = $1;
 		}
-
+		
 		$options -> {onChange} .= <<EOJS;
 			if (this.options[this.selectedIndex].value == -1) {
 
@@ -1828,15 +1828,17 @@ sub draw_toolbar_input_select {
 				);
 
 			} else {
-
-				if (\$.data (this, 'prev_value') != this.selectedIndex) {
+				if (\$.data (this, 'prev_value') !== this.selectedIndex) {
 					$submit;
 				}
-
 			}
 EOJS
 
 	} # defined $options -> {other}
+
+	if ($options -> {onChange} =~ s/(submit\(\);)$//) {
+		$options -> {onChange} = q|if ($.data(this, 'prev_value') !== this.selectedIndex) submit();|;
+	}
 
 	$options -> {attributes} ||= {};
 
