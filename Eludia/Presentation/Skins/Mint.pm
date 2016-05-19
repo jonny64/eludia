@@ -3423,8 +3423,6 @@ sub lrt_print {
 
 	flock (OUT, LOCK_EX);
 
-	push @{$_REQUEST {__lrt_log}}, $_[0];
-
 	if ($i18n -> {_charset} ne 'UTF-8') {
 		print OUT Encode::decode ('windows-1251', $_) foreach ($time, @_)
 	} else {
@@ -3564,8 +3562,6 @@ sub lrt_finish {
 
 	delete $_REQUEST {__lrt_time};
 	delete $_REQUEST {__lrt_show_time};
-
-	return $_REQUEST {__lrt_log};
 }
 
 ################################################################################
