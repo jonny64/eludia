@@ -2289,8 +2289,9 @@ EOH
 EOH
 
 	} else {
+		my $download = $$options{download} ? "download='$$options{download}'" : "";
 		$html .= <<EOH;
-			<a tabindex=$options->{tabindex} class="k-button toolbar_button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button toolbar_button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}" $download><nobr>
 EOH
 	}
 
