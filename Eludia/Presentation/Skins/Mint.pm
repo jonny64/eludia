@@ -2251,7 +2251,7 @@ sub draw_centered_toolbar_button {
 
 		$btn_r = <<EOH;
 			<nobr>
-				<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:middle;" border="0" hspace="0">
+				<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:middle;" border="0" hspace="0" class="toolbar_button_multi_img">
 			</nobr>
 EOH
 
@@ -2272,14 +2272,14 @@ EOH
 
 		$html .= "<div style='display:none;'>";
 		map { $html .= <<EOH if $_ -> {hotkey};
-			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title=''>
+			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title='' class='toolbar_button'>
 EOH
 		} @{$options -> {items}};
 		$html .= "</div>";
 
 		$html .= <<EOH;
 
-			<a tabindex=$options->{tabindex} class="k-button" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button toolbar_button_multi" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
 
 			<script>
 
@@ -2290,7 +2290,7 @@ EOH
 
 	} else {
 		$html .= <<EOH;
-			<a tabindex=$options->{tabindex} class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button toolbar_button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
 EOH
 	}
 
