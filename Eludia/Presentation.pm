@@ -2972,18 +2972,33 @@ sub draw_redirect_page {
 ################################################################################
 
 sub lrt_print {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_print (@_);
 }
 
 ################################################################################
 
 sub lrt_println {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_println (@_);
 }
 
 ################################################################################
 
 sub lrt_ok {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_ok (@_);
 }
 
@@ -2995,6 +3010,7 @@ sub lrt_start {
 
 	$_REQUEST {__response_started} = 1;
 	$_REQUEST {__response_sent} = 1;
+	$_REQUEST {__lrt_log} = []	;
 
 	$_SKIN -> lrt_start (@_);
 
@@ -3036,6 +3052,7 @@ sub lrt_finish {
 
 	$_SKIN -> lrt_finish ($banner, $href, $options);
 
+	return delete $_REQUEST {__lrt_log};
 }
 
 ################################################################################

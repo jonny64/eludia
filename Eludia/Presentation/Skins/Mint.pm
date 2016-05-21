@@ -2251,7 +2251,7 @@ sub draw_centered_toolbar_button {
 
 		$btn_r = <<EOH;
 			<nobr>
-				<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:middle;" border="0" hspace="0">
+				<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:middle;" border="0" hspace="0" class="toolbar_button_multi_img">
 			</nobr>
 EOH
 
@@ -2272,14 +2272,14 @@ EOH
 
 		$html .= "<div style='display:none;'>";
 		map { $html .= <<EOH if $_ -> {hotkey};
-			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title=''>
+			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title='' class='toolbar_button'>
 EOH
 		} @{$options -> {items}};
 		$html .= "</div>";
 
 		$html .= <<EOH;
 
-			<a tabindex=$options->{tabindex} class="k-button" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button toolbar_button_multi" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
 
 			<script>
 
@@ -2289,8 +2289,9 @@ EOH
 EOH
 
 	} else {
+		my $download = $$options{download} ? "download='$$options{download}'" : "";
 		$html .= <<EOH;
-			<a tabindex=$options->{tabindex} class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button toolbar_button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}" $download><nobr>
 EOH
 	}
 
@@ -3405,14 +3406,30 @@ sub lrt_print {
 
 	my $_SKIN = shift;
 
+	return
+		if $_REQUEST {_lrt_show_time} && int (time() - $_REQUEST {__lrt_show_time}) <= $_REQUEST {_lrt_show_time};
+
+	$_REQUEST {__lrt_show_time} = time();
+
+	my $time = '';
+	unless ($_REQUEST {__lrt_no_time}) {
+		my $sec = int ($_REQUEST {__lrt_show_time} - $_REQUEST {__lrt_time});
+		my $min = int ($sec / 60);
+		$sec -= $min * 60;
+		$time = sprintf ("%02d:%02d - ", $min, $sec);
+	}
+
+	my $id = int ($_REQUEST {__lrt_show_time} * rand);
+
+
 	open  (OUT, '>>' . $_REQUEST {__lrt_filename}) or die "Can't open $_REQUEST{__lrt_filename}:$!\n";
 
 	flock (OUT, LOCK_EX);
 
 	if ($i18n -> {_charset} ne 'UTF-8') {
-		print OUT Encode::decode ('windows-1251', $_) foreach @_
+		print OUT Encode::decode ('windows-1251', $_) foreach ($time, @_)
 	} else {
-		print OUT @_;
+		print OUT ($time, @_);
 	}
 
 	flock (OUT, LOCK_UN);
@@ -3439,6 +3456,8 @@ sub lrt_ok {
 
 	my $_SKIN = shift;
 
+	local $_REQUEST {__lrt_no_time} = 1;
+
 	$_SKIN -> lrt_print ('^:::1:::' . ($_[1] ? $i18n -> {error} : 'OK') . ':::' . ($_[1] || 0) . ':::$');
 
 }
@@ -3453,6 +3472,8 @@ sub lrt_start {
 
 	$r -> content_type ("text/html; charset=$i18n->{_charset}");
 	$r -> send_http_header ();
+
+	$_REQUEST {__lrt_time} = $_REQUEST {__lrt_show_time} = time();
 
 	$_REQUEST {__lrt_id} = rand (100000);
 
@@ -3512,6 +3533,9 @@ sub lrt_finish {
 
 	my ($banner, $href, $options) = @_;
 
+	local $_REQUEST {__lrt_no_time} = 1;
+	local $_REQUEST {_lrt_show_time} = 0;
+
 # 	if ($options -> {kind} eq 'download') {
 
 # 		$r -> print ($options -> {toolbar});
@@ -3539,6 +3563,8 @@ sub lrt_finish {
 
 	}
 
+	delete $_REQUEST {__lrt_time};
+	delete $_REQUEST {__lrt_show_time};
 }
 
 ################################################################################
