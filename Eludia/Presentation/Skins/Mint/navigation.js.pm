@@ -2749,3 +2749,14 @@ if (!window.getSelection) {
 		return document.selection.createRange();
 	}
 }
+
+window.queryCommandSupported__original = document.queryCommandSupported;
+document.queryCommandSupported = function(command) {
+	var result;
+	try {
+		result = window.queryCommandSupported__original(command);
+	} catch(error) {
+		result = false;
+	}
+	return result;
+}
