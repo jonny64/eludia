@@ -611,7 +611,7 @@ function adjust_kendo_selects(top_element) {
 		$(original_select).addClass('k-group').kendoDropDownList({
 			height: 320,
 			popup : {
-				appendTo: $(body),
+				appendTo: $('body'),
 			},
 			open: function (e) {
 
@@ -2442,7 +2442,7 @@ function init_page (options) {
 
 			tableSlider.set_row (parseInt (options.__scrollable_table_row));
 
-			$(body).scroll(function() {
+			$('body').scroll(function() {
 				$(document.body).find("[data-role=popup]").each(function() {
 					var popup = $(this).data("kendoPopup");
 					popup.close();
@@ -2748,4 +2748,15 @@ if (!window.getSelection) {
 	window.getSelection = function() {
 		return document.selection.createRange();
 	}
+}
+
+window.queryCommandSupported__original = document.queryCommandSupported;
+document.queryCommandSupported = function(command) {
+	var result;
+	try {
+		result = window.queryCommandSupported__original(command);
+	} catch(error) {
+		result = false;
+	}
+	return result;
 }

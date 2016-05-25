@@ -2973,6 +2973,8 @@ sub draw_redirect_page {
 
 sub lrt_print {
 
+	$_REQUEST {__lrt_time} or return;
+
 	if (index ($_[0], ':::') == -1) {
 		push @{$_REQUEST {__lrt_log}}, $_[0];
 	}
@@ -2984,6 +2986,8 @@ sub lrt_print {
 
 sub lrt_println {
 
+	$_REQUEST {__lrt_time} or return;
+
 	if (index ($_[0], ':::') == -1) {
 		push @{$_REQUEST {__lrt_log}}, $_[0];
 	}
@@ -2994,6 +2998,8 @@ sub lrt_println {
 ################################################################################
 
 sub lrt_ok {
+
+	$_REQUEST {__lrt_time} or return;
 
 	if (index ($_[0], ':::') == -1) {
 		push @{$_REQUEST {__lrt_log}}, $_[0];
