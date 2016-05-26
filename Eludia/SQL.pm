@@ -948,7 +948,11 @@ sub _hide_full_clones {
 
 	my ($relink_cols, $column_def, $old_id, $new_id) = @_;
 
-	@{$relink_cols -> {$column_def -> {table_name}}} > 0 or return;
+	my @relink_cols = @{$relink_cols -> {$column_def -> {table_name} . '_' . $column_def -> {name}}};
+
+	@relink_cols > 0 or @relink_cols = @{$relink_cols -> {$column_def -> {table_name}}};
+
+	@relink_cols > 0 or return;
 
 	my $ids = _check_ids ("$old_id, $new_id");
 
@@ -956,7 +960,7 @@ sub _hide_full_clones {
 
 	if (sql_version() -> {string} =~ /mysql/i) {
 
-		my $group = 'GROUP BY ' . join (", ", map {"$$column_def{table_name}." . $_} @{$relink_cols -> {$column_def -> {table_name}}});
+		my $group = 'GROUP BY ' . join (", ", map {"$$column_def{table_name}." . $_} @relink_cols);
 
 		$clones_ids = join (',', sql_select_col (<<EOS));
 			SELECT
@@ -974,7 +978,7 @@ EOS
 	} else {
 
 		my $join = "LEFT JOIN $$column_def{table_name} AS clone_table_name ON $$column_def{table_name}.id <> clone_table_name.id AND "
-			. join (" AND ", map {"$$column_def{table_name}." . $_ . " = clone_table_name." . $_} @{$relink_cols -> {$column_def -> {table_name}}});
+			. join (" AND ", map {"$$column_def{table_name}." . $_ . " = clone_table_name." . $_} @relink_cols);
 
 		my $clones_ids;
 
