@@ -1010,7 +1010,7 @@ EOJS
 		<select
 			name="_$$options{name}"
 			$attributes
-			onChange="is_dirty=true; console.log('change');$$options{onChange}"
+			onChange="is_dirty=true;$$options{onChange}"
 			onKeyUp="var keyCode = event.keyCode || event.which; if (keyCode == 38 || keyCode == 40) this.onchange();"
 		>
 EOH

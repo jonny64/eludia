@@ -608,6 +608,7 @@ function adjust_kendo_selects(top_element) {
 
 	var select_tranform = function(){
 		var original_select = this;
+		if (original_select.selectedIndex == $.data(this, 'prev_value')) return;
 		$(original_select).addClass('k-group').kendoDropDownList({
 			height: 320,
 			popup : {
