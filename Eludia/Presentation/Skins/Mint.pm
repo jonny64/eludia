@@ -3163,11 +3163,15 @@ sub draw_page {
 
 	if ($_REQUEST {__refresh_tree}) {
 
+		my $id_selected_node = $_REQUEST {__refresh_tree} =~ /^\d+$/?
+			0 + $_REQUEST {__refresh_tree} : 0;
+
 		$_REQUEST {__on_load} .= qq{
 			var tree = window.parent.\$('#splitted_tree_window_left');
-
 			if (tree.data ("active") === 2) {
+				tree.data ("selected-node", $id_selected_node);
 				tree = tree.data ("kendoTreeView");
+				tree.bind("dataBound", debounce(window.parent.treeview_select_node, 500));
 				tree.dataSource.read();
 			} else {
 				window.parent.location.reload ();

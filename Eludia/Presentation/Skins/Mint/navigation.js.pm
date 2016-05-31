@@ -2102,6 +2102,9 @@ function treeview_get_node_uid_by_id(node, id) {
 
 		var childs = node.children.data();
 		var res = 0;
+		if (!childs) {
+			return 0;
+		}
 		for (var i = 0; i < childs.length; i++) {
 			res = treeview_get_node_uid_by_id(childs[i], id);
 			if (res) {return res;};
@@ -2111,7 +2114,6 @@ function treeview_get_node_uid_by_id(node, id) {
 }
 
 function treeview_select_node(e) {
-
 	var tree = $('#splitted_tree_window_left');
 	var selected_node = tree.data ('selected-node');
 	if (!selected_node) {
@@ -2123,7 +2125,16 @@ function treeview_select_node(e) {
 	if (!root.length)
 		return;
 
-	var selected_node_uid = treeview_get_node_uid_by_id(root[0], selected_node) || root[0].uid;
+	var selected_node_uid;
+	for (var i = root.length - 1; i >= 0; i--) {
+		selected_node_uid = treeview_get_node_uid_by_id(root[i], selected_node);
+		if (selected_node_uid) {
+			break;
+		}
+	}
+
+	selected_node_uid = selected_node_uid || root[0].uid;
+
 	if(selected_node_uid){
 		var select_node = treeview.findByUid(selected_node_uid);
 		if (select_node) {
