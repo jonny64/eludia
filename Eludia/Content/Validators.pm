@@ -42,6 +42,8 @@ sub vld_snils {
 
 	$checksum = $checksum % 101;
 
+	$checksum = $checksum == 100 ? 0 : $checksum;
+
 	$checksum == 0 + substr ($value, 9, 2) or $name1 ? die "#$name1#:$i18n->{snils_checksum_fail}" : return $i18n -> {snils_checksum_fail};
 
 	$_REQUEST {$name1} = substr ($value, 0, 3)

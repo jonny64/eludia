@@ -75,9 +75,14 @@ sub page_is_not_needed {
 
 	setup_request_params     (@_);
 
+	if ($ENV {REQUEST_METHOD} eq 'PROPFIND' && !$_REQUEST {query} && user_agent () -> {msoffice}) {
+		handle_request_of_type_kickout (405);
+		return 1;
+	}
+
 	if ($ENV {REQUEST_METHOD} eq 'OPTIONS') {
 
-		if ($ENV {REQUEST_URI} !~/webdav/) {
+		if (!user_agent () -> {msoffice} || !$_REQUEST {query}) {
 			handle_request_of_type_kickout (403);
 			return 1;
 		}
@@ -86,6 +91,13 @@ sub page_is_not_needed {
 		$r -> headers_out -> {'DAV'} = '1,2';
 		$r -> headers_out -> {'MS-Author-Via'} = 'DAV';
 		$r -> headers_out -> {'Content-Length'} = '0';
+
+		if ($preconf -> {core_cors}) {
+			$r -> headers_out -> {'Access-Control-Allow-Origin'} = $preconf -> {core_cors};
+			$r -> headers_out -> {'Access-Control-Allow-Credentials'} = 'true';
+			$r -> headers_out -> {'Access-Control-Allow-Headers'} = 'Origin, X-Requested-With, Content-Type, Accept, Cookie';
+		}
+
 		send_http_header ();
 		$_REQUEST {__response_sent} = 1;
 
@@ -190,11 +202,13 @@ sub setup_request_params {
 
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 
-	if ($r -> header_in ('User-Agent') =~ /^Microsoft/ && $ENV {REQUEST_URI} =~ /webdav/) {
+	delete $_REQUEST {__script};
+
+	if (user_agent () -> {msoffice} && $ENV {REQUEST_URI} =~ /webdav/i) {
 		$_REQUEST {type} = $_REQUEST_VERBATIM {type} = 'webdav';
 		$_REQUEST {method} = $ENV {REQUEST_METHOD};
 
-		$_REQUEST {query} ||= $ENV {'REQUEST_URI'};
+		$_REQUEST {query} ||= $ENV {REQUEST_URI};
 		$_REQUEST {query} =~ s/\/webdav\///;
 		$_REQUEST {query} =~ s/^([a-z0-9]+)_(\d+)_//;
 		$_COOKIE {client_cookie} = $1;
@@ -472,7 +486,16 @@ sub handle_error {
 
 	my ($page) = @_;
 
-	out_html ({}, draw_error_page ($page));
+	my $error = investigate_error ($_REQUEST {error}, delete $_REQUEST {sql_query}, delete $_REQUEST {sql_params});
+
+	out_html ({}, draw_error_page ($page, $error));
+
+	if ($error -> {kind}) {
+
+		notify_about_error ($error);
+
+		try_to_repair_error ($error);
+	}
 
 	return action_finish ();
 
@@ -672,9 +695,15 @@ sub handle_request_of_type_showing {
 	setup_page_content ($page)
 		unless ($_REQUEST {__only_menu} || !$_REQUEST_VERBATIM {type} && !$_REQUEST_VERBATIM {__subset});
 
-	return handler_finish () if $_REQUEST {__response_sent} && !$_REQUEST {error};
+	return handle_error ($page) if $_REQUEST {error};
 
-	out_html ({}, draw_page ($page));
+	return handler_finish () if $_REQUEST {__response_sent};
+
+	my $html = draw_page ($page);
+
+	return handle_error ($page) if $_REQUEST {error};
+
+	out_html ({}, $html);
 
 	return handler_finish ();
 

@@ -466,7 +466,6 @@ sub draw_form {
 	$html .= _draw_bottom (@_);
 
 	$html .=  <<EOH;
-		<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 			<form
 				name="$$options{name}"
 				target="$$options{target}"
@@ -485,6 +484,10 @@ EOH
 
 	);
 
+	$html .=  <<EOH;
+			<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
+EOH
+
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
@@ -496,7 +499,7 @@ EOH
 		$html .= qq{</tr>};
 	}
 
-	$html .=  '</form></table>' . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? '</div>' : '');
+	$html .=  '</table></form>' . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? '</div>' : '');
 
 	$html .= $options -> {bottom_toolbar};
 	$_REQUEST {__on_load} .= ";numerofforms++;" . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? "\$('#$tname').css('visibility','visible');" : "");
@@ -577,6 +580,50 @@ EOH
 EOH
 
 	return $path;
+
+}
+
+
+################################################################################
+
+sub draw_fatal_error_page {
+
+	my ($_SKIN, $page, $error) = @_;
+
+	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
+
+	my $head_links;
+
+	if ($error -> {kind}) {
+
+		my $options = {
+			email   => $preconf -> {mail}? $preconf -> {mail} -> {support} : '',
+			subject => "Техподдержка ($$preconf{about_name}). Ошибка от $$_USER{label}",
+			title   => $i18n -> {internal_error},
+			details => $error -> {label} . "\n" . $error -> {error},
+			msg     => $error -> {msg},
+			label   => $error -> {label},
+			href    => "$_REQUEST{__static_url}/error.html?",
+			height  => 280,
+			width   => 510,
+		};
+
+		$options = $_JSON -> encode ($options);
+
+		$head_links .= qq|<script src="/i/_skins/$_REQUEST{__skin}/navigation.js"></script>|;
+
+		$_REQUEST{__script} .= "\n var options = $options; options.after = function() {history.go(-1)}; dialog_open (options)\n setCursor ();\n";
+
+	}
+
+
+	$_REQUEST {__script} = <<EOJ;
+function on_load () {
+$_REQUEST{__script}
+}
+EOJ
+
+	return qq{<html><head>$head_links<script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};
 
 }
 
@@ -696,10 +743,6 @@ sub draw_form_field_string {
 	my ($_SKIN, $options) = @_;
 
 	my $attributes = $options -> {attributes};
-	if ($options -> {disabled}) {
-		$attributes -> {readonly} = 'readonly';
-		$attributes -> {style} .= '; background-color: #eeeeee;';
-	}
 
 	$attributes -> {onKeyUp}    .= $options -> {onKeyUp};
 	$attributes -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
@@ -727,7 +770,7 @@ sub draw_form_field_suggest {
 
 	};
 
-	my $id = '' . $options;
+	my $id = $options -> {name} || 'suggest';
 
 	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
@@ -1236,8 +1279,7 @@ sub draw_form_field_select {
 	my ($_SKIN, $options, $data) = @_;
 
 	$options -> {attributes} ||= {};
-	my $id = $options -> {id} || "_$options->{name}_select";
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
+	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
 
 	if (@{$options -> {values}} == 0 && defined ($options -> {empty}) && defined ($options -> {other})) {
 		$options -> {attributes} -> {onClick} .= ";if (this.length == 2) {this.selectedIndex=1; this.onchange();}";
@@ -1250,49 +1292,22 @@ sub draw_form_field_select {
 
 	if (defined $options -> {other}) {
 
-		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
-		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
-
-		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
-
-		my ($confirm_js_if, $confirm_js_else) = $options -> {no_confirm} ? ('', '')
-			: (
-				"if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {",
-				"} else {this.selectedIndex = 0}"
-			);
+		$options -> {other} -> {width}  ||= 'dialog_width';
+		$options -> {other} -> {height} ||= 'dialog_height';
 
 		$options -> {onChange} .= <<EOJS;
 
 			if (this.options[this.selectedIndex].value == -1) {
 
-				$confirm_js_if
-
-					var dialog_width  = $options->{other}->{width};
-					var dialog_height = $options->{other}->{height};
-
-					try {
-
-						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(), parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-
-						focus ();
-
-						if (result.result == 'ok') {
-
-							setSelectOption (this, result.id, result.label);
-
-						} else {
-
-							this.selectedIndex = 0;
-
-						}
-
-					} catch (e) {
-
-						this.selectedIndex = 0;
-
+				open_vocabulary_from_select (
+					this,
+					{
+						message       : i18n.choose_open_vocabulary,
+						href          : '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(),
+						dialog_width  : $options->{other}->{width},
+						dialog_height : $options->{other}->{height}
 					}
-
-				$confirm_js_else
+				);
 
 			}
 EOJS
@@ -1302,7 +1317,6 @@ EOJS
 	my $html = <<EOH;
 		<select
 			name="_$$options{name}"
-			id="$id"
 			$attributes
 			onKeyDown="tabOnEnter();"
 			onChange="is_dirty=true; $$options{onChange}"
@@ -1320,7 +1334,9 @@ EOH
 	}
 
 	foreach my $value (@{$options -> {values}}) {
-		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n};
+		my $label = ('&nbsp;&nbsp;&nbsp;' x $value -> {level}) . $value -> {label};
+		my $disabled = $value -> {disabled} ? "disabled=true" : '';
+		$html .= qq {<option value="$$value{id}" $$value{selected} $disabled>$label</option>\n};
 	}
 
 	if (defined $options -> {other} && !$options -> {other} -> {on_top}) {
@@ -1330,14 +1346,6 @@ EOH
 	$html .= '</select>';
 
 	$html .= $options -> {label_tail} || '';
-#	if (defined $options -> {other}) {
-#		$html .= <<EOH;
-#			<div id="_$$options{name}_div" style="{position:absolute; display:none; width:expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)}">
-#				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="$_REQUEST{__static_url}/0.html" application="yes">
-#				</iframe>
-#			</div>
-#EOH
-#	}
 
 	return $html;
 
@@ -1589,7 +1597,9 @@ EOH
 			$tabindex ++;
 			$n ++;
 
-			$html .= qq {<td class="form-inner"><input id="$value" $subattr class=cbx type="checkbox" name="_$$options{name}_$$value{id}" value="1" $checked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;<label for="$value">$$value{label}</value> $subhtml</td>};
+			my $disabled = $value -> {disabled} ? 'disabled' : '';
+
+			$html .= qq {<td class="form-inner"><input id="$value" $subattr class=cbx type="checkbox" name="_$$options{name}_$$value{id}" value="1" $checked onChange="is_dirty=true" tabindex=$tabindex $disabled>&nbsp;<label for="$value">$$value{label}</value> $subhtml</td>};
 			$html .= '</tr><tr>' unless $n % $options -> {cols};
 
 		}
@@ -1863,26 +1873,6 @@ sub draw_toolbar_button {
 
 	my $html = '<td class="bgr0">';
 
-	if ($preconf -> {core_blockui_on_submit} && $options -> {blockui}) {
-
-		unless ($options -> {href} =~ /^javaScript\:/i) {
-
-			$options -> {target} ||= '_self';
-
-			$options -> {href} =~ s{\%}{\%25}g;
-
-			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
-
-		}
-
-		my $code = "\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\\'$_REQUEST{__static_url}/busy.gif\\'> $i18n->{request_sent}</h2>'})";
-		$code .= ";window.setInterval(poll_invisibles, 100);" if $options -> {target} eq 'invisible';
-
-		$options -> {href} =~ s/\bnope\b/$code;nope/;
-
-		$options -> {target} = '_self';
-	}
-
 	my $btn2_r = 'btn2_r';
 	my $btn2_r_width = 6;
 
@@ -2127,53 +2117,37 @@ sub draw_toolbar_input_select {
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
 
-		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
+		$options -> {onChange} =~ s/submit\(\);$//;
 
-		$options -> {no_confirm} += 0;
-
-		$options -> {onChange} = <<EOJS . $options -> {onChange} . '}';
+		$options -> {onChange} .= <<EOJS;
 
 			if (this.options[this.selectedIndex].value == -1) {
 
-				if ($$options{no_confirm} || window.confirm ('$$i18n{confirm_open_vocabulary}')) {
-
-					try {
-
-						var dialog_width = $options->{other}->{width};
-						var dialog_height = $options->{other}->{height};
-
-						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name', parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-
-						focus ();
-
-						if (result.result == 'ok') {
-							setSelectOption (this, result.id, result.label);
-							submit ();
-						} else {
-							this.selectedIndex = 0;
-							submit ();
-						}
-					} catch (e) {
-						this.selectedIndex = 0;
-						submit ();
+				open_vocabulary_from_select (
+					this,
+					{
+						message       : i18n.choose_open_vocabulary,
+						href          : '$options->{other}->{href}&select=$name&salt=' + Math.random(),
+						dialog_width  : $options->{other}->{width},
+						dialog_height : $options->{other}->{height},
+						title         : '$i18n->{voc_title}'
 					}
+				);
 
-				} else {
-
-					this.selectedIndex = 0;
-					submit ();
-
-				}
 			} else {
+
+				this.form.submit ();
+
+			}
 EOJS
 	}
 
 	$options -> {attributes} ||= {};
 
+	my $title = [grep{$_ -> {id} == $options -> {value}} @{$options -> {values}}] -> [0] -> {title};
+
 	$options -> {max_len} += 0;
 	$options -> {attributes} -> {max_len} = $options -> {max_len};
-
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
 
@@ -2182,7 +2156,7 @@ EOJS
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	$html .= <<EOH;
-		<select name="$name" id="${name}_select" $read_only $attributes>
+		<select name="$name" id="${name}_select" title='$title' $read_only $attributes>
 EOH
 
 	foreach my $value (@{$options -> {values}}) {
@@ -2414,26 +2388,6 @@ sub draw_centered_toolbar_button {
 
 	if ($options -> {icon}) {
 		$img_path = _icon_path ($options -> {icon});
-	}
-
-	if ($preconf -> {core_blockui_on_submit} && $options -> {blockui}) {
-
-		unless ($options -> {href} =~ /^javaScript\:/i) {
-
-			$options -> {target} ||= '_self';
-
-			$options -> {href} =~ s{\%}{\%25}g;
-
-			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
-
-		}
-
-		my $code = "\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\\'$_REQUEST{__static_url}/busy.gif\\'> $i18n->{request_sent}</h2>'})";
-		$code .= ";window.setInterval(poll_invisibles, 100);" if $options -> {target} eq 'invisible';
-
-		$options -> {href} =~ s/\bnope\b/blockui ('', 1);nope/;
-
-		$options -> {target} = '_self';
 	}
 
 	my $nbsp = $options -> {label} ? '&nbsp;' : '';
@@ -2673,13 +2627,13 @@ EOH
 				$type -> {onclick} = "eludia_copy_clipboard ('$$type{clipboard_text}')";
 			}
 
-			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
+			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree} || $_REQUEST {can_close_window});
 
 			my $td = $type -> {items} ? <<EOH : qq{<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
 				<td nowrap onclick="$$type{onclick}" class="vert-menu" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}">
 						<table width="100%" cellspacing=0 cellpadding=0 border=0><tr>
 							<td align="left" nowrap style="font-family: Tahoma, 'MS Sans Serif'; font-weight: normal; font-size: 8pt; color: #ffffff;">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
-							<td align="right" style="font-family: Marlett; font-weight: normal; font-size: 8pt; color: #ffffff;">8</td>
+							<td align="right" style="font-size: 8pt; color: #ffffff;padding-right:5px">&raquo;</td>
 						</tr></table>
 				</td>
 EOH
@@ -3385,8 +3339,8 @@ sub draw_table {
 
 			$html .= "<tr id='$$i{__tr_id}'";
 
+			$menus .= $i -> {__menu};
 			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
-				$menus .= $i -> {__menu};
 				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent (); return false;"};
 			}
 
@@ -3497,6 +3451,13 @@ sub draw_page {
 	}
 	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
 
+		unless ($r -> headers_in -> {'User-Agent'} =~ /MSIE (\d+)|Trident/) {
+			$_REQUEST {__head_links} .= <<EOH
+<link href="$_REQUEST{__static_url}/jquery-ui.min.css?$_REQUEST{__static_salt}" type="text/css" rel="stylesheet">
+<script src="$_REQUEST{__static_url}/jquery-ui.min.js?$_REQUEST{__static_salt}"></script>
+<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js?$_REQUEST{__static_salt}"></script>
+EOH
+		}
 		$body .= qq {
 
 			<div style='display:none'>$_REQUEST{__menu_links}</div>
@@ -3742,8 +3703,9 @@ EOH
 
 	} . $_REQUEST {__head_links};
 
-	if (user_agent () -> {msie} > 9) {
-		$_REQUEST {__head_links}  = qq|<meta http-equiv="X-UA-Compatible" content="IE=5">\n| . $_REQUEST {__head_links};
+	if (user_agent () -> {msie} > 9 || $_REQUEST {__x_ua_compatible}) {
+		my $content_ie = $_REQUEST {__x_ua_compatible} || 5;
+		$_REQUEST {__head_links}  = qq|<meta http-equiv="X-UA-Compatible" content="IE=$content_ie">\n| . $_REQUEST {__head_links};
 	}
 
 	if ($body !~ /^\s*\<frameset/ism) {

@@ -42,7 +42,8 @@ var is_dirty = false,
 
 	max_len = 50,
 	poll_invisibles_interval_id,
-	max_tabindex = 0;
+	max_tabindex = 0,
+	supertables = [];
 
 
 var request = {},
@@ -177,12 +178,10 @@ function dialog_open (options) {
 		options.position =  {my: "left top", at: "left top", of: window};
 	}
 
-	var url = 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random ();
+	var url = window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random();
 
 	if ($.browser.webkit || $.browser.safari)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
-
-	var result;
 
 	if (is_ua_mobile) {
 		$.showModalDialog({
@@ -247,7 +246,7 @@ function open_vocabulary_from_select (s, options) {
 		if (is_ua_mobile) {
 
 			 $.showModalDialog({
-				url             : 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				url             : window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				height          : dialog_height,
 				width           : dialog_width,
 				resizable       : true,
@@ -282,7 +281,7 @@ function open_vocabulary_from_select (s, options) {
 		} else {
 
 			var result = window.showModalDialog (
-				'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				{href: options.href, parent: window, title: options.title},
 				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
 			);
@@ -354,7 +353,7 @@ function open_vocabulary_from_combo (combo, options) {
 			 var me = this;
 
 			 $.showModalDialog({
-				url             : 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				url             : window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				height          : dialog_height,
 				width           : dialog_width,
 				resizable       : true,
@@ -378,7 +377,7 @@ function open_vocabulary_from_combo (combo, options) {
 		} else {
 
 			var result = window.showModalDialog (
-				'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				{href: options.href, parent: window, title: options.title},
 				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
 			);
@@ -1038,7 +1037,7 @@ function setAndSubmit (name, values) {
 				type  : 'hidden',
 				name  : i,
 				value : values [i]
-			}).appendTo('form[name=form]');
+			}).appendTo('form[name=' + name + ']');
 
 			continue;
 		}
@@ -1722,6 +1721,11 @@ function enableDropDownList(name, enable){
 	document.getElementById(name).disabled = !enable;
 }
 
+function enable_input(name, enable) {
+	var field = $('[name=_' + name + ']' + ',#input_' + name);
+	field.prop('readonly', !enable).toggleClass('disabled', !enable);
+}
+
 function toggle_field (name, is_visible, is_clear_field) {
 
 	is_visible = is_visible > 0;
@@ -1759,6 +1763,10 @@ function toggle_field_id (id, is_visible,is_clear_field) {
 		full_id = '_' + id + '_span';
 	else if (document.getElementById('_' + id + '_select'))
 		full_id = '_' + id + '_select';
+	else if (document.getElementById('_' + id + '__suggest'))
+		full_id = '_' + id + '__suggest';
+	else if (document.getElementById(id))
+		full_id = id;
 	if(!full_id)
 		return 0;
 	var td_field = $('[id=' + full_id + ']').closest('td');
@@ -2398,11 +2406,9 @@ function init_page (options) {
 
 			table_containers.each (function() {
 				var that = this;
-				var table_url = '/?' + options.table_url + '&__only_table=' + that.id;
-				table_url = table_url + '&__table_cnt=' + table_containers.length;
 
-				new supertable({
-					tableUrl: table_url,
+				supertables.push (new supertable({
+					tableUrl        : '/?' + tables_data [that.id]['table_url'] + '&__only_table=' + that.id + '&__table_cnt=' + table_containers.length,
 					initial_data : tables_data [that.id],
 					el: $(that),
 					containerRender : function(model) {
@@ -2436,7 +2442,7 @@ function init_page (options) {
 						}
 
 					}
-				})
+				}))
 			});
 
 			options.on_load ();

@@ -66,6 +66,10 @@ sub __adjust_form_field_string {
 
 	$attributes -> {id}           ||= 'input_' . $options -> {name};
 
+	if ($options -> {disabled}) {
+		$attributes -> {readonly} = 'readonly';
+		$attributes -> {class} .= ' disabled';
+	}
 }
 
 ################################################################################
@@ -220,6 +224,8 @@ EOJS
 			window.form.name +
 			'&_$$options{name}=' +
 			$options->{value_src} +
+			'&__src_field=' +
+			'$$options{name}' +
 			codetails_url +
 			tab
 
@@ -345,7 +351,7 @@ sub __adjust_button_href {
 
 			$options -> {target} ||= '_self';
 
-			$options -> {href} =~ s{\%}{\%25}g;
+			$options -> {href} =~ s{\%}{\%25}g unless $options -> {parent};
 
 			$js_action = "nope('$options->{href}','$options->{target}')";
 
@@ -374,6 +380,8 @@ sub __adjust_button_href {
 
 	}
 
+	$_SKIN -> __adjust_button_blockui ($options);
+
 	$options -> {id} ||= '' . $options;
 	$options -> {tabindex} = ++ $_REQUEST {__tabindex};;
 
@@ -382,6 +390,32 @@ sub __adjust_button_href {
 		$h -> {data} = $options -> {id};
 
 		hotkey ($h);
+
+	}
+
+}
+
+################################################################################
+
+sub __adjust_button_blockui {
+
+	my ($_SKIN, $options) = @_;
+
+	if ($preconf -> {core_blockui_on_submit} && $options -> {blockui}) {
+
+		unless ($options -> {href} =~ /^javaScript\:/i) {
+
+			$options -> {target} ||= '_self';
+
+			$options -> {href} =~ s{\%}{\%25}g unless $options -> {parent};
+
+			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
+
+			$options -> {target} = '_self';
+
+		}
+
+		$options -> {href} =~ s/\bnope\b/blockui ('', 1);nope/;
 
 	}
 
@@ -521,20 +555,22 @@ sub __adjust_vert_menu_item {
 	}
 
 }
+################################################################################
+
+sub draw_fatal_error_page {
+
+	return draw_error_page (@_);
+}
 
 ################################################################################
 
 sub draw_error_page {
 
-	my ($_SKIN, $page) = @_;
+	my ($_SKIN, $page, $error) = @_;
 
 	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
 
-	my $data = $_JSON -> encode ([$_REQUEST {error}]);
-
-	$_REQUEST {__script} = <<EOJ;
-		function on_load () {
-EOJ
+	my $data = $_JSON -> encode ([$error -> {label}]);
 
 	if ($page -> {error_field}) {
 		$_REQUEST{__script} .= <<EOJ;
@@ -578,7 +614,12 @@ EOJ
 			try {window.parent.setCursor ()} catch (e) {}
 			window.parent.document.body.style.cursor = 'default';
 			try {window.parent.poll_invisibles ()} catch (e) {}
-		}
+EOJ
+
+	$_REQUEST {__script} = <<EOJ;
+function on_load () {
+$_REQUEST{__script}
+}
 EOJ
 
 	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};

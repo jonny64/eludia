@@ -31,9 +31,10 @@ sub is_ua_mobile {
 sub options {
 
 	return {
-		core_unblock_navigation => $preconf -> {core_unblock_navigation},
-		static_path             => '/i/mint/',
-		skip_menu_ajusting      => 1,
+		core_unblock_navigation      => $preconf -> {core_unblock_navigation},
+		static_path                  => '/i/mint/',
+		skip_menu_ajusting           => 1,
+		table_columns_order_editable => 1,
 	};
 
 }
@@ -152,21 +153,9 @@ sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
 
-	if ($_REQUEST {select}) {
-
-		$_REQUEST {__script} .= <<EOJ;
-			top.document.title = '$$options{label}';
-			top.title_set = 1;
-EOJ
-		return '';
-
-	} else {
-
-		return <<EOH
-			<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="table_title"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
+	return $_REQUEST {select} ? '' : <<EOH;
+		<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="table_title"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
 EOH
-
-	}
 
 }
 
@@ -373,6 +362,56 @@ EOH
 
 ################################################################################
 
+sub draw_fatal_error_page {
+
+	my ($_SKIN, $page, $error) = @_;
+
+	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
+
+	my $options = {
+		email   => $preconf -> {mail}? $preconf -> {mail} -> {support} : '',
+		subject => "Техподдержка ($$preconf{about_name}). Ошибка от $$_USER{label}",
+		title   => $i18n -> {internal_error},
+		details => $error -> {label} . "\n" . $error -> {error},
+		msg     => $error -> {msg},
+		label   => $error -> {label},
+		href    => "$_REQUEST{__static_url}/error.html?",
+		height  => 290,
+		width   => 510,
+	};
+
+	$options = $_JSON -> encode ($options);
+
+	$_REQUEST {__script} .= <<EOJS;
+
+	var parent_frame = parent;
+
+	var top_w = parent_frame.ancestor_window_with_child('eludia-application-iframe')
+
+	var eludia_frame = top_w.child.contentWindow;
+
+	var options = $options;
+
+	options.after = function() {
+		parent_frame.unblockui();
+	};
+
+	if (eludia_frame.dialog_open) {
+		eludia_frame.dialog_open (options);
+	} else {
+		alert (options.label);
+		if (window.name != 'invisible') {history.go (-1)};
+	}
+EOJS
+
+	$_REQUEST {__head_links} .= dump_tag (script => {}, $_REQUEST {__script}) . "\n";
+
+	return qq{<html><head>$_REQUEST{__head_links}</head><body></body></html>};
+
+}
+
+################################################################################
+
 sub draw_form_field {
 
 	my ($_SKIN, $field, $data) = @_;
@@ -448,7 +487,7 @@ sub draw_form_field {
 
 	$html .= dump_tag (td => $a, $field -> {html});
 
-	return $html;
+	return $html . ($options -> {label_tail} || '');
 
 }
 
@@ -558,7 +597,7 @@ sub draw_form_field_datetime {
 
 	$options -> {name} = '_' . $options -> {name};
 
-	return $_SKIN -> _draw_input_datetime ($options);
+	return $_SKIN -> _draw_input_datetime ($options) . ($options -> {label_tail} || '');
 
 }
 
@@ -651,7 +690,7 @@ EOJS
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return <<EOH;
+	return <<EOH . ($options -> {label_tail} || '');
 
 		<input
 			type="hidden"
@@ -930,8 +969,7 @@ sub draw_form_field_select {
 
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'dialog_width';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
-
-		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
+		$options -> {other} -> {title}  ||= $i18n->{voc_title};
 
 		$options -> {onChange} = <<EOJS;
 
@@ -944,7 +982,7 @@ sub draw_form_field_select {
 						href          : '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(),
 						dialog_width  : $options->{other}->{width},
 						dialog_height : $options->{other}->{height},
-						title         : '$i18n->{voc_title}'
+						title         : '$options->{other}->{title}'
 					}
 				);
 
@@ -2189,24 +2227,6 @@ sub draw_centered_toolbar_button {
 		$img_path = _icon_path ($options -> {icon});
 	}
 
-	if ($preconf -> {core_blockui_on_submit} && $options -> {blockui}) {
-
-		unless ($options -> {href} =~ /^javaScript\:/i) {
-
-			$options -> {target} ||= '_self';
-
-			$options -> {href} =~ s{\%}{\%25}g;
-
-			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
-
-			$options -> {target} = '_self';
-
-		}
-
-		$options -> {href} =~ s/\bnope\b/blockui ('', 1);nope/;
-
-	}
-
 	my $nbsp = $options -> {label} ? '&nbsp;' : '';
 
 	my $html = "<td nowrap>";
@@ -2432,6 +2452,10 @@ sub draw_text_cell {
 	$data -> {attributes} -> {style} = join '; color:', $data -> {attributes} -> {style}, $fgcolor
 		if $fgcolor;
 
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
+
 	if ($data -> {href} && $data -> {href} ne $options -> {href}) {
 		$data -> {attributes} -> {"data-href"} = $data -> {href};
 		$data -> {attributes} -> {"data-href-target"} = $data -> {target}
@@ -2471,6 +2495,7 @@ sub draw_text_cell {
 	$html .= '<strike>' if $data -> {strike} || $options -> {strike};
 
 	$html .= $data -> {label};
+	$html .= $label_tail;
 
 	$html .= '</b>'      if $data -> {bold}   || $options -> {bold};
 	$html .= '</i>'      if $data -> {italic} || $options -> {italic};
@@ -2489,9 +2514,13 @@ sub draw_radio_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
+
 	my $attributes = dump_attributes ($data -> {attributes});
 
-	return qq {<td $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} value='$$data{value}'></td>};
+	return qq {<td $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} value='$$data{value}'>$label_tail</td>};
 
 }
 
@@ -2501,11 +2530,15 @@ sub draw_datetime_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
+
 	my $attributes = dump_attributes ($data -> {attributes});
 
 	local $options -> {name} = $data -> {name};
 
-	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "</td>";
+	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "$label_tail</td>";
 
 }
 
@@ -2515,11 +2548,15 @@ sub draw_checkbox_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
+
 	my $attributes = dump_attributes ($data -> {attributes});
 
 	my $label = $data -> {label} ? '&nbsp;' . $data -> {label} : '';
 
-	return qq {<td $$options{data} $attributes><input tabindex=$data->{tabindex} class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>$label</td>};
+	return qq {<td $$options{data} $attributes><input tabindex=$data->{tabindex} class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>${label}${label_tail}</td>};
 
 }
 
@@ -2539,6 +2576,10 @@ sub draw_select_cell {
 	$s_attributes -> {tabindex} = $data -> {tabindex};
 
 	$s_attributes = dump_attributes ($s_attributes);
+
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
@@ -2599,7 +2640,7 @@ EOJS
 		$html .= qq {<option value=-1>${$$data{other}}{label}</option>};
 	}
 
-	$html .= qq {</select></td>};
+	$html .= qq {</select>$label_tail</td>};
 
 	return $html;
 
@@ -2611,6 +2652,10 @@ EOJS
 sub draw_string_voc_cell {
 
 	my ($_SKIN, $data, $options) = @_;
+
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
@@ -2658,7 +2703,7 @@ EOJS
 			id    => "$data->{name}_id",
 
 		})
-		. '</span></nobr></td>';
+		. "</span></nobr>$label_tail</td>";
 
 	return $html;
 
@@ -2715,6 +2760,10 @@ sub draw_input_cell {
 
 	}
 
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
+
 	my $attributes = dump_attributes ($data -> {attributes});
 	$attr_input = dump_attributes ($attr_input);
 
@@ -2722,7 +2771,7 @@ sub draw_input_cell {
 
 	my $tabindex = 'tabindex=' . (++ $_REQUEST {__tabindex});
 
-	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" $attr_input name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex>$autocomplete</nobr></td>};
+	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" $attr_input name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex>$autocomplete</nobr>$label_tail</td>};
 
 }
 
@@ -2814,6 +2863,38 @@ sub draw_table_header_cell {
 
 ####################################################################
 
+sub rebuild_supertable_columns {
+
+	my ($headers) = @_;
+
+	my $result;
+
+	foreach $cell (@$headers) {
+		unless ($processed_cells {$cell}) {
+			my $group = rebuild_supertable_columns ($cell -> {children} || []);
+			push @$result, {
+				id => $cell -> {id},
+				sort => $cell -> {sort},
+				asc => $cell -> {asc},
+				desc => $cell -> {desc},
+			};
+			$result -> [-1] -> {group} = $group
+				if @$group;
+			$result -> [-1] -> {width} = $cell -> {width}
+				if $cell -> {width};
+			$is_set_all_headers_width = 0
+				unless $cell -> {width} || $cell -> {hidden};
+
+			$processed_cells {$cell} = 1;
+		};
+	};
+
+	return $result;
+
+}
+
+####################################################################
+
 sub draw_super_table__only_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
@@ -2836,7 +2917,6 @@ sub draw_super_table__only_table {
 		my $tr_cnt = 0;
 
 		foreach my $tr (@{$i -> {__trs}}) {
-
 
 			my $attributes = {};
 
@@ -2872,100 +2952,9 @@ sub draw_super_table__only_table {
 
 	$html .= '</tbody></table>';
 
-	my $columns = [];
-
-	my $header_rows = $options -> {headers};
-
-	ref $header_rows -> [0] eq ARRAY or $header_rows = [$header_rows];
-
-	my $matrix;
-
-	for (my $row = 0; $row < @$header_rows; $row ++) {
-		foreach my $cell (@{$header_rows -> [$row]}) {
-			my $col = @{$matrix -> [$row]};
-			$cell -> {id} ||= "coord_$row_$col";
-			my $cell_cnt_to_insert = $cell -> {colspan} || 1;
-			for (my $i = 0; $i < $col && $cell_cnt_to_insert > 0; $i ++) {
-				if (!defined ($matrix -> [$row] -> [$i])) {
-					$matrix -> [$row] -> [$i] = $cell;
-					$cell_cnt_to_insert --;
-				}
-			}
-			push @{$matrix -> [$row]}, ($cell) x $cell_cnt_to_insert
-				if $cell_cnt_to_insert > 0;
-			for (my $rowspan = 1; $rowspan < $cell -> {rowspan}; $rowspan ++) {
-				$matrix -> [$row + $rowspan] -> [$col + rowspan] = $cell;
-			}
-		}
-	}
-
-	for (my $row = 1; $row < @$matrix; $row ++) {
-		for (my $col = 0; $col < @{$matrix -> [$row]}; $col ++) {
-			my $cell = $matrix -> [$row] -> [$col];
-
-
-			my $parent = $matrix -> [$row - 1] -> [$col];
-			unless ($cell -> {id} eq $parent -> {id}) {
-				$cell -> {parent} = $parent;
-			}
-
-		}
-	}
-
-	my $is_set_all_headers_width  = 1;
-
-	local $settings = exists $_QUERY -> {content} -> {columns}? $_QUERY -> {content} -> {columns} : {};
-
-	my $_adjust_cell_hash = sub {
-
-		my ($column) = @_;
-
-		$column -> {id} = $column -> {order} || $column -> {no_order} || $column -> {id},
-
-		$column -> {sortable} = $column -> {order} && (
-			$_REQUEST {order} eq $column -> {id}
-			|| !$_REQUEST {order} && $settings -> {$column -> {id}} -> {sort}
-		);
-
-		my $sort_direction = $settings -> {$column -> {id}} -> {desc} ? "desc" : "asc";
-
-		my $width = $settings -> {$column -> {id}} -> {width} || undef;
-
-		return {
-			id                                       => $column -> {id},
-			($width ? (width                         => $width) : ()),
-			($column -> {sortable}? (sort            => "1") : ()),
-			($column -> {sortable}? ($sort_direction => "1") : ()),
-			($column -> {group} ? (group             => $column -> {group}) : ()),
-		}
-
-	};
-
-
-	for (my $row = 0; $row < @$matrix - 1; $row ++) {
-		for (my $col = 0; $col < @{$matrix -> [$row]}; $col ++) {
-			my $cell = $matrix -> [$row] -> [$col];
-			foreach my $child (@{$matrix -> [$row + 1]}) {
-				if ($child -> {parent} -> {id} eq $cell -> {id} && !grep {$child -> {id} eq $_ -> {id}} @{$cell -> {group}}) {
-					push @{$cell -> {group}}, $_adjust_cell_hash -> ($child);
-					$is_set_all_headers_width = 0
-						unless $child -> {width};
-				}
-			}
-		}
-	}
-
-	foreach my $cell (@{$matrix -> [0]}) {
-		if (!grep {$cell -> {id} eq $_ -> {id}} @$columns) {
-			push @$columns, $_adjust_cell_hash -> ($cell);
-			$is_set_all_headers_width = 0
-				unless $cell -> {width};
-		}
-	}
-
-	$is_set_all_headers_width = 0
-		unless @{$matrix -> [0]};
-
+	local %processed_cells = ();
+	local $is_set_all_headers_width = 1;
+	my $columns = rebuild_supertable_columns (\@{$_PACKAGE . '_COLUMNS'});
 
 	my $table = {
 		id          => $options -> {id_table},
@@ -2983,6 +2972,7 @@ sub draw_super_table__only_table {
 			rows    => 0,
 		},
 		script      => $_REQUEST {__only_table} ? $_REQUEST {__script} . ';' . $_REQUEST {__on_load} : '',
+		table_url   => $_SKIN -> table_url () . ($options -> {is_not_first_table_on_page} ? '&is_not_first_table_on_page=1' : ''),
 	};
 
 	return $_JSON -> encode ($table);
@@ -3248,7 +3238,6 @@ sub draw_page {
 	} . $_REQUEST {__head_links};
 
 	my $init_page_options = {
-		table_url              => $_SKIN -> table_url (),
 		__scrollable_table_row => $_REQUEST {__scrollable_table_row} ||= 0,
 		focus                  => !$_REQUEST {__no_focus},
 		__focused_input        => $_REQUEST {__focused_input},
@@ -3413,7 +3402,7 @@ sub lrt_print {
 
 	close OUT;
 
-	$r -> print (' ' x 100);
+	$r -> print (' ' x 100) if $r;
 
 }
 

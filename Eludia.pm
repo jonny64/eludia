@@ -39,7 +39,7 @@ sub check_constants {
 
 	our $_INHERITABLE_PARAMETER_NAMES    = {map {$_ => 1} qw (__this_query_string __last_query_string __last_scrollable_table_row __no_navigation __tree __infty __popup __no_infty)};
 
-	our $_NONINHERITABLE_PARAMETER_NAMES = {map {$_ => 1} qw (lang salt sid password error id___query)};
+	our $_NONINHERITABLE_PARAMETER_NAMES = {map {$_ => 1} qw (lang salt sid password error id___query columns)};
 
 	our @_OVERRIDING_PARAMETER_NAMES     = qw (select __no_navigation __tree __last_query_string);
 
@@ -311,6 +311,8 @@ sub check_application_directory {
 	loading_log "$docroot...\n";
 
 	$preconf -> {_} -> {docroot} = $docroot;
+
+	$preconf -> {_} -> {logs} = $docroot . '../logs/';
 
 	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm', 'session_access_logs', 'i/_mbox', 'i/_mbox/by_user') {
 
