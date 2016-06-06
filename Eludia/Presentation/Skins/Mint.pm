@@ -1812,7 +1812,7 @@ sub draw_toolbar_input_select {
 		if ($options -> {onChange} =~ s/(submit\(\);)$//) {
 			$submit = $1;
 		}
-		
+
 		$options -> {onChange} .= <<EOJS;
 			if (this.options[this.selectedIndex].value == -1) {
 
@@ -3124,6 +3124,8 @@ EOJS
 
 	my $script = dump_tag (script => {}, $_REQUEST {__script}) . "\n";
 
+	my $sql_version = ($preconf -> {sql_version} -> {string} . $preconf -> {sql_version} -> {number}) || $$SQL_VERSION{string};
+
 	return <<EOH;
 <html>
 	<head>
@@ -3131,7 +3133,7 @@ EOJS
 
 		<title>$$i18n{_page_title}</title>
 
-		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
+		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $sql_version; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
 		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
 		$script
 	</head>
@@ -3236,12 +3238,14 @@ sub draw_page {
 
 	$_REQUEST {__head_links} .= dump_tag (script => {}, $_REQUEST {__script}) . "\n";
 
+	my $sql_version = ($preconf -> {sql_version} -> {string} . $preconf -> {sql_version} -> {number}) || $$SQL_VERSION{string};
+
 	$_REQUEST {__head_links}  = qq {
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 		<title>$$i18n{_page_title}</title>
 
-		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
+		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $sql_version; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
 		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
 
 		<link href="$_REQUEST{__static_url}/eludia.css" type="text/css" rel="stylesheet" />
