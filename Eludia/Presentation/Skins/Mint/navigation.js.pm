@@ -280,8 +280,9 @@ function open_vocabulary_from_select (s, options) {
 
 					} else {
 
-						var kendo_select = $(s).data('kendoDropDownList');
-						kendo_select.select(0);
+						var kendo_select = $(s).data('kendoDropDownList'),
+							prev_value = $(s).data('prev_value') || 0;
+						kendo_select.select(prev_value);
 						kendo_select.close();
 						kendo_select.focus ();
 
