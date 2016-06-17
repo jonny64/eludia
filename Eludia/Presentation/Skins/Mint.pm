@@ -3217,6 +3217,8 @@ sub draw_page {
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 
 	my $version = $Eludia::VERSION;
+	$version = sprintf ('%d.%d.%d', Date::Calc::Today ())
+		if $version =~ /UNKNOWN/;
 
 	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css?salt=$version' type="text/css" rel="stylesheet">\n}   foreach (@{$_REQUEST {__include_css}});
 
