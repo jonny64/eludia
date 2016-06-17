@@ -3216,12 +3216,13 @@ sub draw_page {
 
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 
-	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">\n}   foreach (@{$_REQUEST {__include_css}});
+	my $version = $Eludia::VERSION;
+
+	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css?salt=$version' type="text/css" rel="stylesheet">\n}   foreach (@{$_REQUEST {__include_css}});
 
 	$_REQUEST {__head_links} .= dump_tag (style => {}, $_REQUEST {__css}) . "\n" if $_REQUEST {__css};
 
-	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js'>\n</script>"                          foreach (@{$_REQUEST {__include_js}});
-
+	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?salt=$version'>\n</script>"                          foreach (@{$_REQUEST {__include_js}});
 
 	foreach (keys %_REQUEST) {
 
@@ -3248,18 +3249,17 @@ sub draw_page {
 		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $sql_version; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
 		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
 
-		<link href="$_REQUEST{__static_url}/eludia.css" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/jQueryUI/jquery-ui.min.css" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/SuperTable/supertable.css" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/KendoUI/styles/kendo.common.min.css" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/KendoUI/styles/kendo.bootstrap.min.css" type="text/css" rel="stylesheet" />
+		<link href="$_REQUEST{__static_url}/eludia.css?salt=$version" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/jQueryUI/jquery-ui.min.css?salt=$version" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/SuperTable/supertable.css?salt=$version" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/KendoUI/styles/kendo.common.min.css?salt=$version" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/KendoUI/styles/kendo.bootstrap.min.css?salt=$version" type="text/css" rel="stylesheet" />
 
-		<script src="/i/mint/libs/require.min.js"></script>
-		<script src="/i/mint/libs/KendoUI/js/jquery.min.js"></script>
+		<script src="/i/mint/libs/require.min.js?salt=$version"></script>
+		<script src="/i/mint/libs/KendoUI/js/jquery.min.js?salt=$version"></script>
 
-		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}"></script>
-		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js" async></script>
-
+		<script src="$_REQUEST{__static_url}/navigation.js?salt=$version"></script>
+		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js?salt=$version" async></script>
 
 	} . $_REQUEST {__head_links};
 
