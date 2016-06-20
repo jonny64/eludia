@@ -2059,7 +2059,7 @@ EOH
 					onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
 					onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
 					onChange="is_dirty=true; $$options{onChange}"
-					style="visibility:hidden; width: 1px"
+					style="visibility:hidden; width: 1px; position: absolute; left: -999px"
 					multiple="multiple"
 					data-ken-multiple="true"
 					is-native="true"
