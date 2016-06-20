@@ -2027,6 +2027,8 @@ EOJS
 
 		toolbarFormData.append('action', 'upload');
 
+		blockui ();
+
 		$.ajax ({
 			type: 'POST',
 			url: '/',
