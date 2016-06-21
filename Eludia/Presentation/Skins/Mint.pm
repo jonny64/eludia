@@ -2000,7 +2000,7 @@ EOH
 
 	my $name = "_$$options{name}_1";
 
-	$options -> {href} = "javascript: \$('input[name=$name]').click()";
+	$options -> {href} = "javascript: \$('input[name=$name]').click(); void(0)";
 
 
 	my $keep_form_params = $options -> {keep_form}? <<EOJS : '';
@@ -2045,13 +2045,22 @@ EOJS
 				console.log(data);
 			}
 		});
+
+		return blockEvent();
 EOJS
 
 	$html .= <<EOH;
 			<a TABINDEX=-1 class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
 EOH
 
+	if ($options -> {icon}) {
+		my $img_path = _icon_path ($options -> {icon});
+		$html .= qq {<img src="$img_path" border=0 hspace=0 style='vertical-align:middle;'>};
+	}
+
 	$html .= <<EOH;
+				$options->{label}</nobr>
+				</a>
 				<input
 					type="file"
 					name="$name"
@@ -2064,18 +2073,6 @@ EOH
 					data-ken-multiple="true"
 					is-native="true"
 				/>
-EOH
-
-
-
-	if ($options -> {icon}) {
-		my $img_path = _icon_path ($options -> {icon});
-		$html .= qq {<img src="$img_path" border=0 hspace=0 style='vertical-align:middle;'>};
-	}
-
-	$html .= <<EOH;
-				$options->{label}</nobr>
-				</a>
 		</li>
 
 EOH
