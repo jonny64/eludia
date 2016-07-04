@@ -3215,15 +3215,17 @@ sub draw_page {
 
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 
-	my $version = $Eludia::VERSION;
-	$version = sprintf ('%d.%d.%d', Date::Calc::Today ())
-		if $version =~ /UNKNOWN/;
-
-	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css?salt=$version' type="text/css" rel="stylesheet">\n}   foreach (@{$_REQUEST {__include_css}});
+	foreach (@{$_REQUEST {__include_css}}) {
+		my @stat = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_site}/i/$_.css");
+		$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css?salt=$stat[9]' type="text/css" rel="stylesheet">\n};
+	}
 
 	$_REQUEST {__head_links} .= dump_tag (style => {}, $_REQUEST {__css}) . "\n" if $_REQUEST {__css};
 
-	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?salt=$version'>\n</script>"                          foreach (@{$_REQUEST {__include_js}});
+	foreach (@{$_REQUEST {__include_js}}) {
+		my @stat = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_site}/i/$_.js");
+		$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?salt=$stat[9]'>\n</script>";
+	}
 
 	foreach (keys %_REQUEST) {
 
@@ -3241,6 +3243,10 @@ sub draw_page {
 	$_REQUEST {__head_links} .= dump_tag (script => {}, $_REQUEST {__script}) . "\n";
 
 	my $sql_version = ($preconf -> {sql_version} -> {string} . $preconf -> {sql_version} -> {number}) || $$SQL_VERSION{string};
+
+	my $version = $Eludia::VERSION;
+	$version = sprintf ('%d.%d.%d', Date::Calc::Today ())
+		if $version =~ /UNKNOWN/;
 
 	$_REQUEST {__head_links}  = qq {
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
