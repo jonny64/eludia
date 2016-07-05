@@ -1274,8 +1274,8 @@ sub draw_esc_toolbar {
 		@{$options -> {additional_buttons}},
 		{
 			preset => 'cancel',
-			href => $options -> {href},
-			off  => $options -> {no_esc},
+			href   => $options -> {href},
+			off    => $options -> {no_esc},
 		},
 		@{$options -> {right_buttons}},
 	])
@@ -1305,37 +1305,39 @@ sub draw_ok_esc_toolbar {
 		@{$options -> {left_buttons}},
 		{
 			preset => 'ok',
-			label => $options -> {label_ok},
-			href => $_SKIN -> __submit_href ($name),
-			off  => $_REQUEST {__read_only} || $options -> {no_ok},
+			label  => $options -> {label_ok},
+			href   => $_SKIN -> __submit_href ($name),
+			off    => $_REQUEST {__read_only} || $options -> {no_ok},
 			(exists $options -> {confirm_ok} ? (confirm => $options -> {confirm_ok}) : ()),
 		},
 		{
 			preset => 'edit',
-			label => $options -> {label_edit},
-			href  => create_url (
+			label  => $options -> {label_edit},
+			href   => create_url (
 				__last_query_string         => $_REQUEST {__last_last_query_string},
 				__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
 				__edit                      => 1,
 			),
-			off   => ((!$conf -> {core_auto_edit} && !$_REQUEST{__auto_edit}) || !$_REQUEST{__read_only} || $options -> {no_edit}),
+			off    => ((!$conf -> {core_auto_edit} && !$_REQUEST{__auto_edit}) || !$_REQUEST{__read_only} || $options -> {no_edit}),
 		},
 		{
 			preset => 'choose',
-			label => $options -> {label_choose},
-			href  => js_set_select_option ('', {
+			label  => $options -> {label_choose},
+			href   => js_set_select_option ('', {
 				id       => $data -> {id},
 				label    => $options -> {choose_select_label} || $data -> {label},
 				question => $data -> {question},
 			}),
-			off   => (!$_REQUEST {__read_only} || !$_REQUEST {select}) || $_REQUEST {"__select_type_" . $_REQUEST {select}} ne $_REQUEST {type},
+			off    => (!$_REQUEST {__read_only} || !$_REQUEST {select})
+				|| $_REQUEST {"__select_type_" . $_REQUEST {select}} ne $_REQUEST {type}
+				|| $options -> {no_choose},
 		},
 		@{$options -> {additional_buttons}},
 		{
 			preset => 'cancel',
-			label => $options -> {label_cancel},
-			href => $options -> {href},
-			off  => $options -> {no_esc},
+			label  => $options -> {label_cancel},
+			href   => $options -> {href},
+			off    => $options -> {no_esc},
 		},
 		@{$options -> {right_buttons}},
 	 ])
@@ -1353,7 +1355,7 @@ sub draw_close_toolbar {
 		@{$options -> {additional_buttons}},
 		{
 			preset => 'close',
-			href => 'javascript: window.parent.close()',
+			href   => 'javascript: window.parent.close()',
 		},
 		@{$options -> {right_buttons}},
 	 ])
