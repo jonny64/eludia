@@ -1530,7 +1530,7 @@ TableSlider.prototype.cell_on = function () {
 }
 
 function is_scrolled_into_view(elem) {
-	var div           = $(elem).closest ('div.st-table-right-viewport').get(0);
+	var div           = $(elem).closest('div.st-table-right-viewport').get(0); 
 	var divViewTop    = div.scrollTop;
 	var divViewBottom = divViewTop + div.offsetHeight;
 
@@ -2451,6 +2451,7 @@ function init_page (options) {
 							}
 						})});
 
+
 						if (tableSlider.get_cell ()) {
 							tableSlider.cell_off ();
 							tableSlider = new TableSlider ();
@@ -2567,8 +2568,10 @@ function init_page (options) {
 		$(this).kendoUpload({
 			async: {
 				saveUrl: $(this).attr('data-upload-url'),
+				removeUrl: '/',
 				autoUpload: true
-			}
+			},
+			files: $(this).attr('data-files')
 		});
 	});
 
