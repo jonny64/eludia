@@ -3215,6 +3215,13 @@ sub draw_page {
 
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 
+	unshift @{$_REQUEST {__include_css}},
+		'mint/libs/jQueryUI/jquery-ui.min',
+		'mint/libs/SuperTable/supertable',
+		'mint/libs/KendoUI/styles/kendo.common.min',
+		'mint/libs/KendoUI/styles/kendo.bootstrap.min',
+	;
+
 	foreach (@{$_REQUEST {__include_css}}) {
 		my @stat = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_site}/i/$_.css");
 		$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css?salt=$stat[9]' type="text/css" rel="stylesheet">\n};
@@ -3244,9 +3251,12 @@ sub draw_page {
 
 	my $sql_version = ($preconf -> {sql_version} -> {string} . $preconf -> {sql_version} -> {number}) || $$SQL_VERSION{string};
 
-	my $version = $Eludia::VERSION;
-	$version = sprintf ('%d.%d.%d', Date::Calc::Today ())
-		if $version =~ /UNKNOWN/;
+	my @stat_eludia     = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_url}/eludia.css");
+	my @stat_navigation = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_url}/navigation.js");
+	my @stat_showmodal  = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_url}/jQuery.showModalDialog.js");
+	my @stat_require    = stat ($preconf -> {_} -> {docroot} . "/i/mint/libs/require.min.js");
+	my @stat_jquery     = stat ($preconf -> {_} -> {docroot} . "/i/mint/libs/KendoUI/js/jquery.min.js");
+
 
 	$_REQUEST {__head_links}  = qq {
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -3256,17 +3266,13 @@ sub draw_page {
 		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $sql_version; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
 		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
 
-		<link href="$_REQUEST{__static_url}/eludia.css?salt=$version" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/jQueryUI/jquery-ui.min.css?salt=$version" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/SuperTable/supertable.css?salt=$version" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/KendoUI/styles/kendo.common.min.css?salt=$version" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/KendoUI/styles/kendo.bootstrap.min.css?salt=$version" type="text/css" rel="stylesheet" />
+		<link href="$_REQUEST{__static_url}/eludia.css?salt=$stat_eludia[9]" type="text/css" rel="stylesheet" />
 
-		<script src="/i/mint/libs/require.min.js?salt=$version"></script>
-		<script src="/i/mint/libs/KendoUI/js/jquery.min.js?salt=$version"></script>
+		<script src="/i/mint/libs/require.min.js?salt=$stat_require[9]"></script>
+		<script src="/i/mint/libs/KendoUI/js/jquery.min.js?salt=$stat_jquery[9]"></script>
 
-		<script src="$_REQUEST{__static_url}/navigation.js?salt=$version"></script>
-		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js?salt=$version" async></script>
+		<script src="$_REQUEST{__static_url}/navigation.js?salt=$stat_navigation[9]"></script>
+		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js?salt=$stat_showmodal[9]" async></script>
 
 	} . $_REQUEST {__head_links};
 
