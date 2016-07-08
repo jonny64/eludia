@@ -2214,7 +2214,9 @@ sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;
 
-	return '<li role="header" class="toolbar_pager"></li>';
+	return <<EOH;
+	<li role="header" class="toolbar_pager" data-table-id="$$options{id_table}"></li>
+EOH
 
 }
 
