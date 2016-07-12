@@ -2653,8 +2653,15 @@ function init_page (options) {
 	}
 
 	$(document).on ('keydown', function (event) {
-		lastKeyDownEvent = event;
-		return handle_basic_navigation_keys ();
+		if (event.keyCode == 112) {
+			event.preventDefault();
+			var url = 'https://eias-gkh.reginc.ru/docs/index.php?title=∆ ’#';
+			url += parseURL(document.location.href).type || '';
+			nope(url, '_bloank', 'toolbar=no,resizable=yes');
+		} else {
+			lastKeyDownEvent = event;
+			return handle_basic_navigation_keys ();
+		}
 	});
 
 	$(document).on ('keypress', function (event) {
@@ -2662,12 +2669,14 @@ function init_page (options) {
 			return false;
 	});
 
+	/*
 	if (options.help_url) {
 		$(document).on ('help', function (event) {
 			nope (options.help_url, '_blank', 'toolbar=no,resizable=yes');
 			blockEvent ();
 		});
 	}
+	*/
 
 	$(window).on ('beforeunload', function (event) {
 		setCursor (window, 'wait');
@@ -2795,3 +2804,5 @@ document.queryCommandSupported = function(command) {
 	}
 	return result;
 }
+
+parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b}
