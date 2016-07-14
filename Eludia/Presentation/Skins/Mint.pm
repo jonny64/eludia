@@ -3337,6 +3337,8 @@ EOJS
 		};
 		$body .= "<iframe name='$_' src='$_REQUEST{__static_url}/0.html' width=0 height=0 application='yes' style='display:none'>\n</iframe>" foreach (@{$_REQUEST{__invisibles}});
 
+		$body .= "<div id='help_section' style='display:none'>$_REQUEST{__help_section}</div>" if $_REQUEST {__help_section};
+
 		$body  = dump_tag (body => $body_options, $body);
 	}
 
