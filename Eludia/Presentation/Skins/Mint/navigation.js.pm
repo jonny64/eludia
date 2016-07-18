@@ -544,6 +544,9 @@ function refresh_radio__div (id) {
 
 		div.style.display = 'none';
 
+		if (div.hasAttribute('clear-on-hide')) {
+			$(div).find('input, select').val('');
+		}
 	}
 
 }
