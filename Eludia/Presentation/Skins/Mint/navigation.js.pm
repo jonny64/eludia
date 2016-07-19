@@ -2433,9 +2433,10 @@ function init_page (options) {
 				var that = this;
 
 				supertables.push (new supertable({
-					tableUrl        : '/?' + tables_data [that.id]['table_url'] + '&__only_table=' + that.id + '&__table_cnt=' + table_containers.length,
+					tableUrl        : '/?' + tables_data[that.id]['table_url'] + '&__only_table=' + that.id + '&__table_cnt=' + table_containers.length,
 					initial_data : tables_data [that.id],
 					el: $(that),
+					columns_draggable: tables_data[that.id]['disable_reorder_columns'],
 					containerRender : function(model) {
 						$(that).find('tr[data-menu],td[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);
