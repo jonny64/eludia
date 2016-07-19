@@ -535,17 +535,30 @@ function refresh_radio__div (id) {
 
 	var div = document.getElementById ('radio_div_' + id);
 
-	if (document.getElementById (id).checked) {
+	var display = document.getElementById (id).checked? 'block' : 'none';
 
-		div.style.display = 'block';
-
-	}
-	else {
-
-		div.style.display = 'none';
-
+	if (div.style.display === display) {
+		return;
 	}
 
+	div.style.display = display;
+
+	if (div.hasAttribute('clear-on-hide') && display === 'none') {
+		var selects = $(div).find('select');
+		if (selects.length) {
+			selects.data('kendoDropDownList').value(0);
+			selects.trigger('change')
+		}
+
+		var dates = $(div).find('input[data-type=datepicker]');
+
+		if (dates.length) {
+			dates.data('kendoDatePicker').value(null);
+			dates.trigger('change')
+		}
+
+		$(div).find('input:not([data-type])').val('').trigger('change');
+	}
 }
 
 function stibqif (stib, qif) {

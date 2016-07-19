@@ -939,7 +939,9 @@ sub draw_form_field_radio {
 
 			my $bn = $a -> {checked} ? 'block' : 'none';
 
-			$html .= qq {<td class="form-inner"><div id="radio_div_$value" style="display:$bn">$$value{html}</div>};
+			my $clear_on_hide = $options -> {clear_on_hide}? 'clear-on-hide' : '';
+
+			$html .= qq {<td class="form-inner"><div id="radio_div_$value" style="display:$bn" $clear_on_hide>$$value{html}</div>};
 
 		}
 
