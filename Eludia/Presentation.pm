@@ -1530,7 +1530,7 @@ sub draw_cells {
 
 	my $result = '';
 
-	delete $options -> {href} if $options -> {is_total};
+	delete $options -> {href} if $options -> {is_total} || $_REQUEST {select} && $options -> {no_select_href};
 
 	if ($options -> {href}) {
 		check_href ($options) ;
@@ -1924,14 +1924,14 @@ sub get_composite_table_headers {
 		}
 
 		$colspan -= $headers -> [$i] -> [$j] -> {colspan} || 1
-			if !$headers -> [$i] -> [$j] -> {hidden}
+			if !$headers -> [$i] -> [$j] -> {hidden} || ($headers -> [$i] -> [$j] -> {no_hidden} && $_REQUEST {__edit_query})
 				|| $headers -> [$i] -> [$j] -> {parent} eq $headers -> [$i - 1] -> [$options -> {level_indexes} -> [$i - 1]] -> {id};
 
 # Get tail children with hidden == 1
 		if (
 			$colspan == 0
 			&& $options -> {level_indexes} -> [$i] + 1 < $cnt
-			&& $headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {hidden}
+			&& ($headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {hidden} && !($headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {no_hidden} && $_REQUEST {__edit_query}))
 			&& (
 				!$headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {parent}
 				||
@@ -1940,8 +1940,8 @@ sub get_composite_table_headers {
 		) {
 
 			$colspan ++;
-		}
 
+		}
 
 	}
 
