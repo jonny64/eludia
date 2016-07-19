@@ -520,7 +520,7 @@ sub draw_form_field_button {
 
 	my $tabindex = ++ $_REQUEST {__tabindex};
 
-	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">}
+	return qq {<input type="button" class="k-button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">}
 		. ($options -> {label_tail} || '');
 
 }
