@@ -2528,8 +2528,21 @@ function init_page (options) {
 		$(this).height(h);
 	});
 
-	$('[data-type=datepicker]').each(function () {$(this).kendoDatePicker()});
+	$('[data-type=datepicker]').each(function () {
+		var options = {},
+			min = $(this).attr('min'),
+			max = $(this).attr('max');
+
+		if (min)
+			options.min = new Date(min);
+		if (max)
+			options.max = new Date(max);
+
+		$(this).kendoDatePicker(options);
+	});
+
 	$('[data-type=datetimepicker]').each(function () {$(this).kendoDateTimePicker()});
+	$('[data-type="numeric-text-box"]').each(function () {$(this).kendoNumericTextBox({format : $(this).attr('format') || 0})});
 
 	$('input[mask]').each (init_masked_text_box);
 
@@ -2668,7 +2681,15 @@ function init_page (options) {
 function init_masked_text_box () {
 
 	$(this).kendoMaskedTextBox({
-		mask:$(this).attr('mask')
+		mask:$(this).attr('mask'),
+		culture: "ru-RU",
+		promptChar: " ",
+		rules: {
+			"L": /[a-zA-Zà-ÿÀ-ß¸¨]/,
+			"?": /[a-zA-Zà-ÿÀ-ß¸¨\s]/,
+			"A": /[a-zA-Zà-ÿÀ-ß¸¨\d]/,
+			"a": /[a-zA-Zà-ÿÀ-ß¸¨\d\s]/
+		}
 	});
 
 	if ($(this).data('type') == 'datepicker' || $(this).data('type') == 'datetimepicker') {
@@ -2719,3 +2740,53 @@ function debounce (func, wait, immediate) {
 function tabOnEnter () {
 	void (0);
 }
+
+if (!Array.prototype.find) {
+	Array.prototype.find = function(predicate) {
+    	if (this == null) {
+      		throw new TypeError('Array.prototype.find called on null or undefined');
+    	}
+    	if (typeof predicate !== 'function') {
+      		throw new TypeError('predicate must be a function');
+    	}
+    	var list = Object(this);
+    	var length = list.length >>> 0;
+    	var thisArg = arguments[1];
+    	var value;
+
+    	for (var i = 0; i < length; i++) {
+      		value = list[i];
+      		if (predicate.call(thisArg, value, i, list)) {
+        		return value;
+      		}
+    	}
+    return undefined;
+  	};
+}
+
+if (!String.prototype.trim) {
+	(function() {
+    	String.prototype.trim = function() {
+      		return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
+    	};
+  	})();
+}
+
+if (!window.getSelection) {
+	window.getSelection = function() {
+		return document.selection.createRange();
+	}
+}
+
+window.queryCommandSupported__original = document.queryCommandSupported;
+document.queryCommandSupported = function(command) {
+	var result;
+	try {
+		result = window.queryCommandSupported__original(command);
+	} catch(error) {
+		result = false;
+	}
+	return result;
+}
+
+parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b}

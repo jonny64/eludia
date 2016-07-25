@@ -535,8 +535,16 @@ sub draw_form_field_string {
 
 	$attributes -> {type}        = 'text';
 
-	$attributes -> {mask}        = $options -> {mask}
-		if $options -> {mask};
+	map {
+		$attributes -> {$_}        ||= $options -> {$_}
+			if $options -> {$_};
+	} qw (mask min max format);
+
+	if ($attributes -> {min} || $attributes -> {max} || $attributes -> {format} || $attributes -> {decimals}) {
+		$attributes -> {"data-type"} = "numeric-text-box";
+		$_REQUEST {__libs} -> {kendo} -> {numerictextbox} = 1;
+
+	}
 
 	return dump_tag ('input', $attributes) . ($options -> {label_tail} || '');
 

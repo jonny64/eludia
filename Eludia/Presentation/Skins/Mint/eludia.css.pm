@@ -650,3 +650,25 @@ a.hint {
 }
 
 .zeroclipboard-is-hover { cursor:pointer !important; }
+
+.k-grid tr td.empty {
+	box-shadow: inset 0 0 1px 1px rgba(255, 0, 0, 0.7);
+}
+
+.k-grid a.k-button.k-button-icontext.k-grid-delete {
+	padding: 3px;
+	line-height: normal;
+	min-width: auto;
+}
+
+.k-grid a.k-button.k-button-icontext.k-grid-delete .k-icon {
+	display: none;
+}
+
+.k-numerictextbox .k-link {
+	height: 50%!important;
+}
+.k-numerictextbox .k-link .k-icon {
+	position: inherit!important;
+	margin: 3px 0 0 3px!important;
+}
