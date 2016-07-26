@@ -213,7 +213,7 @@ sub _draw_input_datetime {
 	$options -> {onChange}   ||= 'null';
 	$options -> {onKeyPress} ||= 'if (event.keyCode != 27) is_dirty=true';
 
-	$options -> {attributes} -> {class} .= ' form-mandatory-inputs'
+	$options -> {attributes} -> {class} .= ' form-mandatory-inputs required'
 		if $options -> {mandatory} ;
 
 	$options -> {attributes} -> {class} ||= 'form-active-inputs';
@@ -539,7 +539,8 @@ sub draw_form_field_string {
 	$attributes -> {onFocus}    .= ';stibqif (true, false);';
 	$attributes -> {onBlur}     .= ';stibqif (false);';
 
-	$attributes -> {class}      .= ' k-textbox ';
+	$attributes -> {class}      .= ' k-textbox textbox ';
+	$attributes -> {class}      .= ' required ' if $options -> {mandatory};
 
 	$attributes -> {type}        = 'text';
 
@@ -969,6 +970,9 @@ sub draw_form_field_select {
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
 
+	my $wrapper_classes = 'dropdownlist';
+	$wrapper_classes  .= 'required' if $options -> {mandatory};
+
 	if (
 		@{$options -> {values}} == 0
 		&&
@@ -1009,12 +1013,13 @@ EOJS
 	}
 
 	my $html = <<EOH;
-		<select
-			name="_$$options{name}"
-			$attributes
-			onChange="is_dirty=true;$$options{onChange}"
-			onKeyUp="var keyCode = event.keyCode || event.which; if (keyCode == 38 || keyCode == 40) this.onchange();"
-		>
+		<span class="$wrapper_classes">
+			<select
+				name="_$$options{name}"
+				$attributes
+				onChange="is_dirty=true;$$options{onChange}"
+				onKeyUp="var keyCode = event.keyCode || event.which; if (keyCode == 38 || keyCode == 40) this.onchange();"
+			>
 EOH
 
 	if (defined $options -> {empty}) {
@@ -1033,7 +1038,7 @@ EOH
 		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
 	}
 
-	$html .= '</select>';
+	$html .= '</select></span>';
 
 	$html .= $options -> {label_tail} || '';
 

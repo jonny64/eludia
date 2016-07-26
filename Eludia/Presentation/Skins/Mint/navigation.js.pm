@@ -2819,4 +2819,33 @@ document.queryCommandSupported = function(command) {
 	return result;
 }
 
-parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b}
+parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
+
+$(document).ready(function() {
+	var is_show_highlight = function(el) {
+			var value = el.val();
+			return (value.length == 0 || value < 1);
+		};
+	$('.required').each(function() {
+		var self = $(this);
+		if (self.hasClass('datetimepicker') || self.hasClass('textbox')) {
+			var $el = self;
+			if (!is_show_highlight($el))
+				$el.removeClass('required');
+			$el.on('change', function() {
+				is_show_highlight($el) 
+					? $el.addClass('required') 
+					: $el.removeClass('required');
+			});
+		} else if (self.hasClass('dropdownlist')) {
+			$el = self.find('select');
+			if (!is_show_highlight($el))
+				self.removeClass('required');
+			$el.change(function() {
+				is_show_highlight($el)  
+					? self.addClass('required')  
+					: self.removeClass('required');
+			});
+		}
+	});
+});
