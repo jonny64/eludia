@@ -2861,7 +2861,7 @@ sub draw_table_header_cell {
 
 	$cell -> {attributes} -> {style} = 'z-index:' . ($cell -> {no_scroll} ? 110 : 100) . ';' . $cell -> {attributes} -> {style};
 
-	!$cell -> {width} or $cell -> {attributes} -> {style} .= " width: $$cell{width}px;";
+	!$cell -> {width} or $cell -> {attributes} -> {style} .= " width:$$cell{width}px;min-width:$$cell{width}px;max-width:$$cell{width}px;";
 	!$cell -> {height} or $cell -> {attributes} -> {style} .= " height: $$cell{height}px;";
 
 	$cell -> {id} ||= &{$_PACKAGE . 'get_super_table_cell_id'} ($cell);
