@@ -2456,7 +2456,7 @@ sub draw_text_cell {
 
 	if (defined $data -> {level}) {
 
-		$data -> {attributes} -> {style} .= ';padding-left:' . ($data -> {level} * 15 + 3);
+		$data -> {attributes} -> {style} .= ';padding-left:' . ($data -> {level} * 15 + 3) . 'px;';
 
 	}
 
