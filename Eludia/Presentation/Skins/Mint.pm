@@ -970,9 +970,6 @@ sub draw_form_field_select {
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
 
-	my $wrapper_classes = 'dropdownlist';
-	$wrapper_classes  .= 'required' if $options -> {mandatory};
-
 	if (
 		@{$options -> {values}} == 0
 		&&
@@ -980,6 +977,8 @@ sub draw_form_field_select {
 	) {
 		$options -> {attributes} -> {'data-ken-autoopen'} = 1;
 	}
+
+	$options -> {attributes} -> {class} .= 'required' if $options -> {mandatory};
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -1013,13 +1012,12 @@ EOJS
 	}
 
 	my $html = <<EOH;
-		<span class="$wrapper_classes">
-			<select
-				name="_$$options{name}"
-				$attributes
-				onChange="is_dirty=true;$$options{onChange}"
-				onKeyUp="var keyCode = event.keyCode || event.which; if (keyCode == 38 || keyCode == 40) this.onchange();"
-			>
+		<select
+			name="_$$options{name}"
+			$attributes
+			onChange="is_dirty=true;$$options{onChange}"
+			onKeyUp="var keyCode = event.keyCode || event.which; if (keyCode == 38 || keyCode == 40) this.onchange();"
+		>
 EOH
 
 	if (defined $options -> {empty}) {
@@ -1038,7 +1036,7 @@ EOH
 		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
 	}
 
-	$html .= '</select></span>';
+	$html .= '</select>';
 
 	$html .= $options -> {label_tail} || '';
 
