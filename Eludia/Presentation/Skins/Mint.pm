@@ -978,7 +978,7 @@ sub draw_form_field_select {
 		$options -> {attributes} -> {'data-ken-autoopen'} = 1;
 	}
 
-	$options -> {attributes} -> {class} .= 'required' if $options -> {mandatory};
+	$options -> {attributes} -> {class} .= ' required '; # if $options -> {mandatory};
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -986,7 +986,7 @@ sub draw_form_field_select {
 
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'dialog_width';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
-		$options -> {other} -> {title}  ||= $i18n->{voc_title};
+		$options -> {other} -> {title}  ||= $i18n -> {voc_title};
 
 		$options -> {onChange} = <<EOJS;
 

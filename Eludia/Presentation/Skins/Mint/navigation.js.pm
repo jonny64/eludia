@@ -2823,29 +2823,44 @@ parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf
 
 $(document).ready(function() {
 	var is_show_highlight = function(el) {
-			var value = el.val();
-			return (value.length == 0 || value < 1);
+		var value = (el[0].tagName == 'SELECT') 
+			? parseInt(el.val()) 
+			: el.val().trim();
+		return (typeof value == 'number') 
+			? (value < 1) 
+			: (value.length == 0);
 		};
 	$('.required').each(function() {
-		var self = $(this);
-		if (self.hasClass('datetimepicker') || self.hasClass('textbox')) {
-			var $el = self;
+		var $el = $(this);
+		if (this.tagName == 'SELECT') {
+			var select_wrapper = $el.closest('.k-dropdown');
 			if (!is_show_highlight($el))
+				select_wrapper.removeClass('required');
+			$el.on('change', function() {
+				var select_wrapper = $el.closest('.k-dropdown');
+				is_show_highlight($el) 
+					? select_wrapper.addClass('required') 
+					: (function() {
+						try {
+							console.log('removeClass');
+							console.log(select_wrapper);
+							select_wrapper.removeClass('required');
+							select_wrapper[0].classList.remove('required');
+							select_wrapper[0].class = '';
+						} catch(e) {
+							console.error(e);
+						}
+					})();
+					// : select_wrapper.removeClass('required');
+			});
+		} else {
+			if (!is_show_highlight($(this)))
 				$el.removeClass('required');
 			$el.on('change', function() {
 				is_show_highlight($el) 
 					? $el.addClass('required') 
 					: $el.removeClass('required');
 			});
-		} else if (self.hasClass('dropdownlist')) {
-			$el = self.find('select');
-			if (!is_show_highlight($el))
-				self.removeClass('required');
-			$el.change(function() {
-				is_show_highlight($el)  
-					? self.addClass('required')  
-					: self.removeClass('required');
-			});
-		}
+		} 
 	});
 });
