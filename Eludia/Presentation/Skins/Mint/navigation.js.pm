@@ -646,6 +646,11 @@ function adjust_kendo_selects(top_element) {
 			popup : {
 				appendTo: $('body'),
 			},
+			dataBound: function() {
+				console.log('dataBound');
+				if (this.value() > 0)
+					this.wrapper.removeClass('required');
+			},
 			open: function (e) {
 
 				$.data (original_select, 'prev_value', this.selectedIndex);
@@ -2833,9 +2838,6 @@ $(document).ready(function() {
 	$('.required').each(function() {
 		var $el = $(this);
 		if (this.tagName == 'SELECT') {
-			var select_wrapper = $el.closest('.k-dropdown');
-			if (!is_show_highlight($el))
-				select_wrapper.removeClass('required');
 			$el.on('change', function() {
 				var select_wrapper = $el.closest('.k-dropdown');
 				is_show_highlight($el) 
