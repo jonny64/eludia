@@ -647,8 +647,11 @@ function adjust_kendo_selects(top_element) {
 				appendTo: $('body'),
 			},
 			dataBound: function() {
-				console.log('dataBound');
-				if (this.value() > 0)
+				var empty_option = this.wrapper.find('option[value=0]'),
+					is_empty = (empty_option.length == -1)
+						? false
+						: (empty_option.index() < 1);  
+				if (this.value() > 0 || !is_empty)
 					this.wrapper.removeClass('required');
 			},
 			open: function (e) {
@@ -2837,18 +2840,7 @@ $(document).ready(function() {
 		};
 	$('.required').each(function() {
 		var $el = $(this);
-		if (this.tagName == 'SELECT') {
-			$el.on('change', function() {
-				var select_wrapper = $el.closest('.k-dropdown');
-				is_show_highlight($el) 
-					? select_wrapper.addClass('required') 
-					: (function() { // dirty hack
-						setTimeout(function() {
-							select_wrapper.removeClass('required');
-						}, 0); 
-					})();
-			});
-		} else {
+		if (this.tagName !== 'SELECT') {
 			if (!is_show_highlight($(this)))
 				$el.removeClass('required');
 			$el.on('change', function() {

@@ -978,7 +978,7 @@ sub draw_form_field_select {
 		$options -> {attributes} -> {'data-ken-autoopen'} = 1;
 	}
 
-	$options -> {attributes} -> {class} .= ' required '; # if $options -> {mandatory};
+	$options -> {attributes} -> {class} .= ' required ' if $options -> {mandatory};
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
