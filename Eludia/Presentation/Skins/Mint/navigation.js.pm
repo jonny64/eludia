@@ -2840,18 +2840,11 @@ $(document).ready(function() {
 				var select_wrapper = $el.closest('.k-dropdown');
 				is_show_highlight($el) 
 					? select_wrapper.addClass('required') 
-					: (function() {
-						try {
-							console.log('removeClass');
-							console.log(select_wrapper);
+					: (function() { // dirty hack
+						setTimeout(function() {
 							select_wrapper.removeClass('required');
-							select_wrapper[0].classList.remove('required');
-							select_wrapper[0].class = '';
-						} catch(e) {
-							console.error(e);
-						}
+						}, 0); 
 					})();
-					// : select_wrapper.removeClass('required');
 			});
 		} else {
 			if (!is_show_highlight($(this)))
