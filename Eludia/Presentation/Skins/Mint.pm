@@ -256,7 +256,6 @@ sub draw_form {
 
 	my $html = $options -> {hr};
 
-
 	$html .= $options -> {path};
 
 	$html .= _draw_bottom (@_);
@@ -284,12 +283,14 @@ EOH
 			<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 EOH
 	foreach my $row (@{$options -> {rows}}) {
+
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
 
 		my $attributes = dump_attributes (draw_form_row_attributes ($row));
+		my $row_class = ($row -> [0] -> {is_grid} == 1) ? 'row_grid' : '';
 
-		$html .= qq{<tr id="$tr_id" $attributes>};
+		$html .= qq{<tr id="$tr_id" $attributes class="$row_class">};
 		foreach (@$row) { $html .= $_ -> {html} };
 		$html .= qq{</tr>};
 	}
@@ -314,7 +315,7 @@ sub draw_form_row_attributes {
 	my $is_any_field_shown = 0 + grep {!$_ -> {off} && !$_ -> {draw_hidden}} @$row;
 
 	if (!$is_any_field_shown) {
-		$attributes -> {class} = 'form-hidden-field';
+		$attributes -> {class} .= 'form-hidden-field';
 	}
 
 	return $attributes;
