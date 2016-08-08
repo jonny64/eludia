@@ -623,7 +623,10 @@ function focus_on_input (__focused_input) {
 	}
 
 	$("FORM:not('.toolbar')").find("INPUT[type='text'],INPUT[type='checkbox'],INPUT[type='radio'],TEXTAREA").each (function () {
-		try {this.focus ();} catch (e) { return true; } return false;
+		try { 
+			if ($(this).is_on_screen())
+				this.focus ();
+		} catch (e) { return true; } return false;
 	})
 
 }
@@ -645,6 +648,14 @@ function adjust_kendo_selects(top_element) {
 			height: 320,
 			popup : {
 				appendTo: $('body'),
+			},
+			dataBound: function() {
+				var empty_option = this.wrapper.find('option[value=0]'),
+					is_empty = (empty_option.length == -1)
+						? false
+						: (empty_option.index() < 1);  
+				if (this.value() > 0 || !is_empty)
+					this.wrapper.removeClass('required');
 			},
 			open: function (e) {
 
@@ -2819,4 +2830,44 @@ document.queryCommandSupported = function(command) {
 	return result;
 }
 
-parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b}
+parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
+
+$(document).ready(function() {
+	var is_show_highlight = function(el) {
+		var value = (el[0].tagName == 'SELECT') 
+			? parseInt(el.val()) 
+			: el.val().trim();
+		return (typeof value == 'number') 
+			? (value < 1) 
+			: (value.length == 0);
+		};
+	$('.required').each(function() {
+		var $el = $(this);
+		if (this.tagName !== 'SELECT') {
+			if (!is_show_highlight($(this)))
+				$el.removeClass('required');
+			$el.on('change', function() {
+				is_show_highlight($el) 
+					? $el.addClass('required') 
+					: $el.removeClass('required');
+			});
+		} 
+	});
+});
+
+
+$.fn.is_on_screen = function() {
+	var win = $(window),	
+		viewport = {
+			top : win.scrollTop(),
+			left : win.scrollLeft()
+		},
+		bounds = this.offset();
+	
+	viewport.right = viewport.left + win.width();
+	viewport.bottom = viewport.top + win.height();
+    bounds.right = bounds.left + this.outerWidth();
+    bounds.bottom = bounds.top + this.outerHeight();
+	
+    return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
+};
