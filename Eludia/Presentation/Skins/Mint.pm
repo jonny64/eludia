@@ -415,6 +415,7 @@ EOJS
 
 sub draw_form_field {
 
+
 	my ($_SKIN, $field, $data) = @_;
 
 	if ($field -> {type} eq 'banner') {
@@ -497,6 +498,12 @@ sub draw_form_field {
 
 	$a -> {colspan} = $field -> {colspan}    if $field -> {colspan};
 	$a -> {width}   = $field -> {cell_width} if $field -> {cell_width};
+
+
+	if ($field -> {is_grid}) {
+		$a -> {class} .= $field -> {class};
+		$a -> {'data-level'} = $field -> {attributes} -> {'data-level'};
+	}
 
 	$html .= dump_tag (td => $a, $field -> {html});
 
