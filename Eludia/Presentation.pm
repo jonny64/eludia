@@ -3012,7 +3012,7 @@ sub lrt_start {
 
 	$_REQUEST {__response_started} = 1;
 	$_REQUEST {__response_sent} = 1;
-	$_REQUEST {__lrt_log} = []	;
+	$_REQUEST {__lrt_log} = [];
 
 	$_SKIN -> lrt_start (@_);
 
@@ -3051,6 +3051,7 @@ sub lrt_finish {
 		]);
 
 	}
+
 
 	$_SKIN -> lrt_finish ($banner, $href, $options);
 
