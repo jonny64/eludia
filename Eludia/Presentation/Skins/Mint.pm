@@ -935,14 +935,18 @@ sub draw_form_field_radio {
 
 		$html .= qq {</td><td class="form-inner" width=1><nobr>&nbsp;<label for="$value">$$value{label}</label></nobr>};
 
+		if ($value -> {type} ne 'static' && $options -> {value_colon}) {
+			$html .= $value -> {label} ? ':' : '&nbsp;';
+		}
+
 		if ($value -> {html}) {
 
 			my $bn = $a -> {checked} ? 'block' : 'none';
 
 			my $clear_on_hide = $options -> {clear_on_hide}? 'clear-on-hide' : '';
 
-			$html .= qq {<td class="form-inner"><div id="radio_div_$value" style="display:$bn" $clear_on_hide>$$value{html}</div>};
 
+			$html .= qq {<td class="form-inner"><div id="radio_div_$value" style="display:$bn" $clear_on_hide>$$value{html}</div>};
 		}
 
 		$options -> {no_br} or ++ $n == @{$options -> {values}} or $html .= qq {<td class="form-inner"><div>&nbsp;</div><tr>};
