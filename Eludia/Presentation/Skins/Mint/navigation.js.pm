@@ -2477,9 +2477,8 @@ function init_page (options) {
 						})});
 
 
-						if (tableSlider.get_cell ()) {
+						if (tableSlider && tableSlider.get_cell ()) {
 							tableSlider.cell_off ();
-							tableSlider = new TableSlider ();
 							tableSlider.set_row (0);
 							tableSlider.cell_on ();
 						}
