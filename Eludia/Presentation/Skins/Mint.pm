@@ -256,7 +256,6 @@ sub draw_form {
 
 	my $html = $options -> {hr};
 
-
 	$html .= $options -> {path};
 
 	$html .= _draw_bottom (@_);
@@ -284,12 +283,14 @@ EOH
 			<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 EOH
 	foreach my $row (@{$options -> {rows}}) {
+
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
 
 		my $attributes = dump_attributes (draw_form_row_attributes ($row));
+		my $row_class = ($row -> [0] -> {is_grid} == 1) ? 'row_grid' : '';
 
-		$html .= qq{<tr id="$tr_id" $attributes>};
+		$html .= qq{<tr id="$tr_id" $attributes class="$row_class">};
 		foreach (@$row) { $html .= $_ -> {html} };
 		$html .= qq{</tr>};
 	}
@@ -314,7 +315,7 @@ sub draw_form_row_attributes {
 	my $is_any_field_shown = 0 + grep {!$_ -> {off} && !$_ -> {draw_hidden}} @$row;
 
 	if (!$is_any_field_shown) {
-		$attributes -> {class} = 'form-hidden-field';
+		$attributes -> {class} .= 'form-hidden-field';
 	}
 
 	return $attributes;
@@ -378,6 +379,10 @@ sub draw_fatal_error_page {
 		href    => "$_REQUEST{__static_url}/error.html?",
 		height  => 290,
 		width   => 510,
+		close   => $i18n -> {close},
+		show_error_detail => $i18n -> {show_error_detail},
+		error_hint_area   => $i18n -> {error_hint_area},
+		mail_support      => $i18n -> {mail_support},
 	};
 
 	$options = $_JSON -> encode ($options);
@@ -413,6 +418,7 @@ EOJS
 ################################################################################
 
 sub draw_form_field {
+
 
 	my ($_SKIN, $field, $data) = @_;
 
@@ -496,6 +502,12 @@ sub draw_form_field {
 
 	$a -> {colspan} = $field -> {colspan}    if $field -> {colspan};
 	$a -> {width}   = $field -> {cell_width} if $field -> {cell_width};
+
+
+	if ($field -> {is_grid}) {
+		$a -> {class} .= $field -> {class};
+		$a -> {'data-level'} = $field -> {attributes} -> {'data-level'};
+	}
 
 	$html .= dump_tag (td => $a, $field -> {html});
 
@@ -935,14 +947,18 @@ sub draw_form_field_radio {
 
 		$html .= qq {</td><td class="form-inner" width=1><nobr>&nbsp;<label for="$value">$$value{label}</label></nobr>};
 
+		if ($value -> {type} ne 'static' && $options -> {value_colon}) {
+			$html .= $value -> {label} ? ':' : '&nbsp;';
+		}
+
 		if ($value -> {html}) {
 
 			my $bn = $a -> {checked} ? 'block' : 'none';
 
 			my $clear_on_hide = $options -> {clear_on_hide}? 'clear-on-hide' : '';
 
-			$html .= qq {<td class="form-inner"><div id="radio_div_$value" style="display:$bn" $clear_on_hide>$$value{html}</div>};
 
+			$html .= qq {<td class="form-inner"><div id="radio_div_$value" style="display:$bn" $clear_on_hide>$$value{html}</div>};
 		}
 
 		$options -> {no_br} or ++ $n == @{$options -> {values}} or $html .= qq {<td class="form-inner"><div>&nbsp;</div><tr>};
