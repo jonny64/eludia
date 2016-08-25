@@ -743,8 +743,7 @@ sub draw_form_field_hgroup {
 		$html .= '</td><td>' if $item -> {type} eq 'radio';
 		$html .= $item -> {label} if $item -> {label};
 		$html .= $item -> {html};
-		$html .= '&nbsp;';
-		$html .= '</td><td>' if $item -> {type} eq 'radio';
+		$html .= $item -> {type} eq 'radio' ? '</td><td>' : '&nbsp;';
 	}
 
 	$html .= '</nobr>'
