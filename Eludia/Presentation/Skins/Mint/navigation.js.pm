@@ -635,13 +635,25 @@ function focus_on_input (__focused_input) {
 function adjust_kendo_selects(top_element) {
 
 	var setWidth = function (el) {
-		var p = el.data("kendoDropDownList").popup.element;
-		var w = p.css("visibility","hidden").outerWidth() + 32;
-		p.css("visibility","visible");
-		el.closest(".k-widget").width(w);
-	}
+			var p = el.data("kendoDropDownList").popup.element;
+			var w = p.css("visibility","hidden").outerWidth() + 32;
+			p.css("visibility","visible");
+			el.closest(".k-widget").width(w);
+		},
+		required_lighten = function() {
+			var value = $(this).val(),
+				wrapper = $(this).closest('.k-dropdown');
 
-	var select_tranform = function(){
+			if (!$(this).hasClass('required')) return;
+			if (value < 1) {
+				wrapper.addClass('required');
+			} else {
+				wrapper.removeClass('required');
+			}
+		};
+
+
+	var select_tranform = function() {
 		var original_select = this;
 		if (original_select.selectedIndex == $.data(this, 'prev_value')) return;
 		$(original_select).addClass('k-group').kendoDropDownList({
@@ -680,9 +692,13 @@ function adjust_kendo_selects(top_element) {
 					kendo_select.close();
 				}, 200);
 				return blockEvent();
+			},
+			change: function(e) {
+				required_lighten.call(this.element[0]);
 			}
 		}).data('kendoDropDownList');
 		setWidth ($(original_select));
+		required_lighten.call(original_select);
 	}
 
 	$('select', top_element).not('#_setting__suggest, #_id_filter__suggest, [multiselect]')

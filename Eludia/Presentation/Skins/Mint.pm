@@ -279,6 +279,7 @@ EOH
 			@{$options -> {keep_params}}
 
 	);
+
 	$html .=  <<EOH;
 			<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 EOH
@@ -995,6 +996,8 @@ sub draw_form_field_select {
 	) {
 		$options -> {attributes} -> {'data-ken-autoopen'} = 1;
 	}
+
+	$options -> {attributes} -> {class} .= ' required' if $options -> {mandatory};
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
