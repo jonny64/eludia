@@ -213,8 +213,8 @@ sub _draw_input_datetime {
 	$options -> {onChange}   ||= 'null';
 	$options -> {onKeyPress} ||= 'if (event.keyCode != 27) is_dirty=true';
 
-	$options -> {attributes} -> {class} .= ' form-mandatory-inputs'
-		if $options -> {mandatory} ;
+	$options -> {attributes} -> {class} .= ' form-mandatory-inputs required'
+		if $options -> {mandatory};
 
 	$options -> {attributes} -> {class} ||= 'form-active-inputs';
 
