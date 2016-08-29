@@ -734,21 +734,18 @@ sub draw_form_field_hgroup {
 	my ($_SKIN, $options, $data) = @_;
 	my $html = '';
 
-	$html .= '<nobr>'
+	$html .= "<nobr class='hgroup-nobr'>"
 		if ($options -> {nobr});
-	$html .= '<table><tr><td>';
 
 	foreach my $item (@{$options -> {items}}) {
 		next if $item -> {off};
-		$html .= '</td><td>' if $item -> {type} eq 'radio';
 		$html .= $item -> {label} if $item -> {label};
 		$html .= $item -> {html};
-		$html .= $item -> {type} eq 'radio' ? '</td><td>' : '&nbsp;';
+		$html .= '&nbsp;' unless $options -> {no_nbsp};
 	}
 
 	$html .= '</nobr>'
 		if ($options -> {nobr});
-	$html .= '</td></tr></table>';
 
 	return $html;
 
