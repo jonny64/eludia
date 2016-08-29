@@ -553,6 +553,7 @@ sub draw_form_field_string {
 	$attributes -> {onBlur}     .= ';stibqif (false);';
 
 	$attributes -> {class}      .= ' k-textbox ';
+	$attributes -> {class}      .= ' required ' if $options -> {mandatory};
 
 	$attributes -> {type}        = 'text';
 
