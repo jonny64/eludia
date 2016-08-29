@@ -736,19 +736,18 @@ sub draw_form_field_hgroup {
 
 	$html .= '<nobr>'
 		if ($options -> {nobr});
-	$html .= '<table><tr><td>';
 
 	foreach my $item (@{$options -> {items}}) {
 		next if $item -> {off};
-		$html .= '</td><td>' if $item -> {type} eq 'radio';
 		$html .= $item -> {label} if $item -> {label};
-		$html .= $item -> {html};
-		$html .= $item -> {type} eq 'radio' ? '</td><td>' : '&nbsp;';
+		$html .= '<div style="display:inline-block;vertical-align:middle;">'
+			. $item -> {html}
+			. '</div>';
+		$html .= '&nbsp;';
 	}
 
 	$html .= '</nobr>'
 		if ($options -> {nobr});
-	$html .= '</td></tr></table>';
 
 	return $html;
 
