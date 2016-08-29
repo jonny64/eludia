@@ -78,6 +78,11 @@ window.alert = function (error_text, error_field_name) {
 
 	if (window.name != 'invisible') {
 
+		if (window.name == '_content_iframe' && error_field_name === undefined) {
+			window.__original_alert(error_text);
+			return;
+		}
+
 		top.localStorage ['message'] = error_text;
 		top.localStorage ['message_type'] = 'error';
 
