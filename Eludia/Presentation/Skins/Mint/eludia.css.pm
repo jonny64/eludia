@@ -650,9 +650,3 @@ a.hint {
 }
 
 .zeroclipboard-is-hover { cursor:pointer !important; }
-
-nobr.hgroup-nobr > table {
-	width: auto!important;
-	display: inline-block;
-	float: left;
-}
