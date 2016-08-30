@@ -213,7 +213,7 @@ sub _draw_input_datetime {
 	$options -> {onChange}   ||= 'null';
 	$options -> {onKeyPress} ||= 'if (event.keyCode != 27) is_dirty=true';
 
-	$options -> {attributes} -> {class} .= ' form-mandatory-inputs required'
+	$options -> {attributes} -> {class} .= ' form-mandatory-inputs required light'
 		if $options -> {mandatory};
 
 	$options -> {attributes} -> {class} ||= 'form-active-inputs';
@@ -553,7 +553,7 @@ sub draw_form_field_string {
 	$attributes -> {onBlur}     .= ';stibqif (false);';
 
 	$attributes -> {class}      .= ' k-textbox ';
-	$attributes -> {class}      .= ' required ' if $options -> {mandatory};
+	$attributes -> {class}      .= ' required light ' if $options -> {mandatory};
 
 	$attributes -> {type}        = 'text';
 
@@ -998,7 +998,7 @@ sub draw_form_field_select {
 		$options -> {attributes} -> {'data-ken-autoopen'} = 1;
 	}
 
-	$options -> {attributes} -> {class} .= ' required' if $options -> {mandatory};
+	$options -> {attributes} -> {class} .= ' required light ' if $options -> {mandatory};
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
