@@ -213,7 +213,7 @@ sub _draw_input_datetime {
 	$options -> {onChange}   ||= 'null';
 	$options -> {onKeyPress} ||= 'if (event.keyCode != 27) is_dirty=true';
 
-	$options -> {attributes} -> {class} .= ' form-mandatory-inputs'
+	$options -> {attributes} -> {class} .= ' form-mandatory-inputs required'
 		if $options -> {mandatory} ;
 
 	$options -> {attributes} -> {class} ||= 'form-active-inputs';
@@ -551,7 +551,8 @@ sub draw_form_field_string {
 	$attributes -> {onFocus}    .= ';stibqif (true, false);';
 	$attributes -> {onBlur}     .= ';stibqif (false);';
 
-	$attributes -> {class}      .= ' k-textbox ';
+	$attributes -> {class}      .= ' k-textbox textbox ';
+	$attributes -> {class}      .= ' required ' if $options -> {mandatory};
 
 	$attributes -> {type}        = 'text';
 
@@ -996,13 +997,15 @@ sub draw_form_field_select {
 		$options -> {attributes} -> {'data-ken-autoopen'} = 1;
 	}
 
+	$options -> {attributes} -> {class} .= ' required ' if $options -> {mandatory};
+
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	if (defined $options -> {other}) {
 
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'dialog_width';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
-		$options -> {other} -> {title}  ||= $i18n->{voc_title};
+		$options -> {other} -> {title}  ||= $i18n -> {voc_title};
 
 		$options -> {onChange} = <<EOJS;
 
