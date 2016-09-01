@@ -1006,7 +1006,7 @@ sub draw_form_field_select {
 
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'dialog_width';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
-		$options -> {other} -> {title}  ||= $i18n->{voc_title};
+		$options -> {other} -> {title}  ||= $i18n -> {voc_title};
 
 		$options -> {onChange} = <<EOJS;
 

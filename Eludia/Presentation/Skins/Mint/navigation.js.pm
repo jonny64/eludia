@@ -670,7 +670,7 @@ function adjust_kendo_selects(top_element) {
 				appendTo: $('body'),
 			},
 			dataBound: function() {
-				// 
+				//
 			},
 			open: function (e) {
 
@@ -2897,6 +2897,7 @@ $(document).ready(function() {
 			? (value < 1) 
 			: (value.length == 0);
 		};
+
 	$('.k-textbox.required').each(function() {
 		var $el = $(this),
 			light = function() {
