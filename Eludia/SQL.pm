@@ -927,7 +927,7 @@ warn "undo relink $$column_def{table_name} ($$column_def{name}): $old_id";
 
 			if ($column_def -> {TYPE_NAME} =~ /int/) {
 				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = ? WHERE id IN ($ids)", $old_id);
-				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = -$$column_def{name} WHERE $$column_def{name} = ?", -$old_id);
+				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = -$$column_def{name}, fake = IF(fake = -2, 0, fake) WHERE $$column_def{name} = ?", -$old_id);
 			}
 			else {
 				$old_id_ = $old_id . ',';
@@ -1004,6 +1004,7 @@ EOS
 			$$column_def{table_name}
 		SET
 			$$column_def{name} = -$$column_def{name}
+			, fake = IF(fake = 0, -2, fake)
 		WHERE
 			id IN ($clones_ids)
 		AND $$column_def{name} = ?
