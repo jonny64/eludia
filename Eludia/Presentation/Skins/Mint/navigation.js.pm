@@ -2920,6 +2920,12 @@ $(document).ready(function() {
 });
 
 
+$(window).load(function() {
+	if ($('#waiting_screen').length !== 0) {
+		$('#waiting_screen').remove();
+	}
+});
+
 $.fn.is_on_screen = function() {
 	var win = $(window),	
 		viewport = {
