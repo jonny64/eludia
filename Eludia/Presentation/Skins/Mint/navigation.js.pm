@@ -2579,24 +2579,8 @@ function init_page (options) {
 		$(this).height(h);
 	});
 
-	$('[data-type=datepicker]').each(function () {
-		$(this).on('keydown', function(e) {
-			var key = e.keyCode || e.which,
-				form = $(this).closest('form');
-			
-			if (key == 13 && form.hasClass('toolbar')) form.submit();
-		});
-		$(this).kendoDatePicker();
-	});
-	$('[data-type=datetimepicker]').each(function () {
-		$(this).on('keydown', function(e) {
-			var key = e.keyCode || e.which,
-				form = $(this).closest('form');
-			
-			if (key == 13 && form.hasClass('toolbar')) form.submit();
-		});
-		$(this).kendoDateTimePicker();
-	});
+	$('[data-type=datepicker]').each(function () {$(this).kendoDatePicker()});
+	$('[data-type=datetimepicker]').each(function () {$(this).kendoDateTimePicker()});
 
 	$('input[mask]').each (init_masked_text_box);
 
