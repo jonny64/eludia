@@ -734,8 +734,7 @@ function adjust_kendo_selects(top_element) {
 	}
 
 	var is_empty = function() {
-		console.log(this.value());
-		if (this.value() < 1) {
+		if (this.value() == 0) {
 			this.wrapper.addClass('empty');
 		} else {
 			this.wrapper.removeClass('empty');
