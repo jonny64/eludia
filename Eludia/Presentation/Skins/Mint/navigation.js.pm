@@ -48,7 +48,7 @@ is_ua_mobile = 1;
 
 var is_dirty = false,
 	scrollable_table_is_blocked = false,
-	tableSlider,
+	tableSlider = new TableSlider (),
 	q_is_focused = false,
 	is_interface_is_locked = false,
 	left_right_blocked = false,
@@ -62,7 +62,7 @@ var is_dirty = false,
 	poll_invisibles_interval_id,
 	max_tabindex = 0,
 	supertables = [];
-	confirm_window_is_open = false;
+
 
 var request = {},
 	params = window.location.search.substr(1).split ('&');
@@ -74,119 +74,24 @@ for (var i = 0; i < params.length; i++ ) {
 
 
 window.__original_alert   = window.alert;
-window.alert = function (error_text, error_field_name) {
+window.alert = function (s) {
 
-	if (window.name != 'invisible') {
+	window.__original_alert (s);
 
-		top.localStorage ['message'] = error_text;
-		top.localStorage ['message_type'] = 'error';
-
-		return;
-	}
-
-	var error_field = parent.$("[name='" + error_field_name + "'");
-
-	if (error_field_name && error_field.length > 0) {
-
-			var notification = parent.$("#notification").data("kendoTooltip");
-
-			if (notification)
-				notification.hide ();
-
-			notification = parent.$("<span id='notification'/>").kendoTooltip({
-				position: 'bottom',
-				autoHide: false,
-				content: function () {
-					return error_text;
-				},
-
-			}).data("kendoTooltip");
-
-			notification.show (error_field);
-
-	} else {
-
-		var notification = parent.$("#notification").data("kendoNotification");
-
-		if (notification)
-			notification.hide ();
-
-		notification = parent.$("<span id='notification'/>").kendoNotification({
-			stacking: "up",
-			button: true,
-			autoHide: 0,
-		}).data("kendoNotification");
-
-		notification.show (error_text, 'error');
-
-	}
-
-	if (parent.is_interface_is_locked) {
-		parent.$.unblockUI ();
-		parent.is_interface_is_locked = false;
-	}
+	window.setCursor (top);
+	window.setCursor (window);
 
 };
 
 window.__original_confirm = window.confirm;
-window.confirm = function (message, succesCallback, failCallback) {
+window.confirm = function (s) {
 
-	if (!succesCallback || typeof(succesCallback) != "function") {
+	var r = window.__original_confirm (s);
 
-		var result = window.__original_confirm (message);
+	window.setCursor (top);
+	window.setCursor (window);
 
-		window.setCursor (top);
-		window.setCursor (window);
-
-		return result;
-	}
-
-	var confirm_window = $("#confirm_window").data("kendoWindow");
-
-	if (confirm_window)
-		confirm_window.destroy();
-
-	confirm_window = $("<div />").kendoWindow({
-		width: "300px",
-		modal: true,
-		visible: false,
-		resizable: false,
-		title: i18n.confirm,
-	}).data("kendoWindow");
-
-	$(".k-window-titlebar").css('background', '#479feb');
-
-	confirm_window.content($("#confirmation-template").html()).center().open();
-
-	$("#confirm_text").text (message);
-
-	$("#confirm_window").focus();
-
-	confirm_window_is_open = true;
-
-	$("#confirm_window").find(".delete-confirm, .delete-cancel").click(function() {
-
-		confirm_window.destroy();
-
-		confirm_window_is_open = false;
-
-		if ($(this).hasClass("delete-confirm") && succesCallback && typeof(succesCallback) == "function") {
-            succesCallback();
-		}
-		if ($(this).hasClass("delete-cancel") && failCallback && typeof(failCallback) == "function") {
-            failCallback();
-		}
-
-		if (is_interface_is_locked) {
-			$.unblockUI ();
-			is_interface_is_locked = false;
-		}
-
-		setCursor (top);
-		setCursor (window);
-	}).end();
-
-	return;
+	return r;
 
 };
 
@@ -718,7 +623,10 @@ function focus_on_input (__focused_input) {
 	}
 
 	$("FORM:not('.toolbar')").find("INPUT[type='text'],INPUT[type='checkbox'],INPUT[type='radio'],TEXTAREA").each (function () {
-		try {this.focus ();} catch (e) { return true; } return false;
+		try { 
+			if ($(this).is_on_screen())
+				this.focus ();
+		} catch (e) { return true; } return false;
 	})
 
 }
@@ -733,38 +641,34 @@ function adjust_kendo_selects(top_element) {
 		el.closest(".k-widget").width(w);
 	}
 
-	var is_empty = function() {
-		if (this.value() == 0) {
-			this.wrapper.addClass('empty');
-		} else {
-			this.wrapper.removeClass('empty');
-		}
-	}
-
-	var select_tranform = function() {
+	var select_tranform = function(){
 		var original_select = this;
-
 		if (original_select.selectedIndex == $.data(this, 'prev_value')) return;
 		$(original_select).addClass('k-group').kendoDropDownList({
 			height: 320,
 			popup : {
 				appendTo: $('body'),
 			},
+			dataBound: function() {
+				var empty_option = this.wrapper.find('option[value=0]'),
+					is_empty = (empty_option.length == -1)
+						? false
+						: (empty_option.index() < 1);  
+				if (this.value() > 0 || !is_empty)
+					this.wrapper.removeClass('required');
+			},
 			open: function (e) {
 
-				$(this.items()[0]).addClass('empty');
-
-				$.data(original_select, 'prev_value', this.selectedIndex);
+				$.data (original_select, 'prev_value', this.selectedIndex);
 
 				if (!$(original_select).attr('data-ken-autoopen')) {
 					return;
 				}
 
-				var kendo_select = this,
-					non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
-						return el.value != 0 && el.value != -1;
-					});
-
+				var kendo_select = this;
+				var non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
+					return el.value != 0 && el.value != -1;
+				});
 				if (non_voc_options.length > 0) {
 					return;
 				}
@@ -776,16 +680,10 @@ function adjust_kendo_selects(top_element) {
 					kendo_select.close();
 				}, 200);
 				return blockEvent();
-			},
-			change: function() {
-				is_empty.call(this);
 			}
 		}).data('kendoDropDownList');
-		setWidth($(original_select));
-		is_empty.call($(original_select).data('kendoDropDownList'));
+		setWidth ($(original_select));
 	}
-
-
 
 	$('select', top_element).not('#_setting__suggest, #_id_filter__suggest, [multiselect]')
 		.each(select_tranform)
@@ -1333,6 +1231,8 @@ function focus_on_first_input (td) {
 
 	if (!td) return blur_all_inputs ();
 
+	last_cell_id = td;
+
 	$('input', td).each (function () {
 		try {
 			this.focus  ();
@@ -1381,22 +1281,11 @@ function handle_basic_navigation_keys () {
 
 	}
 
-	var e = get_event (lastKeyDownEvent);
-	var keyCode = e.keyCode || e.which;
-
-	if (confirm_window_is_open) {
-		if (keyCode == 13) {
-			$(".delete-confirm").click();
-		}
-		if (keyCode == 27) {
-			$(".delete-cancel").click();
-		}
-		return;
-	}
-
 	if (q_is_focused || is_interface_is_locked)
 		return;
 
+	var e = get_event (lastKeyDownEvent);
+	var keyCode = e.keyCode || e.which;
 	var i = 0;
 
 	if (e.altKey ) i += 2;
@@ -1437,8 +1326,7 @@ function handle_basic_navigation_keys () {
 	if (code_alt_ctrl (115, 0, 0))
 		return blockEvent ();
 
-	if (tableSlider)
-		tableSlider.handle_keyboard (keyCode);
+	return tableSlider.handle_keyboard (keyCode);
 
 }
 
@@ -1505,436 +1393,55 @@ function show_size(obj) {
 }
 
 
+function refresh_table_slider_on_resize () {
+
+	var d = document.body;
+
+	if (lastClientHeight == d.clientHeight && lastClientWidth == d.clientWidth) return;
+
+	tableSlider.cell_on ();
+
+	lastClientHeight = d.clientHeight;
+	lastClientWidth  = d.clientWidth;
+
+}
+
 function TableSlider (initial_row) {
 
 	this.rows = [];
 	this.row = 0;
 	this.col = 0;
+	this.last_cell_id = null;
 
-	this.is_selecting = false;
-
-}
-
-TableSlider.prototype.cell_location = function (td) {
-
-	var matrix = this.rows;
-
-    for (var i = 0; i < matrix.length; i ++) {
-
-        for (var j = 0; j < matrix [i].length; j ++) {
-
-            if (td.isSameNode (matrix [i][j]))
-
-                return {
-                    x : j,
-                    y : i,
-                    colspan : $(td).prop ('colspan'),
-                    rowspan : $(td).prop ('rowspan')
-                };
-
-        }
-    }
-
-    return undefined;
-
-}
-
-TableSlider.prototype.addSelectClass = function (td, selection_id, directions) {
-
-	var data = $(td).data ('selections');
-
-	data = data || {};
-
-	data [selection_id] = data [selection_id] || {};
-
-	if (!directions) {
-		directions = ['top', 'right', 'bottom', 'left'];
-	} else {
-		directions = [directions];
-	}
-
-	for (var i = 0; i < directions.length; i ++) {
-
-		var direction = directions [i];
-
-		data [selection_id] [direction] = 1;
-
-		$(td).addClass('selected-' + direction);
-
-	}
-
-	$(td).data ('selections', data);
-
-}
-
-TableSlider.prototype.removeSelectClass = function (td, selection_id, directions) {
-
-	var data = $(td).data ('selections');
-
-	data = data || {};
-
-
-	data [selection_id] = data [selection_id] || {};
-
-	if (!directions) {
-		directions = ['top', 'right', 'bottom', 'left'];
-	} else {
-		directions = [directions];
-	}
-
-	for (var i = 0; i < directions.length; i ++) {
-
-		var direction = directions [i];
-
-		delete data [selection_id] [direction];
-
-		var is_exist_direction = false;
-		for (var s in data) {
-			if (data [s] [direction]) {
-				is_exist_direction = true;
-				break;
-			}
-		}
-		if (!is_exist_direction) {
-
-			$(td).removeClass('selected-' + direction);
-
-		}
-
-	}
-
-	if (Object.keys(data [selection_id]).length == 0)
-		delete data [selection_id];
-
-	$(td).data ('selections', data);
-
-}
-
-TableSlider.prototype.addSelection = function (td, selection_id) {
-
-	var data = $(td).data ('selections');
-
-	data = data || {};
-
-	data [selection_id] = data [selection_id] || {};
-
-	data [selection_id] ['selected'] = 1;
-
-	$(td).addClass('selected');
-
-	$(td).data ('selections', data);
-
-}
-
-
-TableSlider.prototype.removeSelection = function (td, selection_id) {
-
-	var data = $(td).data ('selections');
-
-	data = data || {};
-
-	delete data [selection_id];
-
-	var is_exist_selection = false;
-	for (var s in data) {
-		if (data [s] ['selected']) {
-			is_exist_selection = true;
-			break;
-		}
-	}
-	if (!is_exist_selection) {
-
-		$(td).removeClass('selected');
-
-	}
-
-	$(td).data ('selections', data);
-
-}
-
-TableSlider.prototype.onClick = function (event, self) {
-
-	if (event.target.tagName != 'TD' || !event.ctrlKey)
-		return;
-
-	self.cell_off ();
-
-	var selection_id = event.timeStamp,
-		start = self.cell_location (event.target),
-		matrix = self.rows;
-
-	if (!$(matrix [start.y][start.x]).hasClass ('selected')) {
-
-		self.addSelectClass (matrix [start.y][start.x], selection_id);
-		self.addSelection (matrix [start.y][start.x], selection_id);
-
-		self.calculateSelections ();
-
-	}
-
-	event.preventDefault ();
-
-	return false;
-
-}
-
-TableSlider.prototype.onContextMenu = function (event, self) {
-
-	if (event.target.tagName != 'TD')
-		return;
-
-	var tds = $('td.selected', event.currentTarget);
-
-	if (tds.length) {
-
-		tds.removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
-			$(this).data ('selections', {});
-		});
-		self.showStat ($(event.currentTarget).closest ('div.eludia-table-container'), '');
-
-		event.preventDefault ();
-
-		return false;
-
-	}
-
-	return true;
-
-}
-
-TableSlider.prototype.onMouseDown = function (event, self) {
-
-	if (event.target.tagName != 'TD' || event.which != 1)
-		return;
-
-	if (!event.ctrlKey)
-		$(event.currentTarget).find('td').removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
-			$(this).data ('selections', {});
-		});
-
-
-	var selection_id = event.timeStamp,
-		start = self.cell_location (event.target),
-		matrix = self.rows;
-
-	$(event.currentTarget).mouseover(function (event) {
-
-		if (event.target.tagName != 'TD')
-			return;
-
-		self.cell_off ();
-
-		var td = event.target,
-			finish = self.cell_location (td);
-
-		$(this).addClass ('selected');
-
-		var x1 = Math.min(start.x, finish.x);
-		var y1 = Math.min(start.y, finish.y);
-		var x2 = Math.max(start.x + start.colspan - 1, finish.x + finish.colspan - 1);
-		var y2 = Math.max(start.y + start.rowspan - 1, finish.y + finish.rowspan - 1);
-
-		var should_be_restarted;
-
-		do {
-
-			should_be_restarted = false;
-
-TOP:
-			for (var i = y1 > 0 ? y1 - 1 : 0; i <= y2 + 1 && i < matrix.length; i ++) {
-
-				for (var j = x1 > 0 ? x1 - 1 : 0; j <= x2 + 1 && j < matrix [i].length; j ++) {
-
-					if (i < y1 || i > y2 || j < x1 || j > x2) {
-						self.removeSelection (matrix [i][j], selection_id);
-						self.removeSelectClass (matrix [i][j], selection_id);
-
-						continue;
-					}
-
-					self.addSelection (matrix [i][j], selection_id);
-
-					if (i == y1)
-						self.addSelectClass (matrix [i][j], selection_id, 'top');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'top');
-
-					if (i == y2)
-						self.addSelectClass (matrix [i][j], selection_id, 'bottom');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'bottom');
-
-					if (j == x1)
-						self.addSelectClass (matrix [i][j], selection_id, 'left');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'left');
-
-					if (j == x2)
-						self.addSelectClass (matrix [i][j], selection_id, 'right');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'right');
-
-
-					var shift_x_left = 0,
-						shift_x_right = 0,
-						shift_y_up = 0,
-						shift_y_down = 0;
-
-					if ($(matrix [i][j]).prop ('colspan') > 1) {
-
-						for (var k = x1 - 1; k >= 0; k --) {
-							if (matrix [i][j].isSameNode (matrix [i][k]))
-								shift_x_left ++;
-							else {
-								break;
-							}
-						}
-
-						for (var k = x2 + 1; k < matrix [i].length; k ++) {
-							if (matrix [i][j].isSameNode (matrix [i][k]))
-								shift_x_right ++;
-							else {
-								break;
-							}
-						}
-
-
-						for (var k = y1 - 1; k >= 0; k --) {
-							if (matrix [i][j].isSameNode (matrix [k][j]))
-								shift_y_up ++;
-							else {
-								break;
-							}
-						}
-
-						for (var k = y2 + 1; k < matrix.length; k ++) {
-							if (matrix [i][j].isSameNode (matrix [k][j]))
-								shift_y_down ++;
-							else {
-								break;
-							}
-						}
-
-					}
-
-					if (shift_x_left || shift_x_right || shift_y_up || shift_y_down) {
-						x1 = x1 - shift_x_left;
-						x2 = x2 + shift_x_right;
-						y1 = y1 - shift_y_up;
-						y2 = y2 + shift_y_down;
-						should_be_restarted = true;
-
-						break TOP;
-
-					}
-
-				}
-
-			}
-
-		} while (should_be_restarted);
-
-	});
-
-	var table = event.currentTarget;
-
-	$(document).mouseup(function (event) {
-
-		$(table).unbind('mouseover');
-		$(table).removeClass ('selected');
-		$(document).unbind('mouseup');
-
-		self.calculateSelections ();
-
-		return false;
-
-	});
-
-}
-
-TableSlider.prototype.showStat = function (div, text) {
-
-	var title = $(div).closest ('form').prevAll ('.table-title');
-
-	if (title.length)
-		$('.table-stat', title).text (text);
-
-}
-
-TableSlider.prototype.calculateSelections = function () {
-
-	var self = this;
-
-	$('div.eludia-table-container').each (function () {
-		var count = 0,
-			sum = 0;
-		$('div.st-table-right-viewport table.st-fixed-table-right td.selected').each (function () {
-			count ++;
-			var text = this.innerText.replace (/\s+/, '');
-			text = text.replace (/,/, '.');
-
-			if (Number(text) == text)
-				sum = sum + Number(text);
-		});
-
-		self.showStat (this, count ? i18n.count + ': ' + count + ', ' + i18n.sum + ': ' + sum : '');
-
-	});
-
-}
-
-TableSlider.prototype.clear_rows = function (row) {
-	self.rows = [];
 }
 
 TableSlider.prototype.set_row = function (row) {
 
-	var self = this,
-		matrix = self.rows;
+	$('.eludia-table-container').each (function (n) {
 
-	$('div.st-table-right-viewport table.st-fixed-table-right').each (function (n) {
+		var trs = '.st-table-right-viewport tr';
 
-		var table = this,
-			matrix_i = matrix.length;
+		$(trs, this).each (function (i) {
 
+			if ($(this).hasClass("st-table-widths-row"))
+				return;
 
-		for (var i = 0; i < table.rows.length; i ++) {
+			tableSlider.rows.push (this);
 
-			if ($(table.rows [i]).hasClass("st-table-widths-row"))
-				continue;
+			$('td', this).each (function (j) {
 
-			var offset_x = 0;
+				$(this).on ('click contextmenu', td_on_click);
 
-			for (var j = 0; j < table.rows [i].cells.length; j ++) {
-				matrix [matrix_i] = matrix [matrix_i] || [];
+			})
 
-				while (matrix [matrix_i].length > offset_x && typeof matrix [matrix_i][offset_x] !== 'undefined')
-					offset_x ++;
-
-				for (var k = 0; k < $(table.rows [i].cells [j]).prop ('colspan'); k ++) {
-					for (var l = 0; l < $(table.rows [i].cells [j]).prop ('rowspan'); l ++) {
-						matrix [matrix_i + l] = matrix [matrix_i + l] || [];
-						matrix [matrix_i + l][offset_x] = table.rows [i].cells [j];
-					}
-					offset_x ++;
-				}
-
-			}
-
-			matrix_i ++;
-
-		}
-
-		$(table).on ('mousedown', function (event) {self.onMouseDown (event, self);});
-		$(table).on ('click', function (event) {self.onClick (event, self);});
-		$(table).on ('contextmenu', function (event) {self.onContextMenu (event, self);});
+		});
 
 	});
 
-	self.cnt      = self.rows.length;
+	this.cnt      = this.rows.length;
 
-	if (row < self.cnt) {
-		self.row = row;
+	if (row < this.cnt) {
+		this.row = row;
 	}
 
 }
@@ -1947,38 +1454,132 @@ TableSlider.prototype.get_cell = function () {
 
 	if (!the_row) return null;
 
-	return the_row [Math.min (this.col, the_row.length - 1)];
+	var cells = the_row.cells;
+
+	if (!cells) return null;
+
+	return cells [Math.min (this.col, cells.length - 1)];
 
 }
 
 TableSlider.prototype.cell_off = function (cell) {
 
-	$('table.st-fixed-table-right td.selected-single').removeClass ('selected-single');
+	$('#slider').css ('display', 'none');
+
+	$('#slider_').css ('display', 'none');
 
 	return cell;
 
 }
 
-TableSlider.prototype.cell_on = function (cell) {
+TableSlider.prototype.cell_on = function () {
 
-	cell         = cell || this.get_cell ();
+	if (this.isVirgin && this.row == 0 && this.initial_row == 0) return;
+
+	var cell         = this.get_cell ();
 
 	if (!cell) return;
 
-	$('table.st-fixed-table-right td.selected').removeClass ('selected-top selected-right selected-bottom selected-left selected');
-	$(cell).addClass ('selected-single');
+	if (!is_scrolled_into_view (cell))
+		return this.cell_off (cell);
+
+	var c            = $(cell);
+	var a            = $('a', c).get (0);
+	var table        = c.closest ('table');
+	var div          = table.closest ('div.st-table-right-viewport');
+	var offset       = div.offset ();
+	var css          = c.offset ();
+
+	css.width        = c.outerWidth ();
+
+	var overlap      = css.left - offset.left - 1;
+	if (overlap < 0) {
+		css.left  -= overlap;
+		css.width += overlap;
+	}
+
+	if (css.width < 1) return this.cell_off (cell);
+
+	var cell_right   = css.left + css.width;
+	var div_right    = offset.left + div.outerWidth () - 16;
+	var overlap      = cell_right - div_right;
+	if (overlap > 0) css.width -= overlap;
+
+	if (css.width < 1) return this.cell_off (cell);
+
+	css.height       = c.outerHeight ();
+	css.cursor       = a == null ? 'default' : 'pointer';
+	$('#slider').click (a == null ? null : function (event) {
+
+		$('a', tableSlider.get_cell ()).each ( function () {
+
+			a_click (this, event)
+
+		})
+
+	})
+
+	$('#slider').dblclick (function (event) {
+
+		$(tableSlider.get_cell ()).dblclick ();
+
+	})
+
+	if (
+		css.top < offset.top
+		|| css.top + css.height + ((div.scrollHeight > div.offsetHeight - 12) ? 16 : 0) > offset.top + div.outerHeight ()
+	) return this.cell_off (cell);
+
+	css.top        --;
+	css.left       --;
+	css.display = 'block';
+
+
+	$('#slider_').css ({
+		left       : css.left + css.width  - 2,
+		top        : css.top  + css.height - 2,
+		display : 'block'
+	});
+
+	css.width  ++;
+	css.height ++;
+
+	$('#slider').css (css);
+//	if (this.last_cell_id != cell) focus_on_first_input (cell);
+
+	this.last_cell_id = cell;
 
 	return cell;
 
 }
 
+function is_scrolled_into_view(elem) {
+	var div           = $(elem).closest('div.st-table-right-viewport').get(0); 
+	var divViewTop    = div.scrollTop;
+	var divViewBottom = divViewTop + div.offsetHeight;
+
+	var elemTop       = elem.offsetTop;
+	var elemBottom    = elemTop + elem.offsetHeight + 2;
+
+	var docViewTop    = $(window).scrollTop();
+	var docViewBottom = docViewTop + Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	var elemDocTop    = $(elem).offset ().top;
+	var elemDocBottom = elemDocTop + elem.offsetHeight + 2;
+
+	return ((elemBottom >= divViewTop) && (elemTop <= divViewBottom)
+		&& (elemBottom <= divViewBottom) &&  (elemTop >= divViewTop))
+		&& ((elemDocBottom >= docViewTop) && (elemDocTop <= docViewBottom)
+		&& (elemDocBottom <= docViewBottom) &&  (elemDocTop >= docViewTop));
+}
+
+
 function td_on_click (event) {
 
-	var td = event.target;
+	event = get_event (event);
+	var td = browser_is_msie ? event.srcElement : event.target;
 
 	if (td.tagName != 'TD') return;
 
-	focus_on_first_input (td);
 	$('[type="checkbox"]', td).click ();
 
 	var tr = td;
@@ -1994,6 +1595,9 @@ function td_on_click (event) {
 		tableSlider.col ++;
 	};
 
+
+
+
 	for (i = 0; i < tableSlider.cnt; i ++) {
 
 		if (tableSlider.rows [i] != tr) continue;
@@ -2004,9 +1608,13 @@ function td_on_click (event) {
 
 	}
 
-	tableSlider.cell_off ();
+	var cell = tableSlider.get_cell ();
 
-	tableSlider.cell_on ();
+	tableSlider.cell_on (cell);
+
+//	if (tableSlider.last_cell_id != cell) focus_on_first_input (cell);
+
+	tableSlider.last_cell_id = cell;
 
 	return true;
 
@@ -2036,17 +1644,13 @@ TableSlider.prototype.handle_keyboard = function (keyCode) {
 
 	if (i) {
 		if (left_right_blocked) return true;
-		var cnt = this.rows [this.row].length;
+		var cnt = this.rows [this.row].cells.length;
 		var key = 'col';
 	}
 
 	if (!cnt) return true;
 
-	var currentNode = this.rows [this.row][this.col];
-	do {
-		this [key] += (keyCode - 39 + i);
-	} while (this [key] > 0 && this [key] < cnt && currentNode.isSameNode (this.rows [this.row][this.col]));
-
+	this [key] += (keyCode - 39 + i);
 	if (this [key] < 0) this [key]    = 0;
 	if (this [key] >= cnt) this [key] = cnt - 1;
 
@@ -2078,7 +1682,7 @@ TableSlider.prototype.scrollCellToVisibleTop = function (force_top) {
 		delta += 8;
 	}
 	else {
-		delta -= div.clientHeight;
+		delta -= div.offsetHeight;
 		delta += td.offsetHeight + 2;
 	}
 	if (delta > 0) div.scrollTop += delta;
@@ -2087,7 +1691,7 @@ TableSlider.prototype.scrollCellToVisibleTop = function (force_top) {
 	if (delta > 0) div.scrollLeft -= delta;
 
 	var delta = td.offsetLeft - div.scrollLeft;
-	delta -= div.clientWidth;
+	delta -= div.offsetWidth;
 	delta += td.offsetWidth;
 	if (delta > 0) div.scrollLeft += delta;
 
@@ -2552,60 +2156,17 @@ function treeview_get_node_uid_by_id(node, id) {
 	return 0;
 }
 
-function check_frame_stack () {
-
-	var frame_stack = sessionStorage.getItem('frame_stack');
-
-	if (frame_stack) {
-
-		var current_window_href = window.location.href;
-		current_window_href = modify_url_salt (current_window_href);
-		current_window_href = current_window_href.replace (/&?sid=\d+/g, '');
-
-		frame_stack = JSON.parse (frame_stack);
-
-		for (var i = 0; i < frame_stack.length; i ++) {
-
-			if (current_window_href == frame_stack [i].href) {
-
-				return frame_stack.slice (i);
-
-				break;
-
-			}
-		}
-	}
-
-	return;
-
-}
-
-
-function treeview_check_frame_stack () {
-
-	var frame_stack = check_frame_stack ();
-
-	if (frame_stack && frame_stack.length > 1) {
-		activate_link (frame_stack [1].href + '&sid=' + request ['sid'], frame_stack [1].name, 1);
-	}
-
-}
-
-
 function treeview_select_node(e) {
 	var tree = $('#splitted_tree_window_left');
 	var selected_node = tree.data ('selected-node');
 	if (!selected_node) {
-		treeview_check_frame_stack ();
 		treeview.unbind("dataBound", treeview_select_node);
 		return;
 	}
 	var treeview = tree.data('kendoTreeView');
 	var root = treeview.dataSource.data();
-	if (!root.length) {
-		treeview_check_frame_stack ();
+	if (!root.length)
 		return;
-	}
 
 	var selected_node_uid;
 	for (var i = root.length - 1; i >= 0; i--) {
@@ -2626,9 +2187,6 @@ function treeview_select_node(e) {
 		}
 		treeview.unbind("dataBound", treeview_select_node);
 	}
-
-	treeview_check_frame_stack ();
-
 }
 
 function eludia_is_flash_installed () {
@@ -2685,8 +2243,6 @@ function poll_invisibles (form_name) {
 	if (!has_loading_iframes) {
 		window.clearInterval(poll_invisibles_interval_id);
 		poll_invisibles_interval_id = undefined;
-		if (browser_is_msie)
-			__salt_element = $('form input[name="__salt"]').val (Math.random ())
 		$.unblockUI ();
 		is_interface_is_locked = false;
 		setCursor ();
@@ -2920,6 +2476,7 @@ function init_page (options) {
 							}
 						})});
 
+
 						if (tableSlider.get_cell ()) {
 							tableSlider.cell_off ();
 							tableSlider = new TableSlider ();
@@ -2935,21 +2492,12 @@ function init_page (options) {
 							console.log(e.message);
 						}
 
-						$('input[mask]').each (init_masked_text_box);
-
-						if (tableSlider) {
-							tableSlider.clear_rows ();
-							tableSlider.set_row (0);
-						}
-
-
 					}
 				}))
 			});
 
 			options.on_load ();
 
-			tableSlider = new TableSlider ();
 			tableSlider.set_row (parseInt (options.__scrollable_table_row));
 
 			$('body').scroll(function() {
@@ -2957,7 +2505,9 @@ function init_page (options) {
 					var popup = $(this).data("kendoPopup");
 					popup.close();
 				});
+				tableSlider.cell_on ();
 			});
+			$(".st-table-right-viewport").scroll(function() {tableSlider.cell_on ();});
 
 			if (typeof tableSlider.row === 'number' && tableSlider.rows.length > tableSlider.row) {
 				tableSlider.scrollCellToVisibleTop ();
@@ -3028,10 +2578,25 @@ function init_page (options) {
 		h = this.scrollHeight > h ? this.scrollHeight : h;
 		$(this).height(h);
 	});
-	$('textarea[type=text_editor]').each (init_text_editors);
 
-	$('[data-type=datepicker]').each(function () {$(this).kendoDatePicker()});
-	$('[data-type=datetimepicker]').each(function () {$(this).kendoDateTimePicker()});
+	$('[data-type=datepicker]').each(function () {
+		$(this).on('keydown', function(e) {
+			var key = e.keyCode || e.which,
+				form = $(this).closest('form');
+			
+			if (key == 13 && form.hasClass('toolbar')) form.submit();
+		});
+		$(this).kendoDatePicker();
+	});
+	$('[data-type=datetimepicker]').each(function () {
+		$(this).on('keydown', function(e) {
+			var key = e.keyCode || e.which,
+				form = $(this).closest('form');
+			
+			if (key == 13 && form.hasClass('toolbar')) form.submit();
+		});
+		$(this).kendoDateTimePicker();
+	});
 
 	$('input[mask]').each (init_masked_text_box);
 
@@ -3159,51 +2724,11 @@ function init_page (options) {
 		try {top.setCursor (top, 'wait')} catch (e) {};
 	});
 
-	if (history.pushState) {
-		$('A[data-esc="1"]').first().each (function () {
-			var href = $(this).attr('href');
+	var resizeTableSilder = debounce (refresh_table_slider_on_resize, 500);
 
-			history.pushState(null, null, window.location.href);
+	$(window).on ('resize', resizeTableSilder);
 
-			$(window).bind ('popstate', function(event) {
-				activate_link (href, null, 1);
-				return true;
-			});
-			$('iframe').each (function () {
-				$(this).load (function () {
-					var w = this.contentWindow;
-					w.history.pushState(null, null, w.location.href);
-					$(w).bind ('popstate', function(event) {
-						activate_link (href, null, 1);
-						return true;
-					});
-				});
-
-			});
-
-		});
-	}
-
-	var frame_stack = check_frame_stack ();
-
-	if (!frame_stack) {
-
-		frame_stack = [];
-
-		var w = window;
-
-		while (w != top) {
-			var href = w.location.href;
-			href = modify_url_salt (href);
-			href = href.replace (/&?sid=\d+/g, '');
-			frame_stack.unshift ({name : w.name || (window.frameElement && window.frameElement.name), href : href});
-			w = w.parent;
-		}
-
-		sessionStorage.setItem ('frame_stack', JSON.stringify (frame_stack));
-	}
-
-
+	$(window).on ('scroll', function (event) {try {tableSlider.cell_on ();} catch(e) {};});
 
 	if (table_containers.length == 0) {
 		options.on_load ();
@@ -3215,13 +2740,6 @@ function init_page (options) {
 	});
 
 	require (['/i/_skins/Mint/jquery.blockUI.js']);
-
-}
-
-function init_text_editors () {
-	$(this).kendoEditor({
-		resizable: true,
-	});
 
 }
 
@@ -3276,18 +2794,6 @@ function debounce (func, wait, immediate) {
 	};
 };
 
-function modify_url_salt (href, is_add_new_salt) {
-
-	href = href.replace (/&?_?salt=[\d\.]+/g, '');
-
-	if (is_add_new_salt) {
-		href = href + '&salt=' + Math.random ()
-	}
-
-	return href;
-
-}
-
 function tabOnEnter () {
 	void (0);
 }
@@ -3315,19 +2821,18 @@ if (!Array.prototype.find) {
   	};
 }
 
-if (!window.getSelection) {
-	window.getSelection = function() {
-		var selection = document.selection && document.selection.createRange();
-		return selection;
-	}
-}
-
 if (!String.prototype.trim) {
 	(function() {
     	String.prototype.trim = function() {
       		return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
     	};
   	})();
+}
+
+if (!window.getSelection) {
+	window.getSelection = function() {
+		return document.selection.createRange();
+	}
 }
 
 window.queryCommandSupported__original = document.queryCommandSupported;
@@ -3341,4 +2846,44 @@ document.queryCommandSupported = function(command) {
 	return result;
 }
 
-parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b}
+parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
+
+$(document).ready(function() {
+	var is_show_highlight = function(el) {
+		var value = (el[0].tagName == 'SELECT') 
+			? parseInt(el.val()) 
+			: el.val().trim();
+		return (typeof value == 'number') 
+			? (value < 1) 
+			: (value.length == 0);
+		};
+	$('.required').each(function() {
+		var $el = $(this);
+		if (this.tagName !== 'SELECT') {
+			if (!is_show_highlight($(this)))
+				$el.removeClass('required');
+			$el.on('change', function() {
+				is_show_highlight($el) 
+					? $el.addClass('required') 
+					: $el.removeClass('required');
+			});
+		} 
+	});
+});
+
+
+$.fn.is_on_screen = function() {
+	var win = $(window),	
+		viewport = {
+			top : win.scrollTop(),
+			left : win.scrollLeft()
+		},
+		bounds = this.offset();
+	
+	viewport.right = viewport.left + win.width();
+	viewport.bottom = viewport.top + win.height();
+    bounds.right = bounds.left + this.outerWidth();
+    bounds.bottom = bounds.top + this.outerHeight();
+	
+    return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
+};
