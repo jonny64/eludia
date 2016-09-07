@@ -3282,6 +3282,7 @@ sub draw_page {
 	my @stat_showmodal  = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_url}/jQuery.showModalDialog.js");
 	my @stat_require    = stat ($preconf -> {_} -> {docroot} . "/i/mint/libs/require.min.js");
 	my @stat_jquery     = stat ($preconf -> {_} -> {docroot} . "/i/mint/libs/KendoUI/js/jquery.min.js");
+	my @stat_supertable = stat ($preconf -> {_} -> {docroot} . "/i/mint/libs/SuperTable/supertable.min.js");
 
 
 	$_REQUEST {__head_links}  = qq {
@@ -3328,7 +3329,7 @@ sub draw_page {
 					'$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js' : {
 						deps: ['cultures/kendo.culture.ru-RU.min']
 					},
-					'/i/mint/libs/SuperTable/supertable.min.js' : {}
+					'/i/mint/libs/SuperTable/supertable.min.js?$stat_supertable[9]' : {}
 				}
 			});
 			require([ $kendo_modules ], function () {\$(document).ready (
