@@ -3328,6 +3328,16 @@ sub draw_page {
 			require([ $kendo_modules ], function () {\$(document).ready (
 				function () {
 					var options = $init_page_options;
+
+					if (typeof kendo.ui.DropDownList === 'function') {
+						kendo.ui.DropDownList.fn.colorize_empty_value = (function(colorize_empty_value) {
+							return function() {
+								var \$label = this.wrapper.find('span.k-input');
+
+								\$label[(this.value() < 1) ? 'addClass' : 'removeClass']('empty');
+							}
+						})(kendo.ui.DropDownList.fn.colorize_empty_value);
+					}
 					options.on_load = function () {
 						$_REQUEST{__on_load};
 					}

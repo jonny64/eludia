@@ -271,28 +271,23 @@ function open_vocabulary_from_select (s, options) {
 				scrolling       : 'no',
 				dialogArguments : {href: options.href, parent: window, title: options.title},
 				onClose: function () {
-
-					var result = this.returnValue || {result: 'esc'};
+					var kendo_select = $(s).data('kendoDropDownList'),
+						result = this.returnValue || {result: 'esc'};
 
 					if (result.result == 'ok') {
-
 						setSelectOption (s, result.id, result.label);
 
 					} else {
+						var prev_value = $(s).data('prev_value') || 0;
 
-						var kendo_select = $(s).data('kendoDropDownList'),
-							prev_value = $(s).data('prev_value') || 0;
 						kendo_select.select(prev_value);
 						kendo_select.close();
 						kendo_select.focus ();
-
 						$(s).trigger ('change');
-
 					}
-
 					if (is_dialog_blockui)
 						$.unblockUI ();
-
+					kendo_select.colorize_empty_value();
 				}
 			});
 
@@ -633,7 +628,6 @@ function focus_on_input (__focused_input) {
 
 
 function adjust_kendo_selects(top_element) {
-
 	var setWidth = function (el) {
 		var p = el.data("kendoDropDownList").popup.element;
 		var w = p.css("visibility","hidden").outerWidth() + 32;
@@ -641,9 +635,11 @@ function adjust_kendo_selects(top_element) {
 		el.closest(".k-widget").width(w);
 	}
 
-	var select_tranform = function(){
+	var select_tranform = function() {
 		var original_select = this;
+
 		if (original_select.selectedIndex == $.data(this, 'prev_value')) return;
+
 		$(original_select).addClass('k-group').kendoDropDownList({
 			height: 320,
 			popup : {
@@ -651,38 +647,50 @@ function adjust_kendo_selects(top_element) {
 			},
 			dataBound: function() {
 				var empty_option = this.wrapper.find('option[value=0]'),
+					k_items = this.ul.find('li.k-item'),
 					is_empty = (empty_option.length == -1)
 						? false
 						: (empty_option.index() < 1);  
-				if (this.value() > 0 || !is_empty)
+
+				if (this.value() > 0 || !is_empty) 
 					this.wrapper.removeClass('required');
+
+				this.dataItems().forEach(function(item, index) {
+					if (parseInt(item.value) < 1) {
+						var k_item = k_items.eq(index);
+
+						k_item.addClass('empty');
+					}
+				});
 			},
 			open: function (e) {
-
 				$.data (original_select, 'prev_value', this.selectedIndex);
-
 				if (!$(original_select).attr('data-ken-autoopen')) {
 					return;
 				}
 
-				var kendo_select = this;
-				var non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
+				var kendo_select = this,
+					non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
+
 					return el.value != 0 && el.value != -1;
 				});
+
 				if (non_voc_options.length > 0) {
 					return;
 				}
-
 				// auto click vocabulary item
 				setTimeout (function (){ // HACK: 'after_open' event replacement
 					kendo_select.select(function(dataItem){return dataItem.value == -1});
 					$(original_select).trigger('change');
 					kendo_select.close();
 				}, 200);
+
 				return blockEvent();
 			}
-		}).data('kendoDropDownList');
-		setWidth ($(original_select));
+		})
+		.data('kendoDropDownList')
+		.colorize_empty_value();
+		setWidth($(original_select));
 	}
 
 	$('select', top_element).not('#_setting__suggest, #_id_filter__suggest, [multiselect]')
@@ -2833,6 +2841,7 @@ document.queryCommandSupported = function(command) {
 parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
 
 $(document).ready(function() {
+
 	var is_show_highlight = function(el) {
 		var value = (el[0].tagName == 'SELECT') 
 			? parseInt(el.val()) 
