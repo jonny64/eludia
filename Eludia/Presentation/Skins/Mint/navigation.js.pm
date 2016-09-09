@@ -633,13 +633,14 @@ function focus_on_input (__focused_input) {
 
 
 function adjust_kendo_selects(top_element) {
-
 	var setWidth = function (el) {
-			var p = el.data("kendoDropDownList").popup.element;
-			var w = p.css("visibility","hidden").outerWidth() + 32;
+			var kendo_select  = el.data("kendoDropDownList"),
+				selected_item = kendo_select.wrapper.find('span.k-input'),
+				widget = el.closest('.k-widget'),
+				width = selected_item.width() + 35;
 
-			p.css("visibility","visible");
-			el.closest(".k-widget").width(w);
+			if (width < 120) width = 120;
+			widget.width(width);
 		},
 		required_lighten = function() {
 			var value = this.value(),
@@ -657,53 +658,50 @@ function adjust_kendo_selects(top_element) {
 					wrapper.removeClass('light');
 				}
 			}
-		};
+		},
+		select_tranform = function() {
+			var original_select = this;
 
+			if (original_select.selectedIndex == $.data(this, 'prev_value')) return;
+			$(original_select).addClass('k-group').kendoDropDownList({
+				height: 320,
+				popup : {
+					appendTo: $('body'),
+				},
+				dataBound: function() {
+					//
+				},
+				open: function (e) {
 
-	var select_tranform = function() {
-		var original_select = this;
+					$.data (original_select, 'prev_value', this.selectedIndex);
 
-		if (original_select.selectedIndex == $.data(this, 'prev_value')) return;
-		$(original_select).addClass('k-group').kendoDropDownList({
-			height: 320,
-			popup : {
-				appendTo: $('body'),
-			},
-			dataBound: function() {
-				//
-			},
-			open: function (e) {
+					if (!$(original_select).attr('data-ken-autoopen')) {
+						return;
+					}
 
-				$.data (original_select, 'prev_value', this.selectedIndex);
+					var kendo_select = this;
+					var non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
+						return el.value != 0 && el.value != -1;
+					});
+					if (non_voc_options.length > 0) {
+						return;
+					}
 
-				if (!$(original_select).attr('data-ken-autoopen')) {
-					return;
+					// auto click vocabulary item
+					setTimeout (function (){ // HACK: 'after_open' event replacement
+						kendo_select.select(function(dataItem){return dataItem.value == -1});
+						$(original_select).trigger('change');
+						kendo_select.close();
+					}, 200);
+					return blockEvent();
+				},
+				change: function(e) {
+					required_lighten.call(this);
 				}
-
-				var kendo_select = this;
-				var non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
-					return el.value != 0 && el.value != -1;
-				});
-				if (non_voc_options.length > 0) {
-					return;
-				}
-
-				// auto click vocabulary item
-				setTimeout (function (){ // HACK: 'after_open' event replacement
-					kendo_select.select(function(dataItem){return dataItem.value == -1});
-					$(original_select).trigger('change');
-					kendo_select.close();
-				}, 200);
-				return blockEvent();
-			},
-			change: function(e) {
-				required_lighten.call(this);
-			}
-		}).data('kendoDropDownList');
-		setWidth ($(original_select));
-		required_lighten.call($(original_select).data('kendoDropDownList'));
-
-	}
+			}).data('kendoDropDownList');
+			setWidth ($(original_select));
+			required_lighten.call($(original_select).data('kendoDropDownList'));
+	};
 
 	$('select', top_element).not('#_setting__suggest, #_id_filter__suggest, [multiselect]')
 		.each(select_tranform)
