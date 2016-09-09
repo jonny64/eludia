@@ -822,7 +822,8 @@ warn "relink $table_name: $old_id -> $new_id";
 		foreach my $column_def (@{$DB_MODEL -> {aliases} -> {$table_name} -> {references}}) {
 
 			next
-				if $DB_MODEL -> {tables} -> {$column_def -> {table_name}} -> {sql};
+				if $DB_MODEL -> {tables} -> {$column_def -> {table_name}} -> {sql}
+					|| $column_def -> {table_name} eq $conf -> {systables} -> {log};
 
 warn "relink $$column_def{table_name} ($$column_def{name}): $old_id -> $new_id";
 
@@ -910,7 +911,8 @@ warn "undo relink $table_name: $old_id";
 		foreach my $column_def (@{$DB_MODEL -> {aliases} -> {$table_name} -> {references}}) {
 
 			next
-				if $DB_MODEL -> {tables} -> {$column_def -> {table_name}} -> {sql};
+				if $DB_MODEL -> {tables} -> {$column_def -> {table_name}} -> {sql}
+					|| $column_def -> {table_name} eq $conf -> {systables} -> {log};
 
 			my $from = <<EOS;
 				FROM
@@ -927,7 +929,12 @@ warn "undo relink $$column_def{table_name} ($$column_def{name}): $old_id";
 
 			if ($column_def -> {TYPE_NAME} =~ /int/) {
 				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = ? WHERE id IN ($ids)", $old_id);
-				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = -$$column_def{name}, fake = IF(fake = -2, 0, fake) WHERE $$column_def{name} = ?", -$old_id);
+				my $with_fake = 1;
+				foreach (qw (__action_log __checksums __last_update __lrt __moved_links sessions)) {
+					$with_fake = 0 if $column_def -> {table_name} eq $conf -> {systables} -> {$_};
+				}
+				my $set_fake = $with_fake ? ', fake = IF(fake = -2, 0, fake)' : '';
+				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = -$$column_def{name} $set_fake WHERE $$column_def{name} = ?", -$old_id);
 			}
 			else {
 				$old_id_ = $old_id . ',';
