@@ -13,7 +13,7 @@
  * Date: 30-03-2014
  */!function(a,b){"use strict";var c,d;if(a.uaMatch=function(a){a=a.toLowerCase();var b=/(opr)[\/]([\w.]+)/.exec(a)||/(chrome)[ \/]([\w.]+)/.exec(a)||/(version)[ \/]([\w.]+).*(safari)[ \/]([\w.]+)/.exec(a)||/(webkit)[ \/]([\w.]+)/.exec(a)||/(opera)(?:.*version|)[ \/]([\w.]+)/.exec(a)||/(msie) ([\w.]+)/.exec(a)||a.indexOf("trident")>=0&&/(rv)(?::| )([\w.]+)/.exec(a)||a.indexOf("compatible")<0&&/(mozilla)(?:.*? rv:([\w.]+)|)/.exec(a)||[],c=/(ipad)/.exec(a)||/(iphone)/.exec(a)||/(android)/.exec(a)||/(windows phone)/.exec(a)||/(win)/.exec(a)||/(mac)/.exec(a)||/(linux)/.exec(a)||/(cros)/i.exec(a)||[];return{browser:b[3]||b[1]||"",version:b[2]||"0",platform:c[0]||""}},c=a.uaMatch(b.navigator.userAgent),d={},c.browser&&(d[c.browser]=!0,d.version=c.version,d.versionNumber=parseInt(c.version)),c.platform&&(d[c.platform]=!0),(d.android||d.ipad||d.iphone||d["windows phone"])&&(d.mobile=!0),(d.cros||d.mac||d.linux||d.win)&&(d.desktop=!0),(d.chrome||d.opr||d.safari)&&(d.webkit=!0),d.rv){var e="msie";c.browser=e,d[e]=!0}if(d.opr){var f="opera";c.browser=f,d[f]=!0}if(d.safari&&d.android){var g="android";c.browser=g,d[g]=!0}d.name=c.browser,d.platform=c.platform,a.browser=d}(jQuery,window);
 
-$.fn.scrollTo = function( target, options, callback ){
+$.fn.scrollTo = function(target, options, callback) {
   if(typeof options == 'function' && arguments.length == 2){ callback = options; options = target; }
   var settings = $.extend({
     scrollTarget  : target,
@@ -253,16 +253,11 @@ function close_multi_select_window (ret) {
 	}
 }
 
-function open_vocabulary_from_select (s, options) {
-
+function open_vocabulary_from_select(s, options) {
 	if (is_dialog_blockui)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + options.message + '</h1>'});
-
 	try {
-
-
 		if (is_ua_mobile) {
-
 			 $.showModalDialog({
 				url             : window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				height          : dialog_height,
@@ -271,34 +266,29 @@ function open_vocabulary_from_select (s, options) {
 				scrolling       : 'no',
 				dialogArguments : {href: options.href, parent: window, title: options.title},
 				onClose: function () {
-
 					var result = this.returnValue || {result: 'esc'};
 
 					if (result.result == 'ok') {
+						setSelectOption(s, result.id, result.label);
+					} else {			
+						var $s = $(s),
+							kendo_select = $s.data("kendoDropDownList"),
+							selected_item,
+							widget,
+							width;
 
-						setSelectOption (s, result.id, result.label);
-
-					} else {
-
-						var kendo_select = $(s).data('kendoDropDownList'),
-							prev_value = $(s).data('prev_value') || 0;
-						kendo_select.select(prev_value);
-						kendo_select.close();
-						kendo_select.focus ();
-
-						$(s).trigger ('change');
-
+						kendo_select.select($s.data('prev_value'));
+						selected_item = kendo_select.wrapper.find('span.k-input');
+						widget = $s.closest('.k-widget');
+						width = selected_item.width() + 35;					
+						widget.width(width);				
+						kendo_select.focus();
 					}
-
 					if (is_dialog_blockui)
-						$.unblockUI ();
-
+						$.unblockUI();
 				}
 			});
-
-
 		} else {
-
 			var result = window.showModalDialog (
 				window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				{href: options.href, parent: window, title: options.title},
@@ -306,37 +296,27 @@ function open_vocabulary_from_select (s, options) {
 			);
 
 			window.focus ();
-
 			if (result.result == 'ok') {
-
 				setSelectOption (s, result.id, result.label);
-
 			} else {
-
 				var kendo_select = $(s).data('kendoDropDownList');
+
 				kendo_select.select(0);
 				kendo_select.close();
 				kendo_select.focus ();
-
 				$(s).trigger ('change');
-
 			}
-
 			if (is_dialog_blockui)
 				$.unblockUI ();
-
 		}
-
 	} catch (e) {
-
 		var kendo_select = $(s).data('kendoDropDownList');
+
 		kendo_select.select(0);
 		kendo_select.close();
-
 		if (is_dialog_blockui)
 			$.unblockUI ();
 	}
-
 }
 
 function open_vocabulary_from_combo (combo, options) {
@@ -639,7 +619,7 @@ function adjust_kendo_selects(top_element) {
 				widget = el.closest('.k-widget'),
 				width = selected_item.width() + 35;
 
-			if (width < 120) width = 120;
+			kendo_select.list.width('auto');
 			widget.width(width);
 		},
 		required_lighten = function() {
@@ -661,7 +641,7 @@ function adjust_kendo_selects(top_element) {
 		},
 		select_tranform = function() {
 			var original_select = this;
-
+			
 			if (original_select.selectedIndex == $.data(this, 'prev_value')) return;
 			$(original_select).addClass('k-group').kendoDropDownList({
 				height: 320,
@@ -672,34 +652,35 @@ function adjust_kendo_selects(top_element) {
 					//
 				},
 				open: function (e) {
-
-					$.data (original_select, 'prev_value', this.selectedIndex);
-
+					$.data(original_select, 'prev_value', this.selectedIndex);
 					if (!$(original_select).attr('data-ken-autoopen')) {
 						return;
 					}
 
-					var kendo_select = this;
-					var non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
-						return el.value != 0 && el.value != -1;
-					});
+					var kendo_select = this,
+						non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
+							return el.value != 0 && el.value != -1;
+						});
+
 					if (non_voc_options.length > 0) {
 						return;
 					}
-
 					// auto click vocabulary item
-					setTimeout (function (){ // HACK: 'after_open' event replacement
-						kendo_select.select(function(dataItem){return dataItem.value == -1});
+					setTimeout (function () { // HACK: 'after_open' event replacement
+						kendo_select.select(function(dataItem) {
+							return dataItem.value == -1
+						});
 						$(original_select).trigger('change');
 						kendo_select.close();
 					}, 200);
+
 					return blockEvent();
 				},
 				change: function(e) {
 					required_lighten.call(this);
 				}
 			}).data('kendoDropDownList');
-			setWidth ($(original_select));
+			setWidth($(original_select));
 			required_lighten.call($(original_select).data('kendoDropDownList'));
 	};
 
