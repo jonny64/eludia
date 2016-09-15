@@ -213,8 +213,8 @@ sub _draw_input_datetime {
 	$options -> {onChange}   ||= 'null';
 	$options -> {onKeyPress} ||= 'if (event.keyCode != 27) is_dirty=true';
 
-	$options -> {attributes} -> {class} .= ' form-mandatory-inputs'
-		if $options -> {mandatory} ;
+	$options -> {attributes} -> {class} .= ' form-mandatory-inputs required light'
+		if $options -> {mandatory};
 
 	$options -> {attributes} -> {class} ||= 'form-active-inputs';
 
@@ -279,6 +279,7 @@ EOH
 			@{$options -> {keep_params}}
 
 	);
+
 	$html .=  <<EOH;
 			<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 EOH
@@ -532,7 +533,7 @@ sub draw_form_field_button {
 
 	my $tabindex = ++ $_REQUEST {__tabindex};
 
-	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">}
+	return qq {<input type="button" class="k-button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">}
 		. ($options -> {label_tail} || '');
 
 }
@@ -552,6 +553,7 @@ sub draw_form_field_string {
 	$attributes -> {onBlur}     .= ';stibqif (false);';
 
 	$attributes -> {class}      .= ' k-textbox ';
+	$attributes -> {class}      .= ' required light ' if $options -> {mandatory};
 
 	$attributes -> {type}        = 'text';
 
@@ -764,7 +766,9 @@ sub draw_form_field_hgroup {
 	foreach my $item (@{$options -> {items}}) {
 		next if $item -> {off};
 		$html .= $item -> {label} if $item -> {label};
-		$html .= $item -> {html};
+		$html .= '<div style="display:inline-block;vertical-align:middle;">'
+			. $item -> {html}
+			. '</div>';
 		$html .= '&nbsp;';
 	}
 
@@ -993,13 +997,15 @@ sub draw_form_field_select {
 		$options -> {attributes} -> {'data-ken-autoopen'} = 1;
 	}
 
+	$options -> {attributes} -> {class} .= ' required light ' if $options -> {mandatory};
+
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	if (defined $options -> {other}) {
 
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'dialog_width';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
-		$options -> {other} -> {title}  ||= $i18n->{voc_title};
+		$options -> {other} -> {title}  ||= $i18n -> {voc_title};
 
 		$options -> {onChange} = <<EOJS;
 
@@ -2472,7 +2478,7 @@ sub draw_text_cell {
 
 	if (defined $data -> {level}) {
 
-		$data -> {attributes} -> {style} .= ';padding-left:' . ($data -> {level} * 15 + 3);
+		$data -> {attributes} -> {style} .= ';padding-left:' . ($data -> {level} * 15 + 3) . 'px;';
 
 	}
 
@@ -3276,6 +3282,7 @@ sub draw_page {
 	my @stat_showmodal  = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_url}/jQuery.showModalDialog.js");
 	my @stat_require    = stat ($preconf -> {_} -> {docroot} . "/i/mint/libs/require.min.js");
 	my @stat_jquery     = stat ($preconf -> {_} -> {docroot} . "/i/mint/libs/KendoUI/js/jquery.min.js");
+	my @stat_supertable = stat ($preconf -> {_} -> {docroot} . "/i/mint/libs/SuperTable/supertable.min.js");
 
 
 	$_REQUEST {__head_links}  = qq {
@@ -3322,7 +3329,7 @@ sub draw_page {
 					'$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js' : {
 						deps: ['cultures/kendo.culture.ru-RU.min']
 					},
-					'/i/mint/libs/SuperTable/supertable.min.js' : {}
+					'/i/mint/libs/SuperTable/supertable.min.js?$stat_supertable[9]' : {}
 				}
 			});
 			require([ $kendo_modules ], function () {\$(document).ready (

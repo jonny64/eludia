@@ -629,11 +629,30 @@ function focus_on_input (__focused_input) {
 
 function adjust_kendo_selects(top_element) {
 	var setWidth = function (el) {
-		var p = el.data("kendoDropDownList").popup.element;
-		var w = p.css("visibility","hidden").outerWidth() + 32;
-		p.css("visibility","visible");
-		el.closest(".k-widget").width(w);
-	}
+			var p = el.data("kendoDropDownList").popup.element;
+			var w = p.css("visibility","hidden").outerWidth() + 32;
+
+			p.css("visibility","visible");
+			el.closest(".k-widget").width(w);
+		},
+		required_lighten = function() {
+			var value = this.value(),
+				wrapper = this.wrapper;
+
+			if (!wrapper.hasClass('required')) {
+				return;
+			}
+			if (value < 1) {
+				if (!wrapper.hasClass('light')) {
+					wrapper.addClass('light');
+				}
+			} else {
+				if (wrapper.hasClass('light')) {
+					wrapper.removeClass('light');
+				}
+			}
+		};
+
 
 	var select_tranform = function() {
 		var original_select = this;
@@ -688,11 +707,15 @@ function adjust_kendo_selects(top_element) {
 				}, 200);
 
 				return blockEvent();
+			},
+			change: function(e) {
+				required_lighten.call(this);
 			}
 		})
 		.data('kendoDropDownList')
 		.colorize_empty_value();
 		setWidth($(original_select));
+		required_lighten.call($(original_select).data('kendoDropDownList'));
 	}
 
 	$('select', top_element).not('#_setting__suggest, #_id_filter__suggest, [multiselect]')
@@ -2487,9 +2510,9 @@ function init_page (options) {
 						})});
 
 
-						if (tableSlider.get_cell ()) {
+						if (tableSlider && tableSlider.get_cell ()) {
 							tableSlider.cell_off ();
-							tableSlider = new TableSlider ();
+							tableSlider  = new  TableSlider();
 							tableSlider.set_row (0);
 							tableSlider.cell_on ();
 						}
@@ -2589,8 +2612,43 @@ function init_page (options) {
 		$(this).height(h);
 	});
 
-	$('[data-type=datepicker]').each(function () {$(this).kendoDatePicker()});
-	$('[data-type=datetimepicker]').each(function () {$(this).kendoDateTimePicker()});
+	var date_field_keydown = function(e) {
+			var key = e.keyCode || e.which,
+				form = $(this).closest('form');
+
+			if (key == 13 && form.hasClass('toolbar')) form.submit();
+		},
+		date_field_light = function() {
+			var $el = this.element,
+				wrapper = this.wrapper,
+				light = function() {
+					if (this.element.val().length == 0) {
+						this.wrapper.addClass('light');
+					} else {
+						this.wrapper.removeClass('light');
+					}
+				};
+
+			if ($el.hasClass('required')) {
+				wrapper.addClass('required')
+					.addClass('light');
+				$el.removeClass('required')
+					.removeClass('light');
+				$el.change(light.bind(this));
+			}
+			light.call(this);
+		};
+
+	$('[data-type=datepicker]').each(function () {
+		$(this).on('keydown', date_field_keydown);
+		$(this).kendoDatePicker();
+		date_field_light.call($(this).data('kendoDatePicker'));
+	});
+	$('[data-type=datetimepicker]').each(function () {
+		$(this).on('keydown', date_field_keydown);
+		$(this).kendoDateTimePicker();
+		date_field_light.call($(this).data('kendoDateTimePicker'));
+	});
 
 	$('input[mask]').each (init_masked_text_box);
 
@@ -2852,17 +2910,25 @@ $(document).ready(function() {
 			? (value < 1) 
 			: (value.length == 0);
 		};
-	$('.required').each(function() {
-		var $el = $(this);
-		if (this.tagName !== 'SELECT') {
-			if (!is_show_highlight($(this)))
-				$el.removeClass('required');
-			$el.on('change', function() {
-				is_show_highlight($el) 
-					? $el.addClass('required') 
-					: $el.removeClass('required');
-			});
-		} 
+
+	$('.k-textbox.required').each(function() {
+		var $el = $(this),
+			light = function() {
+				if (this.val().length == 0) {
+					if (!this.hasClass('light')) {
+						this.addClass('light');
+					}
+				} else {
+					if (this.hasClass('light')) {
+						this.removeClass('light');
+					}
+				}
+			};
+
+		$el.keyup(function() {
+			light.call($(this));
+		});
+		light.call($el);
 	});
 });
 
