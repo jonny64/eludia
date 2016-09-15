@@ -656,7 +656,9 @@ function adjust_kendo_selects(top_element) {
 					this.wrapper.removeClass('required');
 
 				this.dataItems().forEach(function(item, index) {
-					if (parseInt(item.value) < 1) {
+					var value = parseInt(item.value);
+
+					if (value == 0 || value == -1) {
 						var k_item = k_items.eq(index);
 
 						k_item.addClass('empty');
