@@ -512,19 +512,26 @@ function activate_link_by_id (id) {
 }
 
 function refresh_radio__div (id) {
-
-	var div = document.getElementById ('radio_div_' + id);
-
-	var display = document.getElementById (id).checked? 'block' : 'none';
+	var div = document.getElementById ('radio_div_' + id),
+		display = document.getElementById (id).checked? 'block' : 'none';
 
 	if (div.style.display === display) {
 		return;
 	}
-
 	div.style.display = display;
+	if (display == 'block') {
+		$(div).find('select').each(function() {
+			var	$div_parents = $(this).parents('div'),
+				$wrapper = $div_parents.eq((typeof $div_parents.eq(0).attr('id') == 'undefined') ? 1 : 0);
 
+			if ($wrapper.css('display') !== 'none') {
+				$(this).trigger('change');
+			}
+		});
+	}
 	if (div.hasAttribute('clear-on-hide') && display === 'none') {
 		var selects = $(div).find('select');
+
 		if (selects.length) {
 			selects.data('kendoDropDownList').value(0);
 			selects.trigger('change')
@@ -536,7 +543,6 @@ function refresh_radio__div (id) {
 			dates.data('kendoDatePicker').value(null);
 			dates.trigger('change')
 		}
-
 		$(div).find('input:not([data-type])').val('').trigger('change');
 	}
 }
@@ -613,7 +619,7 @@ function focus_on_input (__focused_input) {
 
 
 function adjust_kendo_selects(top_element) {
-	var setWidth = function (el) {
+	var setWidth = function (el) { 
 			var kendo_select  = el.data("kendoDropDownList"),
 				selected_item = kendo_select.wrapper.find('span.k-input'),
 				widget = el.closest('.k-widget'),
