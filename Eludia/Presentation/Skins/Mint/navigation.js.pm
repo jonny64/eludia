@@ -13,7 +13,7 @@
  * Date: 30-03-2014
  */!function(a,b){"use strict";var c,d;if(a.uaMatch=function(a){a=a.toLowerCase();var b=/(opr)[\/]([\w.]+)/.exec(a)||/(chrome)[ \/]([\w.]+)/.exec(a)||/(version)[ \/]([\w.]+).*(safari)[ \/]([\w.]+)/.exec(a)||/(webkit)[ \/]([\w.]+)/.exec(a)||/(opera)(?:.*version|)[ \/]([\w.]+)/.exec(a)||/(msie) ([\w.]+)/.exec(a)||a.indexOf("trident")>=0&&/(rv)(?::| )([\w.]+)/.exec(a)||a.indexOf("compatible")<0&&/(mozilla)(?:.*? rv:([\w.]+)|)/.exec(a)||[],c=/(ipad)/.exec(a)||/(iphone)/.exec(a)||/(android)/.exec(a)||/(windows phone)/.exec(a)||/(win)/.exec(a)||/(mac)/.exec(a)||/(linux)/.exec(a)||/(cros)/i.exec(a)||[];return{browser:b[3]||b[1]||"",version:b[2]||"0",platform:c[0]||""}},c=a.uaMatch(b.navigator.userAgent),d={},c.browser&&(d[c.browser]=!0,d.version=c.version,d.versionNumber=parseInt(c.version)),c.platform&&(d[c.platform]=!0),(d.android||d.ipad||d.iphone||d["windows phone"])&&(d.mobile=!0),(d.cros||d.mac||d.linux||d.win)&&(d.desktop=!0),(d.chrome||d.opr||d.safari)&&(d.webkit=!0),d.rv){var e="msie";c.browser=e,d[e]=!0}if(d.opr){var f="opera";c.browser=f,d[f]=!0}if(d.safari&&d.android){var g="android";c.browser=g,d[g]=!0}d.name=c.browser,d.platform=c.platform,a.browser=d}(jQuery,window);
 
-$.fn.scrollTo = function( target, options, callback ){
+$.fn.scrollTo = function(target, options, callback) {
   if(typeof options == 'function' && arguments.length == 2){ callback = options; options = target; }
   var settings = $.extend({
     scrollTarget  : target,
@@ -253,16 +253,11 @@ function close_multi_select_window (ret) {
 	}
 }
 
-function open_vocabulary_from_select (s, options) {
-
+function open_vocabulary_from_select(s, options) {
 	if (is_dialog_blockui)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + options.message + '</h1>'});
-
 	try {
-
-
 		if (is_ua_mobile) {
-
 			 $.showModalDialog({
 				url             : window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				height          : dialog_height,
@@ -271,29 +266,30 @@ function open_vocabulary_from_select (s, options) {
 				scrolling       : 'no',
 				dialogArguments : {href: options.href, parent: window, title: options.title},
 				onClose: function () {
-					var kendo_select = $(s).data('kendoDropDownList'),
-						result = this.returnValue || {result: 'esc'};
+					var result = this.returnValue || {result: 'esc'};
 
 					if (result.result == 'ok') {
-						setSelectOption (s, result.id, result.label);
+						setSelectOption(s, result.id, result.label);
+					} else {			
+						var $s = $(s),
+							kendo_select = $s.data("kendoDropDownList"),
+							selected_item,
+							widget,
+							width;
 
-					} else {
-						var prev_value = $(s).data('prev_value') || 0;
-
-						kendo_select.select(prev_value);
-						kendo_select.close();
-						kendo_select.focus ();
-						$(s).trigger ('change');
+						kendo_select.select($s.data('prev_value'));
+						selected_item = kendo_select.wrapper.find('span.k-input');
+						widget = $s.closest('.k-widget');
+						width = selected_item.width() + 35;					
+						widget.width(width);				
+						kendo_select.focus();
 					}
 					if (is_dialog_blockui)
-						$.unblockUI ();
+						$.unblockUI();
 					kendo_select.colorize_empty_value();
 				}
 			});
-
-
 		} else {
-
 			var result = window.showModalDialog (
 				window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				{href: options.href, parent: window, title: options.title},
@@ -301,37 +297,27 @@ function open_vocabulary_from_select (s, options) {
 			);
 
 			window.focus ();
-
 			if (result.result == 'ok') {
-
 				setSelectOption (s, result.id, result.label);
-
 			} else {
-
 				var kendo_select = $(s).data('kendoDropDownList');
+
 				kendo_select.select(0);
 				kendo_select.close();
 				kendo_select.focus ();
-
 				$(s).trigger ('change');
-
 			}
-
 			if (is_dialog_blockui)
 				$.unblockUI ();
-
 		}
-
 	} catch (e) {
-
 		var kendo_select = $(s).data('kendoDropDownList');
+
 		kendo_select.select(0);
 		kendo_select.close();
-
 		if (is_dialog_blockui)
 			$.unblockUI ();
 	}
-
 }
 
 function open_vocabulary_from_combo (combo, options) {
@@ -527,19 +513,26 @@ function activate_link_by_id (id) {
 }
 
 function refresh_radio__div (id) {
-
-	var div = document.getElementById ('radio_div_' + id);
-
-	var display = document.getElementById (id).checked? 'block' : 'none';
+	var div = document.getElementById ('radio_div_' + id),
+		display = document.getElementById (id).checked? 'block' : 'none';
 
 	if (div.style.display === display) {
 		return;
 	}
-
 	div.style.display = display;
+	if (display == 'block') {
+		$(div).find('select').each(function() {
+			var	$div_parents = $(this).parents('div'),
+				$wrapper = $div_parents.eq((typeof $div_parents.eq(0).attr('id') == 'undefined') ? 1 : 0);
 
+			if ($wrapper.css('display') !== 'none') {
+				$(this).trigger('change');
+			}
+		});
+	}
 	if (div.hasAttribute('clear-on-hide') && display === 'none') {
 		var selects = $(div).find('select');
+
 		if (selects.length) {
 			selects.data('kendoDropDownList').value(0);
 			selects.trigger('change')
@@ -551,7 +544,6 @@ function refresh_radio__div (id) {
 			dates.data('kendoDatePicker').value(null);
 			dates.trigger('change')
 		}
-
 		$(div).find('input:not([data-type])').val('').trigger('change');
 	}
 }
@@ -628,12 +620,14 @@ function focus_on_input (__focused_input) {
 
 
 function adjust_kendo_selects(top_element) {
-	var setWidth = function (el) {
-			var p = el.data("kendoDropDownList").popup.element;
-			var w = p.css("visibility","hidden").outerWidth() + 32;
+	var setWidth = function (el) { 
+			var kendo_select  = el.data("kendoDropDownList"),
+				selected_item = kendo_select.wrapper.find('span.k-input'),
+				widget = el.closest('.k-widget'),
+				width = selected_item.width() + 35;
 
-			p.css("visibility","visible");
-			el.closest(".k-widget").width(w);
+			kendo_select.list.width('auto');
+			widget.width(width);
 		},
 		required_lighten = function() {
 			var value = this.value(),
@@ -652,7 +646,6 @@ function adjust_kendo_selects(top_element) {
 				}
 			}
 		};
-
 
 	var select_tranform = function() {
 		var original_select = this;
