@@ -1065,6 +1065,7 @@ sub draw_form_field_hgroup {
 		next if $item -> {off};
 		$html .= $item -> {label} if $item -> {label};
 		$html .= $item -> {html};
+		$html .= $item -> {label_tail} if $item -> {label_tail};
 		$html .= '&nbsp;' unless $options -> {no_nbsp};
 	}
 
@@ -1958,6 +1959,8 @@ sub draw_toolbar_input_tree {
 
 	my $nodes = $_JSON -> encode (\@nodes);
 
+	my $attributes = dump_attributes ($options -> {attributes});
+
 	return qq {
 
 		<td class="toolbar" nowrap>
@@ -2001,7 +2004,7 @@ sub draw_toolbar_input_tree {
 		</div>
 
 
-				<select id="${id}_select_1"
+				<select id="${id}_select_1" $attributes
 
 					onDblClick="
 
