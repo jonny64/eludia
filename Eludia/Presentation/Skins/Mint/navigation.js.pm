@@ -13,6 +13,11 @@
  * Date: 30-03-2014
  */!function(a,b){"use strict";var c,d;if(a.uaMatch=function(a){a=a.toLowerCase();var b=/(opr)[\/]([\w.]+)/.exec(a)||/(chrome)[ \/]([\w.]+)/.exec(a)||/(version)[ \/]([\w.]+).*(safari)[ \/]([\w.]+)/.exec(a)||/(webkit)[ \/]([\w.]+)/.exec(a)||/(opera)(?:.*version|)[ \/]([\w.]+)/.exec(a)||/(msie) ([\w.]+)/.exec(a)||a.indexOf("trident")>=0&&/(rv)(?::| )([\w.]+)/.exec(a)||a.indexOf("compatible")<0&&/(mozilla)(?:.*? rv:([\w.]+)|)/.exec(a)||[],c=/(ipad)/.exec(a)||/(iphone)/.exec(a)||/(android)/.exec(a)||/(windows phone)/.exec(a)||/(win)/.exec(a)||/(mac)/.exec(a)||/(linux)/.exec(a)||/(cros)/i.exec(a)||[];return{browser:b[3]||b[1]||"",version:b[2]||"0",platform:c[0]||""}},c=a.uaMatch(b.navigator.userAgent),d={},c.browser&&(d[c.browser]=!0,d.version=c.version,d.versionNumber=parseInt(c.version)),c.platform&&(d[c.platform]=!0),(d.android||d.ipad||d.iphone||d["windows phone"])&&(d.mobile=!0),(d.cros||d.mac||d.linux||d.win)&&(d.desktop=!0),(d.chrome||d.opr||d.safari)&&(d.webkit=!0),d.rv){var e="msie";c.browser=e,d[e]=!0}if(d.opr){var f="opera";c.browser=f,d[f]=!0}if(d.safari&&d.android){var g="android";c.browser=g,d[g]=!0}d.name=c.browser,d.platform=c.platform,a.browser=d}(jQuery,window);
 
+ /*
+ 	underscore
+ */
+ _ = window.top._;
+
 $.fn.scrollTo = function(target, options, callback) {
   if(typeof options == 'function' && arguments.length == 2){ callback = options; options = target; }
   var settings = $.extend({
@@ -1929,7 +1934,7 @@ TableSlider.prototype.handle_keyboard = function (keyCode) {
 
 	if (scrollable_table_is_blocked) return true;
 
-	if (keyCode == 13) {									// Enter key
+	if (keyCode == 13) { // Enter key
 
 		var cell = this.get_cell ();
 
@@ -2395,17 +2400,15 @@ function treeview_onexpand (e) {
 
 
 function treeview_onselect_node (node, expand_on_select, e) {
-
 	var treeview = $("#splitted_tree_window_left").data ("kendoTreeView");
 
 	if (expand_on_select == 1)
 		treeview.expand(node);
-
 	node = treeview.dataItem (node);
 	if (!node || !node.href) return false;
-	var href = node.href;
 
-	var right_div = $("#splitted_tree_window_right"),
+	var href = node.href,
+		right_div = $("#splitted_tree_window_right"),
 		content_iframe = $('#__content_iframe', right_div);
 
 	if (content_iframe.length && content_iframe.get(0).contentWindow && content_iframe.get(0).contentWindow.is_dirty && !confirm (i18n.F5)) {
@@ -2414,10 +2417,13 @@ function treeview_onselect_node (node, expand_on_select, e) {
 	}
 
 	var name = right_div.data('name');
-	right_div.html ("<iframe onload='this.style.visibility="+'"visible"'+"' style='visibility: hidden;' width=100% height=100% src='" + href + "' name='" + name + "' id='__content_iframe' application=yes scroll=no>");
+
+	content_iframe.attr('src', href);
+	content_iframe.attr('name', name);
 
 	/************************* add height in iframe *************************/
 	var heghtstr = $(window.parent.document.getElementById( "tabstrip" )).height();
+
 	if (heghtstr > 100){
 		$('#__content_iframe').css('height', heghtstr - 36);
 	}
@@ -3018,31 +3024,16 @@ function init_page (options) {
 		});
 	}
 
-	$(document).on ('keydown', function (event) {
-		if (event.keyCode == 112) {
-			event.preventDefault();
-			var url = 'https://eias-gkh.reginc.ru/docs/index.php?title=∆ ’#';
-			url += parseURL(document.location.href).type || '';
-			nope(url, '_bloank', 'toolbar=no,resizable=yes');
-		} else {
-			lastKeyDownEvent = event;
-			return handle_basic_navigation_keys ();
-		}
+	$(document).on('keydown', function(event) {
+		lastKeyDownEvent = event;
+		
+		return handle_basic_navigation_keys();
 	});
 
 	$(document).on ('keypress', function (event) {
 		if (!browser_is_msie && event.keyCode == 27)
 			return false;
 	});
-
-	/*
-	if (options.help_url) {
-		$(document).on ('help', function (event) {
-			nope (options.help_url, '_blank', 'toolbar=no,resizable=yes');
-			blockEvent ();
-		});
-	}
-	*/
 
 	$(window).on ('beforeunload', function (event) {
 		setCursor (window, 'wait');
