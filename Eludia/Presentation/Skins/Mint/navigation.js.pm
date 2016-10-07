@@ -268,15 +268,15 @@ function open_vocabulary_from_select(s, options) {
 				onClose: function () {
 					var result = this.returnValue || {result: 'esc'};
 
+					var $s = $(s),
+						kendo_select = $s.data("kendoDropDownList"),
+						selected_item,
+						widget,
+						width;
+
 					if (result.result == 'ok') {
 						setSelectOption(s, result.id, result.label);
 					} else {			
-						var $s = $(s),
-							kendo_select = $s.data("kendoDropDownList"),
-							selected_item,
-							widget,
-							width;
-
 						kendo_select.select($s.data('prev_value'));
 						selected_item = kendo_select.wrapper.find('span.k-input');
 						widget = $s.closest('.k-widget');
