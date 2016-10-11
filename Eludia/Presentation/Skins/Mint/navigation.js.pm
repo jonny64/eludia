@@ -914,53 +914,44 @@ function setup_drop_down_button (id, data) {
 	});
 }
 
-function table_row_context_menu (e, tr) {
-
-	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap;top:0;left:0" />').appendTo (document.body);
-
-	var items = $.parseJSON ($(tr).attr ('data-menu'));
-	menuDiv.kendoMenu ({
+function table_row_context_menu(e, tr) {
+	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap;top:0;left:0" />').appendTo(document.body),
+		items = $.parseJSON($(tr).attr('data-menu'));
+	
+	menuDiv.kendoMenu({
 		dataSource: items,
 		orientation: 'vertical',
-		select: function (event) {
-			var selected_url = items [$(event.item).index()].url;
-			if (selected_url.match(/^javascript:/)) {
-				eval (selected_url);
-			}
-			menuDiv.remove ();
+		select: function() {
+			menuDiv.remove();
 		}
 	});
 
-	var tr_offset = $(tr).offset ();
-	var tr_height = $(tr).height ();
+	var tr_offset = $(tr).offset(),
+		tr_height = $(tr).height(),
+		menu_top  = e.pageY >= tr_offset.top && e.pageY <= tr_offset.top + tr_height ? e.pageY - 5 : e.clientY - 5,
+		menu_left = e.pageX - 5,
+		is_offscreen = menu_top + $(menuDiv).height() > $(window).height();
 
-	var menu_top  = e.pageY >= tr_offset.top && e.pageY <= tr_offset.top + tr_height ? e.pageY - 5 : e.clientY - 5;
-	var menu_left = e.pageX - 5;
-
-	var is_offscreen = menu_top + $(menuDiv).height() > $(window).height();
 	if (is_offscreen) {
 		menu_top = menu_top - $(menuDiv).height();
 	}
-
-
-	menuDiv.css ({
+	menuDiv.css({
 		top:  menu_top,
 		left: menu_left
 	});
 
-	var width = menuDiv.width ();
+	var width = menuDiv.width();
 
-	window.setTimeout (function () {
-		menuDiv.width (width);
+	window.setTimeout(function() {
+		menuDiv.width(width);
 	}, 100);
-
-	menuDiv.hover (
-		function () {
-			menuDiv.width (width);
+	menuDiv.hover(
+		function() {
+			menuDiv.width(width);
 		},
-		function () {
-			window.setTimeout (function () {
-				menuDiv.remove ()
+		function() {
+			window.setTimeout (function() {
+				menuDiv.remove()
 			}, 500);
 		}
 	);
