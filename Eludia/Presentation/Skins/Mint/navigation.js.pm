@@ -18,6 +18,12 @@
 */
 var _ = window.top._;
 
+if (typeof _ === 'undefined') {
+	require(['/i/mint/libs/underscore/underscore.js'], function(underscore) {
+		_ = underscore
+	})
+}
+
 $.fn.scrollTo = function(target, options, callback) {
   if(typeof options == 'function' && arguments.length == 2){ callback = options; options = target; }
   var settings = $.extend({
