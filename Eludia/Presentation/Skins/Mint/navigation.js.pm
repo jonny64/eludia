@@ -19,8 +19,10 @@
 var _ = window.top._;
 
 if (typeof _ === 'undefined') {
-	require(['/i/mint/libs/underscore/underscore.js'], function(underscore) {
-		_ = underscore
+	$.ajax({
+		url: '/i/mint/libs/underscore/underscore.js',
+		async: false,
+		dataType: 'script'
 	})
 }
 
