@@ -1040,10 +1040,10 @@ function open_popup_menu (e, type) {
 		dataSource: items,
 		orientation: 'vertical',
 		select: function (e) {
-			var selected_url = items [$(e.item).index()].url;
-			if (selected_url.match(/^javascript:/)) {
-				eval (selected_url);
-			}
+			# var selected_url = items [$(e.item).index()].url;
+			# if (selected_url.match(/^javascript:/)) {
+			# 	eval (selected_url);
+			# }
 			menuDiv.remove ();
 		}
 	});
