@@ -2463,6 +2463,26 @@ function init_page (options) {
 		});
 	}
 
+	if ($('[data-toolitip]').length !== 0) {
+		requirejs.config({
+			baseUrl: '/i/mint/libs/KendoUI/js',
+			shim: {
+				'/i/_skins/Mint/i18n_RUS.js' : {
+					deps: ['cultures/kendo.culture.ru-RU.min']
+				}
+			}
+		})
+		require([ "kendo.tooltip.min" ], 
+		function() {
+			$(document).ready(function() { 
+   				$('[data-toolitip]').kendoTooltip({
+					content: function(e) {
+						return $(e.target).attr('data-toolitip')
+					}
+				})
+			})
+		})
+	}
 
 	var splitted_tree_window = $("#splitted_tree_window");
 	if (splitted_tree_window.length) {
