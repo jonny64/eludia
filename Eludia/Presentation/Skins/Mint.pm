@@ -611,7 +611,8 @@ sub draw_form_field_file {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	my $html = "<span id='form_field_file_head_$options->{name}'>";
+	my $html = "<span id='form_field_file_head_$options->{name}'>" .
+		($options -> {no_limit} || !$preconf -> {file_tooltip} ? '' : "<div data-tooltip='$$preconf{file_tooltip}'>");
 
 	$$options{value} ||= $data -> {"$$options{name}_name"};
 
@@ -664,7 +665,15 @@ EOH
 		<input type='hidden' name='_file_clear_flag_for_$$options{name}' id='_file_clear_flag_for_$$options{name}'>
 EOH
 
-	$html .= "</span>";
+	if ($options -> {no_limit}) {
+		$html .= <<EOH ;
+		<input type='hidden' name='_file_no_limit_for_$$options{name}' id='_file_no_limit_for_$$options{name}' value='1'>
+EOH
+	} elsif ($preconf -> {file_tooltip}) {
+		$html .= '</div>';
+	}
+
+	$html .= '</span>';
 
 	return $html . ($options -> {label_tail} || '');
 

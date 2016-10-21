@@ -209,11 +209,22 @@ sub upload_file {
 
 	my ($fh, $filename, $file_size, $file_type) = upload_file_dimensions ($upload);
 
+	$options -> {no_limit} = $_REQUEST {'_file_no_limit_for_' . $$options{name}}
+		if exists $_REQUEST {'_file_no_limit_for_' . $$options{name}};
+
+	croak "#_$$options{name}#: $i18n->{file_ext_fail}" . join ', ', map { '.' . $_ } @{$preconf -> {file_extensions}}
+		if $filename && !$options -> {no_limit} && $preconf -> {file_extensions} && !($filename =~ /\.([^\.]*?)$/ && $1 ~~ $preconf -> {file_extensions});
+
 	unless ($file_size > 0) {
 
 		die "#_$$options{name}#: $i18n->{empty_file}" if $filename;
 
 		return undef;
+
+	} elsif ($filename && !$options -> {no_limit} && $preconf -> {max_file_size} && $file_size > ($preconf -> {max_file_size} << 20)) {
+
+		croak "#_$$options{name}#: " .  sprintf ($i18n -> {max_file_size_fail}, $preconf -> {max_file_size});
+
 	}
 
 	my ($path, $real_path) = upload_path ($filename, $options);
