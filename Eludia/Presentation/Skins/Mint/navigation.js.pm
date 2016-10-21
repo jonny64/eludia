@@ -2463,7 +2463,7 @@ function init_page (options) {
 		});
 	}
 
-	if ($('[data-toolitip]').length !== 0) {
+	if ($('[data-tooltip]').length !== 0) {
 		requirejs.config({
 			baseUrl: '/i/mint/libs/KendoUI/js',
 			shim: {
@@ -2475,9 +2475,9 @@ function init_page (options) {
 		require([ "kendo.tooltip.min" ], 
 		function() {
 			$(document).ready(function() { 
-   				$('[data-toolitip]').kendoTooltip({
+   				$('[data-tooltip]').kendoTooltip({
 					content: function(e) {
-						return $(e.target).attr('data-toolitip')
+						return $(e.target).attr('data-tooltip')
 					}
 				})
 			})
