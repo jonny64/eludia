@@ -3182,7 +3182,15 @@ sub draw_page {
 	$r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' && out_json ($page -> {body} || $page -> {content});
 	$_REQUEST {type} eq '_boot' && return $_SKIN -> draw__boot_page ($page);
 
-	my $body = $page -> {body};
+	my $body = $preconf -> {toggle_in_hidden_form} ? <<EOH : '';
+	<div id="waiting_screen">
+		<div class="content">
+			<img src="$_REQUEST{__static_url}/busy.gif">
+		</div>
+	</div>
+EOH
+
+	$body .= $page -> {body};
 
 	my $body_options = {
 		bgcolor      => 'white',

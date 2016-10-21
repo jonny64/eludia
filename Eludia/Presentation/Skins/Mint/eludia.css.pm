@@ -704,3 +704,23 @@ a.hint {
 .k-grid a.k-button.k-button-icontext.k-grid-delete .k-icon {
 	display: none;
 }
+
+#waiting_screen {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	background-color: #fff;
+	z-index: 9999;
+}
+#waiting_screen .content {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-left: -12px;
+	margin-top: -12px;
+}
+#waiting_screen .content img {
+	width: 24px;
+}
