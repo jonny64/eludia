@@ -666,7 +666,7 @@ EOH
 EOH
 
 	if ($options -> {no_limit}) {
-		$html .= <<EOH ;
+		$html .= <<EOH;
 		<input type='hidden' name='_file_no_limit_for_$$options{name}' id='_file_no_limit_for_$$options{name}' value='1'>
 EOH
 	} elsif ($preconf -> {file_tooltip}) {
@@ -699,26 +699,35 @@ EOJS
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return <<EOH . ($options -> {label_tail} || '');
+	my $html;
 
+	$html .=  "<input type='hidden' name='_file_no_limit_for_$$options{name}' id='_file_no_limit_for_$$options{name}' value='1'>"
+		if $options -> {no_limit};
+
+	$html .= <<EOH . ($options -> {label_tail} || '');
 		<input
 			type="hidden"
 			name="__$$options{name}_file_field"
 			value="$options->{field}"
 		>
-
 		<input
 			type="hidden"
 			name="__$$options{name}_file_no_del"
 			value="$options->{no_del}"
 		>
 		<span id="file_field_$options->{name}">
+EOH
+	$html .= ($options -> {no_limit} || !$preconf -> {file_tooltip} ? '<div>' : "<div data-tooltip='$$preconf{file_tooltip}'>") . <<EOH;
 			<span id="file_field_$options->{name}_head">
 				<input name="_$$options{name}_0" type="file" $attributes />
 			</span>
+			</div>
 		</span>
 
 EOH
+
+	return $html;
+
 
 }
 

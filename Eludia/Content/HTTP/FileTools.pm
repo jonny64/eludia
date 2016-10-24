@@ -209,8 +209,9 @@ sub upload_file {
 
 	my ($fh, $filename, $file_size, $file_type) = upload_file_dimensions ($upload);
 
-	$options -> {no_limit} = $_REQUEST {'_file_no_limit_for_' . $$options{name}}
-		if exists $_REQUEST {'_file_no_limit_for_' . $$options{name}};
+	my $no_limit_param = '_file_no_limit_for_' . $options -> {name};
+	$no_limit_param =~ s/_\d+$//;
+	$options -> {no_limit} = $_REQUEST {$no_limit_param} if exists $_REQUEST {$no_limit_param};
 
 	croak "#_$$options{name}#: $i18n->{file_ext_fail}" . join ', ', map { '.' . $_ } @{$preconf -> {file_extensions}}
 		if $filename && !$options -> {no_limit} && $preconf -> {file_extensions} && !($filename =~ /\.([^\.]*?)$/ && $1 ~~ $preconf -> {file_extensions});
