@@ -213,18 +213,35 @@ sub upload_file {
 	$no_limit_param =~ s/_\d+$//;
 	$options -> {no_limit} = $_REQUEST {$no_limit_param} if exists $_REQUEST {$no_limit_param};
 
-	croak "#_$$options{name}#: $i18n->{file_ext_fail}" . join ', ', map { '.' . $_ } @{$preconf -> {file_extensions}}
-		if $filename && !$options -> {no_limit} && $preconf -> {file_extensions} && !($filename =~ /\.([^\.]*?)$/ && $1 ~~ $preconf -> {file_extensions});
+	if (
+		$filename
+		&& !$options -> {no_limit}
+		&& $preconf -> {file_extensions}
+		&& !($filename =~ /\.([^\.]*?)$/ && $1 ~~ $preconf -> {file_extensions})
+	) {
+		my $error = "#_$$options{name}#: $i18n->{file_ext_fail}" . join ', ', map { '.' . $_ } @{$preconf -> {file_extensions}};
+		if ($_REQUEST {__json_response}) {
+			out_json ({status => 'error', label  => $error});
+		} else {
+			croak $error;
+		}
+		return undef;
+	};
 
 	unless ($file_size > 0) {
 
 		die "#_$$options{name}#: $i18n->{empty_file}" if $filename;
-
 		return undef;
 
 	} elsif ($filename && !$options -> {no_limit} && $preconf -> {max_file_size} && $file_size > ($preconf -> {max_file_size} << 20)) {
 
-		croak "#_$$options{name}#: " .  sprintf ($i18n -> {max_file_size_fail}, $preconf -> {max_file_size});
+		my $error = "#_$$options{name}#: " .  sprintf ($i18n -> {max_file_size_fail}, $preconf -> {max_file_size});
+		if ($_REQUEST {__json_response}) {
+			out_json ({status => 'error', label  => $error});
+		} else {
+			croak $error;
+		}
+		return undef;
 
 	}
 
