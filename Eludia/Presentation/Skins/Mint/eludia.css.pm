@@ -410,13 +410,11 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 	FONT-SIZE: 11pt;
 	COLOR: #2f3237;
 	background-color: #f2f2f2;
-
 	padding: 10px 10px;
-
 	border-color: #d6d3ce;
 	border-style:solid;
-
 	border-width: 0 1px 1px 0;
+	white-space: pre-wrap;
 }
 
 .form-deleted-banner {
