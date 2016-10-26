@@ -219,11 +219,11 @@ sub upload_file {
 		&& $preconf -> {file_extensions}
 		&& !($filename =~ /\.([^\.]*?)$/ && $1 ~~ $preconf -> {file_extensions})
 	) {
-		my $error = "#_$$options{name}#: $i18n->{file_ext_fail}" . join ', ', map { '.' . $_ } @{$preconf -> {file_extensions}};
+		my $error = $i18n -> {file_ext_fail} . join ', ', map { '.' . $_ } @{$preconf -> {file_extensions}};
 		if ($_REQUEST {__json_response}) {
 			out_json ({status => 'error', label  => $error});
 		} else {
-			croak $error;
+			croak "#_$$options{name}#: " . $error;
 		}
 		return undef;
 	};
@@ -235,11 +235,11 @@ sub upload_file {
 
 	} elsif ($filename && !$options -> {no_limit} && $preconf -> {max_file_size} && $file_size > ($preconf -> {max_file_size} << 20)) {
 
-		my $error = "#_$$options{name}#: " .  sprintf ($i18n -> {max_file_size_fail}, $preconf -> {max_file_size});
+		my $error = sprintf ($i18n -> {max_file_size_fail}, $preconf -> {max_file_size});
 		if ($_REQUEST {__json_response}) {
 			out_json ({status => 'error', label  => $error});
 		} else {
-			croak $error;
+			croak "#_$$options{name}#: " . $error;
 		}
 		return undef;
 
