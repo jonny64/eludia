@@ -43,15 +43,23 @@ sub draw_text_cell {
 
 		if ($_REQUEST {select}) {
 
-			$data -> {href} = $options -> {select_href} || js_set_select_option ('', {
-				id       => $i -> {id},
-				label    => $options -> {select_label},
-				question => $options -> {select_question},
-			});
+			if ($options -> {no_select_href}) {
+
+				delete $data -> {href};
+
+			} else {
+
+				$data -> {href} = $options -> {select_href} || js_set_select_option ('', {
+					id       => $i -> {id},
+					label    => $options -> {select_label},
+					question => $options -> {select_question},
+				});
+			}
 
 		}
 
 		if ($data -> {href} && !$_REQUEST {lpt}) {
+
 			check_href ($data) unless $data -> {no_check_href};
 			$data -> {a_class} ||= $options -> {a_class} || 'row-cell';
 			if ($data -> {no_wait_cursor}) {

@@ -254,12 +254,9 @@ sub error_detail_tail {
 
 	my ($options) = @_;
 
-	return ''
-		if $options -> {kind} ne 'code';
-
 	local %_REQUEST = %_REQUEST_VERBATIM;
 
-	local %_REQUEST = %_REQUEST;
+	keys %_REQUEST or return;
 
 	delete $_REQUEST {error};
 

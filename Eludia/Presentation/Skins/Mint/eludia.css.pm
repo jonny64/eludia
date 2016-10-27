@@ -201,11 +201,19 @@ div.modal_div  > * {
 .ui-dialog { z-index: 1100 !important ;}
 .ui-widget-header{background: #479feb !important;}
 
-.table_title {
+.table-title {
 	FONT-WEIGHT: bold;
 	FONT-SIZE: 11pt;
 	COLOR: #2f3237;
 	background-color: #b2d2f2;
+}
+.table-stat {
+	FONT-SIZE: 13px;
+	COLOR: #333;
+	background-color: #b2d2f2;
+	FONT-WEIGHT: normal;
+	text-align: right;
+	padding-right: 10px;
 }
 
 .table-container, FORM.toolbar {
@@ -226,6 +234,37 @@ div.modal_div  > * {
 
 table.st-fixed-table-right {
 	margin-bottom: 2px !important;
+}
+
+table.st-fixed-table-right td.selected-single {
+	border: 2px solid #888;
+	padding: 3px 4px 4px 3px;
+}
+
+table.st-fixed-table-right.selected {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+table.st-fixed-table-right td.selected-top {
+	border-top: 2px solid #888;
+	padding-top: 3px;
+}
+table.st-fixed-table-right td.selected-right {
+	border-right: 2px solid #888;
+	padding-right: 4px;
+}
+table.st-fixed-table-right td.selected-bottom {
+	border-bottom: 2px solid #888;
+	padding-bottom: 4px;
+}
+table.st-fixed-table-right td.selected-left {
+	border-left: 2px solid #888;
+	padding-left: 3px;
 }
 
 A.button, A.button:link, A.button:active, A.button:hover, A.button:visited {
@@ -536,6 +575,7 @@ A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, 
 .form-very-active-inputs {
 	background-color: #fff!important;
 	font-size: 13px!important;
+	font-weight: bold;
 }
 
 INPUT {
@@ -650,3 +690,37 @@ a.hint {
 }
 
 .zeroclipboard-is-hover { cursor:pointer !important; }
+
+.k-grid tr td.empty {
+	box-shadow: inset 0 0 1px 1px rgba(255, 0, 0, 0.7);
+}
+
+.k-grid a.k-button.k-button-icontext.k-grid-delete {
+	padding: 3px;
+	line-height: normal;
+	min-width: auto;
+}
+
+.k-grid a.k-button.k-button-icontext.k-grid-delete .k-icon {
+	display: none;
+}
+
+#waiting_screen {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	background-color: #fff;
+	z-index: 9999;
+}
+#waiting_screen .content {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-left: -12px;
+	margin-top: -12px;
+}
+#waiting_screen .content img {
+	width: 24px;
+}
