@@ -3200,6 +3200,27 @@ document.queryCommandSupported = function(command) {
 
 parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
 
+
+var textbox_required = function(el) {
+	var $el = $(el),
+		light = function() {
+			if (this.val().length == 0) {
+				if (!this.hasClass('light')) {
+					this.addClass('light');
+				}
+			} else {
+				if (this.hasClass('light')) {
+					this.removeClass('light');
+				}
+			}
+		};
+
+	$el.keyup(function() {
+		light.call($(this));
+	});
+	light.call($el);
+};
+
 $(document).ready(function() {
 
 	var is_show_highlight = function(el) {
@@ -3212,23 +3233,7 @@ $(document).ready(function() {
 		};
 
 	$('.k-textbox.required').each(function() {
-		var $el = $(this),
-			light = function() {
-				if (this.val().length == 0) {
-					if (!this.hasClass('light')) {
-						this.addClass('light');
-					}
-				} else {
-					if (this.hasClass('light')) {
-						this.removeClass('light');
-					}
-				}
-			};
-
-		$el.keyup(function() {
-			light.call($(this));
-		});
-		light.call($el);
+		textbox_required(this);
 	});
 });
 
