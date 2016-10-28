@@ -4026,9 +4026,11 @@ sub draw_page__only_field {
 	my ($_SKIN, $page) = @_;
 
 	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
-
 	$_REQUEST {__on_load} .= q {;
 
+		window.parent.$('.k-textbox.required').each(function() {
+			window.parent.textbox_required(this);
+		});
 		window.parent.adjust_kendo_selects();
 
 	};
