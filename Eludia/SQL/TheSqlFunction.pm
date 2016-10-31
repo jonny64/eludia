@@ -437,6 +437,7 @@ sub en_unplural {
 
 	if ($s =~ /status$/)                { return $s }
 	if ($s =~ /goods$/)                 { return $s }
+	if ($s =~ /^nsi$/)                  { return $s }
 	if ($s =~ s{tives$}{tive})          { return $s }
 	if ($s =~ s{ives$}{ife})            { return $s } # life, wife, knife
 	if ($s =~ s{ves$}{f})               { return $s }
