@@ -2919,31 +2919,11 @@ function init_page (options) {
 	});
 
 	var date_field_keydown = function(e) {
-			var key = e.keyCode || e.which,
-				form = $(this).closest('form');
+		var key = e.keyCode || e.which,
+			form = $(this).closest('form');
 
-			if (key == 13 && form.hasClass('toolbar')) form.submit();
-		},
-		date_field_light = function() {
-			var $el = this.element,
-				wrapper = this.wrapper,
-				light = function() {
-					if (this.element.val().length == 0) {
-						this.wrapper.addClass('light');
-					} else {
-						this.wrapper.removeClass('light');
-					}
-				};
-
-			if ($el.hasClass('required')) {
-				wrapper.addClass('required')
-					.addClass('light');
-				$el.removeClass('required')
-					.removeClass('light');
-				$el.change(light.bind(this));
-			}
-			light.call(this);
-		};
+		if (key == 13 && form.hasClass('toolbar')) form.submit();
+	};
 
 	$('[data-type=datepicker]').each(function () {
 		$(this).on('keydown', date_field_keydown);
@@ -3199,6 +3179,41 @@ document.queryCommandSupported = function(command) {
 }
 
 parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
+
+var date_field_light = function() {
+	var $el = this.element,
+		wrapper = this.wrapper,
+		light = function() {
+			if (this.element.val().length == 0) {
+				this.wrapper.addClass('light');
+			} else {
+				this.wrapper.removeClass('light');
+			}
+		};
+
+	if ($el.hasClass('required')) {
+		wrapper.addClass('required').addClass('light');
+		$el.removeClass('required').removeClass('light');
+		$el.change(light.bind(this));
+	}
+	light.call(this);
+};
+
+var required_date_field = function($field, required) {
+	var wrapper = $field.closest('.k-widget');
+
+	if (required) { console.log('req');
+		$field.addClass('form-mandatory-inputs');
+		wrapper.addClass('required');
+	} else { console.log('unreq');
+		$field.removeClass('form-mandatory-inputs');
+		wrapper.removeClass('required');
+	}
+	// $field.kendoDatePicker();
+	if (required) {
+		date_field_light.call($field.data('kendoDatePicker'));
+	}
+};
 
 $(document).ready(function() {
 
