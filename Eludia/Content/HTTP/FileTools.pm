@@ -60,9 +60,9 @@ sub download_file_header {
 	$r -> content_type ($type);
 	$options -> {file_name} =~ s/\?/_/g unless ($ENV {HTTP_USER_AGENT} =~ /MSIE 7/);
 
-	my $filename = "=" . $options -> {file_name};
+	my $filename = '=' . $options -> {file_name};
 
-	if ($i18n -> {_charset} eq 'UTF-8' || !($ENV {HTTP_USER_AGENT} =~ /MSIE (\d+)/ && $1 <= 9)) {
+	if ($i18n -> {_charset} eq 'UTF-8' || !($ENV {HTTP_USER_AGENT} =~ /MSIE/) || $ENV {HTTP_USER_AGENT} =~ /MSIE (\d+)/ && $1 > 9) {
 
 		$options -> {file_name} = decode ($i18n -> {_charset}, $options -> {file_name})
 			unless Encode::is_utf8 ($options -> {file_name});
