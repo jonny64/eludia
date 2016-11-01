@@ -745,12 +745,33 @@ EOJS
 			var el = doc.querySelector('[name=_$field_name]'),
 				sought_for = null;
 
+			if (typeof window.top._ === 'undefined' && !Array.prototype.indexOf) {
+				Array.prototype.indexOf = function(elt /*, from*/) {
+					var len = this.length >>> 0,
+						from = Number(arguments[1]) || 0;
+
+					from = (from < 0) ? Math.ceil(from) : Math.floor(from);
+					if (from < 0) {
+						from += len;
+					}
+					for (; from < len; from++) {
+						if (from in this && this[from] === elt) {
+							return from;
+						}
+					}
+
+					return -1;
+				}
+			}
+
 			if (el !== null) {
 				var stop = false;
 
 				el = el.parentElement;
 				while(!stop) {
-					var result = el.className.indexOf('k-widget') !== -1;
+					var result = (typeof window.top._ === 'undefined')
+						? el.className.indexOf('k-widget') !== -1
+						: window.top._.indexOf(el.className, 'k-widget') !== -1;
 
 					if (
 						result
