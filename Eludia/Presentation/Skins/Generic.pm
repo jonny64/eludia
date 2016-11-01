@@ -741,7 +741,34 @@ EOJS
 EOJS
 		} else {
 			$_REQUEST {__script} .= <<EOJS;
-		var element = doc.getElementById ('input_$field_name');
+		var element = (function() {
+			var el = doc.querySelector('[name=_$field_name]'),
+				sought_for = null;
+
+			if (el !== null) {
+				var stop = false;
+
+				el = el.parentElement;
+				while(!stop) {
+					var result = el.className.indexOf('k-widget') !== -1;
+
+					if (
+						result
+						|| el.parentElement === null
+					) {
+						if (result) {
+							sought_for = el
+						}
+						stop = true
+					} else {
+						el = el.parentElement
+					}
+				}
+			}
+
+			return sought_for
+		})();
+		if (element) element = doc.getElementById ('input_$field_name');
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field_name'];
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
 EOJS
