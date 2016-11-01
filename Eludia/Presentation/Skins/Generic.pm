@@ -745,7 +745,10 @@ EOJS
 			var el = doc.querySelector('[name=_$field_name]'),
 				sought_for = null;
 
-			if (typeof window.top._ === 'undefined' && !Array.prototype.indexOf) {
+			if (
+				typeof window.top._ === 'undefined' 
+				&& typeof Array.prototype.indexOf === 'undefined'
+			) {
 				Array.prototype.indexOf = function(elt /*, from*/) {
 					var len = this.length >>> 0,
 						from = Number(arguments[1]) || 0;
@@ -770,9 +773,9 @@ EOJS
 				el = el.parentElement;
 				while(!stop) {
 					var result = (typeof window.top._ === 'undefined')
-						? el.className.indexOf('k-widget') !== -1
-						: window.top._.indexOf(el.className, 'k-widget') !== -1;
-
+						? el.classList.indexOf('k-widget') !== -1
+						: window.top._.indexOf(el.classList, 'k-widget') !== -1;
+console.log(el, result);
 					if (
 						result
 						|| el.parentElement === null
