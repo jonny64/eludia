@@ -775,7 +775,7 @@ EOJS
 					var result = (typeof window.top._ === 'undefined')
 						? el.classList.indexOf('k-widget') !== -1
 						: window.top._.indexOf(el.classList, 'k-widget') !== -1;
-console.log(el, result);
+
 					if (
 						result
 						|| el.parentElement === null
@@ -792,7 +792,7 @@ console.log(el, result);
 
 			return sought_for
 		})();
-		if (element) element = doc.getElementById ('input_$field_name');
+		if (!element) element = doc.getElementById ('input_$field_name');
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field_name'];
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
 EOJS
