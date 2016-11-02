@@ -931,10 +931,6 @@ function table_row_context_menu (e, tr) {
 		dataSource: items,
 		orientation: 'vertical',
 		select: function (event) {
-			var selected_url = items [$(event.item).index()].url;
-			if (selected_url.match(/^javascript:/)) {
-				eval (selected_url);
-			}
 			menuDiv.remove ();
 		}
 	});
