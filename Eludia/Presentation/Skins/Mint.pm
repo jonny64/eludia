@@ -3053,8 +3053,10 @@ sub draw_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
 
-	my @screen_with_splitter = ('building_passports', 'okii_passports', 'uo_passports', 'rso_passports', 'yard_passports',
-		'overhaul_passports', 'licenses', 'contracts', 'avr_passports', 'cp_passports', 'infrastructures', 'voc_agents');
+	# my @screen_with_splitter = ('building_passports', 'okii_passports', 'uo_passports', 'rso_passports', 'yard_passports',
+	# 	'overhaul_passports', 'licenses', 'contracts', 'avr_passports', 'cp_passports', 'infrastructures', 'voc_agents');
+
+	my @screen_with_splitter = ('building_passports');
 
 	my $has_splitter = $_REQUEST {type} ~~ @screen_with_splitter;
 
