@@ -12,7 +12,11 @@ sub draw_button_cell {
 		my $msg = js_escape ($options -> {confirm});
 		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
 		my $target = $options -> {target} || '_self';
-		$options -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$options{href}', '$target')} else {document.body.style.cursor = 'default'; nop ();}];
+		if ($options -> {href} =~ /^java/) {
+			$options -> {href} = qq [$$options{href}];
+		}else{
+			$options -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$options{href}', '$target')} else {document.body.style.cursor = 'default'; nop ();}];
+		}
 	}
 
 	if (
@@ -28,6 +32,8 @@ sub draw_button_cell {
 	if ($options -> {href} =~ /^java/) {
 		$options -> {target} = '_self';
 	}
+
+	$options -> {href} =~ s/'/"/g;
 
 	check_title ($options);
 
