@@ -2915,11 +2915,31 @@ function init_page (options) {
 	});
 
 	var date_field_keydown = function(e) {
-		var key = e.keyCode || e.which,
-			form = $(this).closest('form');
+			var key = e.keyCode || e.which,
+				form = $(this).closest('form');
 
-		if (key == 13 && form.hasClass('toolbar')) form.submit();
-	};
+			if (key == 13 && form.hasClass('toolbar')) form.submit();
+		},
+		date_field_light = function() {
+			var $el = this.element,
+				wrapper = this.wrapper,
+				light = function() {
+					if (this.element.val().length == 0) {
+						this.wrapper.addClass('light');
+					} else {
+						this.wrapper.removeClass('light');
+					}
+				};
+
+			if ($el.hasClass('required')) {
+				wrapper.addClass('required')
+					.addClass('light');
+				$el.removeClass('required')
+					.removeClass('light');
+				$el.change(light.bind(this));
+			}
+			light.call(this);
+		};
 
 	$('[data-type=datepicker]').each(function () {
 		$(this).on('keydown', date_field_keydown);
@@ -2950,82 +2970,7 @@ function init_page (options) {
 		});
 	});
 	$('input[type=file].metrics_file').each(function() {
-		var origin_input = $.clone(this),
-			id = $(this).attr('name'),
-			input_wrapper = $(this).closest('td'),
-			files = JSON.parse($(this).attr('data-files')),
-			k_window = $('<div/>', {
-				id: 'window_' + id,
-				class: 'k_window'
-			});
-
-		input_wrapper.html('');
-		$('body').prepend(k_window);
-		if (files.length === 0) {
-			var button = $('<a/>', {
-				class: 'k-button',
-				html: 'Загрузить',
-				onClick: '$(\'#window_' + id + '\').data(\'kendoWindow\').center().open()'
-			});
-
-			input_wrapper.append(button);
-			k_window.append(origin_input);
-			k_window.kendoWindow({
-				width: '600px',
-				position: {
-					top: '50%',
-					left: '50%'
-				},
-				visible: false,
-				modal: true,
-				title: 'Загрузка файла',
-				actions: [
-					'Close'
-				],
-			});
-			$(origin_input).kendoUpload({
-				async: {
-					saveUrl: $(origin_input).attr('data-url') + '&action=save_metrics',
-					removeUrl: '/',
-					batch: true
-		        },
-		        multiple: false
-			});
-		} else {
-			_.forEach(files, function(item) {
-				var file = $('<div/>', {
-						class: 'inline_metric_file'
-					})
-					.append(function() {
-						return $('<a/>', {
-							href: item.file_path,
-							html: item.file_name,
-							download: item.file_name,
-							target: '_blank'
-						})
-					})
-					.append(function() {
-						return $('<a/>', {
-							onClick: '' // <-- edit file
-						}).append(function() {
-							return $('<img/>', {
-								src: '/i/_skins/Mint/i_edit.gif'
-							})
-						})
-					})
-					.append(function() {
-						return $('<a/>', {
-							onClick: '' // <-- remove file
-						}).append(function() {
-							return $('<img/>', {
-								src: '/i/_skins/Mint/i_del.gif'
-							})
-						})
-					});
-
-				input_wrapper.append(file);
-			});
-		} 
+		metric_file_uploader(this)
 	});
 	$("form").on ("submit", function () {
 		$('input[type=file][disabled]', this).each (function () {
@@ -3253,50 +3198,22 @@ document.queryCommandSupported = function(command) {
 
 parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
 
-var date_field_light = function() {
-	var $el = this.element,
-		wrapper = this.wrapper,
-		light = function() {
-			if (this.element.val().length == 0) {
-				this.wrapper.addClass('light');
-			} else {
-				this.wrapper.removeClass('light');
-			}
-		};
-
-	if ($el.hasClass('required')) {
-		wrapper.addClass('required').addClass('light');
-		$el.removeClass('required').removeClass('light');
-		$el.change(light.bind(this));
-	}
-	light.call(this);
-};
-
-var required_date_field = function($field, required) {
-	var wrapper = $field.closest('.k-widget');
-
-	if (required) { console.log('req');
-		$field.addClass('form-mandatory-inputs');
-		wrapper.addClass('required');
-	} else { console.log('unreq');
-		$field.removeClass('form-mandatory-inputs');
-		wrapper.removeClass('required');
-	}
-	// $field.kendoDatePicker();
-	if (required) {
-		date_field_light.call($field.data('kendoDatePicker'));
-	}
-};
-
 var metric_file_uploader = function(file_input) {
-	var clone_file_input = $.clone(file_input),
-		file_input_wrapper = $(file_input).closest('td'),
-		file_id = $(file_input).attr('name'),
+	var is_init = (typeof $(file_input).data('init') !== 'undefined'),
+		clone_file_input = is_init 
+			? null 
+			: $.clone(file_input),
+		field_id = $(file_input).attr('name'),
+		url = $(clone_file_input).attr('data-url'),
+		files = JSON.parse($(file_input).attr('data-files')),
+		files_wrapper = is_init
+			? $('[data-files-wrapper=' + field_id + ']')
+			: $(file_input).closest('td'),
 		methods = {
-			make_window: function() {
-				var url = $(clone_file_input).attr('data-url'),
-					k_window = $('<div/>', {
-						id: 'window_' + file_id
+			make_upload_window: function() {
+				var k_window = $('<div/>', {
+						id: 'window_' + field_id,
+						class: 'k_window'
 					})
 					.append(function() {
 						return clone_file_input
@@ -3304,10 +3221,6 @@ var metric_file_uploader = function(file_input) {
 
 				k_window.kendoWindow({
 					width: '600px',
-					position: {
-						top: '50%',
-						left: '50%'
-					},
 					visible: false,
 					modal: true,
 					title: 'Загрузка файла',
@@ -3317,17 +3230,65 @@ var metric_file_uploader = function(file_input) {
 				});
 				$(clone_file_input).kendoUpload({
 					async: {
-						saveUrl: url + '&action=save_metrics',
-						removeUrl: url + '&action=', // <--  action remove
+						saveUrl: url + '&action=save_metrics', 
+						removeUrl: url + '&action=remove_file_metrick',
 						batch: true
 			        },
 			        multiple: false
 				});
 			},
 			render: function() {
-				//
+				files_wrapper.html('');
+				if (files.length === 0) { 
+					var button = $('<a/>', {
+							class: 'k-button',
+							onClick: '$(#window_' + field_id + ')'
+						});
+					files_wrapper.append(button)
+				} else {
+					_.forEach(files, function(item) {
+						var file = $('<div/>', {
+								class: 'inline_metric_file'
+							})
+							.append(function() {
+								return $('<a/>', {
+									href: item.file_path,
+									html: item.file_name,
+									download: item.file_name,
+									target: '_blank'
+								})
+							})
+							.append(function() {
+								return $('<a/>', {
+									onClick: 'event.preventDefault();$(\'#window_' + field_id + '\').data(\'kendoWindow\').center().open()'
+								}).append(function() {
+									return $('<img/>', {
+										src: '/i/_skins/Mint/i_edit.gif'
+									})
+								})
+							})
+							.append(function() {
+								return $('<a/>', {
+									onClick: 'event.preventDefault();' // <-- remove file
+								}).append(function() {
+									return $('<img/>', {
+										src: '/i/_skins/Mint/i_del.gif'
+									})
+								})
+							});
+
+						files_wrapper.append(file);
+					})
+				}
 			}
-		}
+		};
+
+	if (!is_init) {
+		$(file_input).data('init', true);
+		files_wrapper.attr('data-files-wrapper', field_id);
+		methods.make_upload_window()
+	}
+	methods.render()
 };
 
 $(document).ready(function() {
