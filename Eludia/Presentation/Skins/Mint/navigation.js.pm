@@ -3234,7 +3234,10 @@ var metric_file_uploader = function(file_input) {
 						removeUrl: url + '&action=remove_file_metrick',
 						batch: true
 			        },
-			        multiple: false
+			        multiple: false,
+			        success: function(e) {
+			        	console.log('success', e);
+			        }
 				});
 			},
 			render: function() {
@@ -3242,7 +3245,8 @@ var metric_file_uploader = function(file_input) {
 				if (files.length === 0) { 
 					var button = $('<a/>', {
 							class: 'k-button',
-							onClick: '$(#window_' + field_id + ')'
+							html: 'Выбрать файл',
+							onClick: '$(\'#window_' + field_id + '\').data(\'kendoWindow\').center().open()'
 						});
 					files_wrapper.append(button)
 				} else {
@@ -3263,15 +3267,18 @@ var metric_file_uploader = function(file_input) {
 									onClick: 'event.preventDefault();$(\'#window_' + field_id + '\').data(\'kendoWindow\').center().open()'
 								}).append(function() {
 									return $('<img/>', {
-										src: '/i/_skins/Mint/i_edit.gif'
+										title: 'Редактировать',
+										src: '/i/_skins/Mint/i_edit.gif',
+										style: 'margin: 0 8px;'
 									})
 								})
 							})
 							.append(function() {
 								return $('<a/>', {
-									onClick: 'event.preventDefault();' // <-- remove file
+									onClick: 'event.preventDefault();$(\'input[type=file][name=' + field_id + ']\').data(\'kendoUpload\').removeAllFiles();'
 								}).append(function() {
 									return $('<img/>', {
+										title: 'Удалить',
 										src: '/i/_skins/Mint/i_del.gif'
 									})
 								})
