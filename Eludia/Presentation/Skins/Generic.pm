@@ -382,6 +382,8 @@ sub __adjust_button_href {
 
 	$_SKIN -> __adjust_button_blockui ($options);
 
+	$options -> {href} =~ s/'/"/g;
+
 	$options -> {id} ||= '' . $options;
 	$options -> {tabindex} = ++ $_REQUEST {__tabindex};;
 
