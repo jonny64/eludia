@@ -33,8 +33,6 @@ sub draw_button_cell {
 		$options -> {target} = '_self';
 	}
 
-	$options -> {href} =~ s/'/"/g;
-
 	check_title ($options);
 
 	return $_SKIN -> draw_row_button ($options);

@@ -901,6 +901,12 @@ function setup_drop_down_button (id, data) {
 			left: a_offset.left,
 		});
 
+		_.forEach(data, function(item) {
+			item.text = "<a href=\""+item.url+"\">"+item.text+"</a>";
+			delete item.url;
+			item.encoded = false;
+		})
+
 		menuDiv.kendoMenu ({
 			dataSource: data,
 			orientation: 'vertical',
@@ -923,6 +929,13 @@ function table_row_context_menu (e, tr) {
 	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap;top:0;left:0" />').appendTo (document.body);
 
 	var items = $.parseJSON ($(tr).attr ('data-menu'));
+
+	_.forEach(items, function(item) {
+		item.text = "<a href=\""+item.url+"\">"+item.text+"</a>";
+		delete item.url;
+		item.encoded = false;
+	})
+
 	menuDiv.kendoMenu ({
 		dataSource: items,
 		orientation: 'vertical',
