@@ -3247,7 +3247,7 @@ var metric_file_uploader = function(file_input) {
 					async: {
 						saveUrl: url + '&action=save_metrics', 
 						removeUrl: url + '&action=unlink_metrics',
-						batch: true
+						autoUpload: true 
 					},
 					multiple: false,
 					success: function(e) {
@@ -3260,7 +3260,7 @@ var metric_file_uploader = function(file_input) {
 									file_name: item.name,
 									file_path: '&action=download_metrics'
 								})
-							});
+							})
 						}
 						input_file.attr('data-files', JSON.stringify(data_files));
 						if (typeof input_file.data().init === 'undefined' || !input_file.data().init) {
@@ -3308,11 +3308,10 @@ var metric_file_uploader = function(file_input) {
 							.append(function() {
 								return $('<a/>', {
 									onClick: 'event.preventDefault(); \
-										var upload = $(\'input[type=file][name=' + field_id + ']\').data(\'kendoUpload\'); \
-										console.log(upload); \
-										upload.removeFile(function() { \
-											return true \
-										}) \
+										var upload = $(\'input[name=' + field_id + ']\').data(\'kendoUpload\'), \
+											button = upload.wrapper.find(\'.k-upload-action\'); \
+										\
+										button.trigger(\'click\'); \
 									'
 								}).append(function() {
 									return $('<img/>', {
