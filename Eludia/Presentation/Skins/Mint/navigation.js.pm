@@ -3199,7 +3199,7 @@ document.queryCommandSupported = function(command) {
 parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
 
 var metric_file_uploader = function(file_input) {
-	var is_init = (typeof $(file_input).data('init') !== 'undefined'),
+	var is_init = (typeof $(file_input).data().init !== 'undefined' && $(file_input).data().init),
 		clone_file_input = is_init 
 			? null 
 			: $.clone(file_input),
@@ -3229,15 +3229,45 @@ var metric_file_uploader = function(file_input) {
 					],
 				});
 				$(clone_file_input).kendoUpload({
+					files: (function() {
+						var data_fiels = JSON.parse($(clone_file_input).attr('data-files')),
+							files = [];
+
+						_.forEach(data_fiels, function(item) { 
+							var extension = item.file_name.substr(_.lastIndexOf(item.file_name, '.'), item.file_name.length);
+
+							files.push({
+								name: item.file_name,
+								extension: extension
+							})
+						});
+
+						return files
+					})(),
 					async: {
 						saveUrl: url + '&action=save_metrics', 
-						removeUrl: url + '&action=remove_file_metrick',
+						removeUrl: url + '&action=unlink_metrics',
 						batch: true
-			        },
-			        multiple: false,
-			        success: function(e) {
-			        	console.log('success', e);
-			        }
+					},
+					multiple: false,
+					success: function(e) {
+						var input_file = $('[name=' + field_id + ']'),
+							data_files = [];
+
+						if (e.operation !== 'remove') {
+							_.forEach(e.files, function(item) {
+								data_files.push({
+									file_name: item.name,
+									file_path: '&action=download_metrics'
+								})
+							});
+						}
+						input_file.attr('data-files', JSON.stringify(data_files));
+						if (typeof input_file.data().init === 'undefined' || !input_file.data().init) {
+							input_file.data('init', true)
+						}
+						metric_file_uploader(input_file[0]);
+					}
 				});
 			},
 			render: function() {
@@ -3264,7 +3294,9 @@ var metric_file_uploader = function(file_input) {
 							})
 							.append(function() {
 								return $('<a/>', {
-									onClick: 'event.preventDefault();$(\'#window_' + field_id + '\').data(\'kendoWindow\').center().open()'
+									onClick: 'event.preventDefault(); \
+										$(\'#window_' + field_id + '\').data(\'kendoWindow\').center().open() \
+									'
 								}).append(function() {
 									return $('<img/>', {
 										title: 'Редактировать',
@@ -3275,7 +3307,13 @@ var metric_file_uploader = function(file_input) {
 							})
 							.append(function() {
 								return $('<a/>', {
-									onClick: 'event.preventDefault();$(\'input[type=file][name=' + field_id + ']\').data(\'kendoUpload\').removeAllFiles();'
+									onClick: 'event.preventDefault(); \
+										var upload = $(\'input[type=file][name=' + field_id + ']\').data(\'kendoUpload\'); \
+										console.log(upload); \
+										upload.removeFile(function() { \
+											return true \
+										}) \
+									'
 								}).append(function() {
 									return $('<img/>', {
 										title: 'Удалить',
@@ -3291,7 +3329,7 @@ var metric_file_uploader = function(file_input) {
 		};
 
 	if (!is_init) {
-		$(file_input).data('init', true);
+		// $(clone_file_input).data('init', true);
 		files_wrapper.attr('data-files-wrapper', field_id);
 		methods.make_upload_window()
 	}
