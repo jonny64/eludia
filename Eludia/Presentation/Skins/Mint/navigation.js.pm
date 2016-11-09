@@ -3208,12 +3208,23 @@ var metric_file_uploader = function(file_input) {
 		files = JSON.parse($(file_input).attr('data-files')),
 		files_wrapper = is_init
 			? $('[data-files-wrapper=' + field_id + ']')
-			: $(file_input).parent(),
+			: $(file_input).closest('td'),
 		methods = {
 			make_upload_window: function() {
 				var k_window = $('<div/>', {
 						id: 'window_' + field_id,
 						class: 'k_window'
+					})
+					.append(function() {
+						var tooltip_text = $(file_input).parent().attr('data-tooltip') || null;
+
+						if (tooltip_text !== null) {
+							return $('<p/>', {
+								html: tooltip_text
+							})
+						} else {
+							return null
+						}
 					})
 					.append(function() {
 						return clone_file_input
@@ -3329,7 +3340,6 @@ var metric_file_uploader = function(file_input) {
 		};
 
 	if (!is_init) {
-		// $(clone_file_input).data('init', true);
 		files_wrapper.attr('data-files-wrapper', field_id);
 		methods.make_upload_window()
 	}
