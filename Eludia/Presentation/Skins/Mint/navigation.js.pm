@@ -2693,12 +2693,11 @@ function init_page (options) {
 					panes: [
 						{
 							collapsible: true,
-							size: '50%',
+							size: '90%',
 						},
 						{
 							collapsible: true,
-							collapsed: true,
-							size: '50%',
+							size: '10%',
 							contentUrl: 'http://'
 						}
 					]
@@ -3078,9 +3077,14 @@ var open_in_supertable_panel = function(self, url) {
 		iframe[0].contentWindow.is_dirty 
 		&& !confirm('”йти без сохранени€ данных?')
 	) { return };
-	iframe.attr('src', url + '&in_panel=1');
-	splitter.options.panes[1].collapsed = false;
-	splitter.resize(true);
+	if (
+		typeof splitter.options.panes[1].collapsed === 'undefined'
+		|| !splitter.options.panes[1].collapsed
+	) {
+		iframe.attr('src', url + '&in_panel=1');
+	} else {
+		document.location.href = url; 
+	}
 };
 
 $(document).ready(function() {
