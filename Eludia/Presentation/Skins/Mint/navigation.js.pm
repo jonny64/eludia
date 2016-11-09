@@ -3071,9 +3071,14 @@ document.queryCommandSupported = function(command) {
 parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
 
 var open_in_supertable_panel = function(self, url) {
-	var splitter = $(self).closest('.supertable_with_panels').data('kendoSplitter');
+	var splitter = $(self).closest('.supertable_with_panels').data('kendoSplitter'),
+		iframe = splitter.wrapper.find('iframe');
 
-	splitter.wrapper.find('iframe').attr('src', url);
+	if (
+		iframe[0].contentWindow.is_dirty 
+		&& !confirm('”йти без сохранени€ данных?')
+	) { return };
+	iframe.attr('src', url + '&in_panel=1');
 	splitter.options.panes[1].collapsed = false;
 	splitter.resize(true);
 };
