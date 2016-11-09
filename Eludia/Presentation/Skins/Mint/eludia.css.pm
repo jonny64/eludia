@@ -571,7 +571,6 @@ A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, 
 }
 
 .form-very-active-inputs {
-	background-color: #fff!important;
 	font-size: 13px!important;
 	font-weight: bold;
 }
