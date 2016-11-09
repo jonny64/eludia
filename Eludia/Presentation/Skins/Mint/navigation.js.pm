@@ -3208,7 +3208,7 @@ var metric_file_uploader = function(file_input) {
 		files = JSON.parse($(file_input).attr('data-files')),
 		files_wrapper = is_init
 			? $('[data-files-wrapper=' + field_id + ']')
-			: $(file_input).closest('td'),
+			: $(file_input).parent(),
 		methods = {
 			make_upload_window: function() {
 				var k_window = $('<div/>', {
@@ -3260,7 +3260,8 @@ var metric_file_uploader = function(file_input) {
 									file_name: item.name,
 									file_path: '&action=download_metrics'
 								})
-							})
+							});
+							$('#window_' + field_id).data('kendoWindow').close()
 						}
 						input_file.attr('data-files', JSON.stringify(data_files));
 						if (typeof input_file.data().init === 'undefined' || !input_file.data().init) {
