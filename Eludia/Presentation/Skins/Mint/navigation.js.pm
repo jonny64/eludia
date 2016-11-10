@@ -2709,14 +2709,29 @@ function init_page (options) {
 					panes: [
 						{
 							collapsible: true,
-							size: '90%',
+							size: (typeof window.top.passport_splitter_width === 'undefined') 
+								? '90%'
+								: window.top.passport_splitter_width + '%',
 						},
 						{
 							collapsible: true,
-							size: '10%',
+							size: (typeof window.top.passport_splitter_width === 'undefined') 
+								? '10%'
+								: (100 - window.top.passport_splitter_width) + '%',
 							contentUrl: 'http://'
 						}
-					]
+					],
+					resize: function(e) {
+						var save_value = parseInt(this.options.panes[0].size);
+
+						if (_.indexOf(this.options.panes[0].size, '%') === -1) {
+							var one_percent = e.width / 100;
+
+							save_value = Math.round(save_value / one_percent)
+						}
+						console.log(save_value);
+						window.top.passport_splitter_width = save_value
+					}
 				})
 			}
 		});
