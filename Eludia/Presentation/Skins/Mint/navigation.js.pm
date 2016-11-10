@@ -1670,26 +1670,10 @@ TableSlider.prototype.clear_rows = function (row) {
 }
 
 TableSlider.prototype.set_row = function (row) {
-
 	self = this;
-	var matrix = self.rows,
-		selected_row = $('div.st-table-right-viewport table.st-fixed-table-right').find('tr:not(.st-table-widths-row)').eq(row);
 
-	if (selected_row.length !== 0) {
-		var data_href = selected_row.attr('data-href') || null;
+	var matrix = self.rows;
 
-		if (
-			data_href !== null 
-			&& /open_in_supertable_panel/.test(data_href)
-		) {
-			setTimeout(function() {
-				open_in_supertable_panel(
-					selected_row[0], 
-					data_href.slice(_.indexOf(data_href, '\'') + 1, _.lastIndexOf(data_href, '\''))
-				)
-			}, 1000)
-		}
-	}
 	$('div.st-table-right-viewport table.st-fixed-table-right').each (function (n) {
 
 		var table = this,
@@ -2709,28 +2693,44 @@ function init_page (options) {
 					panes: [
 						{
 							collapsible: true,
-							size: (typeof window.top.passport_splitter_width === 'undefined') 
+							size: (typeof window.top.localStorage.passport_splitter_width === 'undefined') 
 								? '90%'
-								: window.top.passport_splitter_width + '%',
+								: window.top.localStorage.passport_splitter_width + '%',
 						},
 						{
 							collapsible: true,
-							size: (typeof window.top.passport_splitter_width === 'undefined') 
+							size: (typeof window.top.localStorage.passport_splitter_width === 'undefined') 
 								? '10%'
-								: (100 - window.top.passport_splitter_width) + '%',
+								: (100 - window.top.localStorage.passport_splitter_width) + '%',
 							contentUrl: 'http://'
 						}
 					],
 					resize: function(e) {
-						var save_value = parseInt(this.options.panes[0].size);
+						var size = parseInt(this.options.panes[0].size),
+							in_percent = (_.indexOf(this.options.panes[0].size, '%') !== -1),
+							is_close = in_percent 
+								? (100 - size) <= 3
+								: (parseInt(this.wrapper.width()) - size) <= 30,
+							iframe = this.wrapper.find('iframe');
 
-						if (_.indexOf(this.options.panes[0].size, '%') === -1) {
-							var one_percent = e.width / 100;
-
-							save_value = Math.round(save_value / one_percent)
+						if (!in_percent) {
+							size = Math.round(size / (e.width / 100))
 						}
-						console.log(save_value);
-						window.top.passport_splitter_width = save_value
+						window.top.localStorage.passport_splitter_width = size;
+						if (iframe.attr('src') === 'http://' && !is_close) {
+							var selected_row = $(tableSlider.get_cell()).closest('tr'), 
+								data_href = selected_row.attr('data-href') || null;
+
+							if (
+								data_href !== null 
+								&& /open_in_supertable_panel/.test(data_href)
+							) {
+								open_in_supertable_panel(
+									selected_row[0], 
+									data_href.slice(_.indexOf(data_href, '\'') + 1, _.lastIndexOf(data_href, '\''))
+								)
+							}
+						}
 					}
 				})
 			}
@@ -3107,14 +3107,17 @@ var open_in_supertable_panel = function(self, url) {
 	if (
 		iframe[0].contentWindow.is_dirty 
 		&& !confirm('”йти без сохранени€ данных?')
-	) { return };
-	if (
-		typeof splitter.options.panes[1].collapsed === 'undefined'
-		|| !splitter.options.panes[1].collapsed
-	) {
-		iframe.attr('src', url + '&in_panel=1');
-	} else {
+	) { return }
+
+	var size = parseInt(splitter.options.panes[1].size),
+		is_close = (_.indexOf(splitter.options.panes[1].size, '%') === -1)
+			? size <= 30
+			: size <= 3;
+
+	if (is_close) {
 		document.location.href = url; 
+	} else {
+		iframe.attr('src', url + '&in_panel=1');
 	}
 };
 
