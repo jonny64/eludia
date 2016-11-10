@@ -1672,8 +1672,24 @@ TableSlider.prototype.clear_rows = function (row) {
 TableSlider.prototype.set_row = function (row) {
 
 	self = this;
-	var matrix = self.rows;
+	var matrix = self.rows,
+		selected_row = $('div.st-table-right-viewport table.st-fixed-table-right').find('tr:not(.st-table-widths-row)').eq(row);
 
+	if (selected_row.length !== 0) {
+		var data_href = selected_row.attr('data-href') || null;
+
+		if (
+			data_href !== null 
+			&& /open_in_supertable_panel/.test(data_href)
+		) {
+			setTimeout(function() {
+				open_in_supertable_panel(
+					selected_row[0], 
+					data_href.slice(_.indexOf(data_href, '\'') + 1, _.lastIndexOf(data_href, '\''))
+				)
+			}, 1000)
+		}
+	}
 	$('div.st-table-right-viewport table.st-fixed-table-right').each (function (n) {
 
 		var table = this,
