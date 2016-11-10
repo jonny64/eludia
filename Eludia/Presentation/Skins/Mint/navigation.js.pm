@@ -3269,7 +3269,7 @@ var metric_file_uploader = function(file_input) {
 							_.forEach(e.files, function(item) {
 								data_files.push({
 									file_name: item.name,
-									file_path: '&action=download_metrics'
+									file_path: $(input_file).attr('data-url') + '&action=download_metrics'
 								})
 							});
 							$('#window_' + field_id).data('kendoWindow').close()
