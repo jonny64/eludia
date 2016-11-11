@@ -199,7 +199,8 @@ sub js_detail {
 		push @all_details, $detail;
 
 		$tab_js .= <<EOJS;
-			element = window.form.elements['_${detail}'];
+
+			element = \$('[name=_${detail}]')[0];
 			if (element) {
 				tabs.push (element.tabIndex);
 			}
