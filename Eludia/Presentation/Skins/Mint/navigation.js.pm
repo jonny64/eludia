@@ -2700,8 +2700,7 @@ function init_page (options) {
 							collapsible: true,
 							size: (typeof window.top.localStorage.passport_splitter_width === 'undefined') 
 								? '10%'
-								: (100 - window.top.localStorage.passport_splitter_width) + '%',
-							contentUrl: 'http://'
+								: (100 - window.top.localStorage.passport_splitter_width) + '%'
 						}
 					],
 					resize: function(e) {
@@ -2710,15 +2709,13 @@ function init_page (options) {
 							is_close = in_percent 
 								? (100 - size) <= 3
 								: (parseInt(this.wrapper.width()) - size) <= 30,
-							iframe = this.wrapper.find('iframe'),
-							view_port_height = parseInt(document.documentElement.clientHeight) - parseInt(splitter.offset().top),
-							supertable_height = view_port_height - Math.max(this.wrapper.find('.st-table-header-right-pane').height(), this.wrapper.find('.st-table-header-left-pane').height());
+							iframe = this.wrapper.find('iframe');
 
 						if (!in_percent) {
 							size = Math.round(size / (e.width / 100))
 						}
 						window.top.localStorage.passport_splitter_width = size;
-						if (iframe.attr('src') === 'http://' && !is_close) {
+						if (iframe.attr('src') === '/i/empty_object/' && !is_close) {
 							var selected_row = $(tableSlider.get_cell()).closest('tr'), 
 								data_href = selected_row.attr('data-href') || null;
 
@@ -2733,15 +2730,11 @@ function init_page (options) {
 							}
 						}
 						$(window).trigger('resize');
-						this.wrapper.height(view_port_height);
-						this.wrapper.find('.st-table-right-viewport, .st-table-left-viewport').each(function() {
-							var viewport = this;
+						setTimeout(function() {
+							var view_port_height = parseInt(document.documentElement.clientHeight) - parseInt(splitter.offset().top);
 
-							setTimeout(function() {
-								viewport.style.removeProperty('height');
-								viewport.style.setProperty('height', supertable_height + 'px', 'important');
-							}, 500)
-						});
+							splitter.data('kendoSplitter').wrapper.height(view_port_height)
+						}, 1000)
 					}
 				})
 			}
@@ -3116,7 +3109,8 @@ var open_in_supertable_panel = function(self, url) {
 		iframe = splitter.wrapper.find('iframe');
 
 	if (
-		iframe[0].contentWindow.is_dirty 
+		typeof iframe[0].contentWindow.is_dirty !== 'undefined'
+		&& iframe[0].contentWindow.is_dirty
 		&& !confirm('”йти без сохранени€ данных?')
 	) { return }
 
