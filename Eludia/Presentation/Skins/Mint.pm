@@ -3087,7 +3087,7 @@ EOJS
 	$html = qq { <div $attributes></div><div class="iframe_panel"></div></div>\n }
 		unless index ($data_json, '<tr') == -1;
 
-	$html = qq { <div class="supertable_with_panels" style="bordr:0">$html<div class="iframe_panel"></div></div>\n }
+	$html = qq { <div class="supertable_with_panels" style="bordr:0">$html<div class="iframe_panel"><iframe src="/i/empty_object/"></iframe></div></div>\n }
 		if $has_splitter;
 
 	my %hidden = ();
