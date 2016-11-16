@@ -2970,7 +2970,7 @@ function init_page (options) {
 		});
 	});
 	try {
-		init_metric_file_uploader()
+		additional_params_init()
 	} catch(e) {}
 	$("form").on ("submit", function () {
 		$('input[type=file][disabled]', this).each (function () {
