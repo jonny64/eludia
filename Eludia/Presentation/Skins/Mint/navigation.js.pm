@@ -2969,14 +2969,15 @@ function init_page (options) {
 			files: $(this).attr('data-files')
 		});
 	});
-
+	try {
+		init_metric_file_uploader()
+	} catch(e) {}
 	$("form").on ("submit", function () {
 		$('input[type=file][disabled]', this).each (function () {
 			if ($('input[type=file][name="' + this.name + '"]').length == 1)
 				$(this).removeAttr("disabled");
 		});
 	});
-
 	$('.eludia-chart').each(function () {
 		var options = $(this).data('chart-options');
 		options.dataSource = new kendo.data.DataSource($(this).data('chart-datasource'));
