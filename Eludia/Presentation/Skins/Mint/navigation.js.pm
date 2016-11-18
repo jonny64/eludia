@@ -2764,11 +2764,31 @@ function init_page (options) {
 	});
 
 	var date_field_keydown = function(e) {
-		var key = e.keyCode || e.which,
-			form = $(this).closest('form');
+			var key = e.keyCode || e.which,
+				form = $(this).closest('form');
 
-		if (key == 13 && form.hasClass('toolbar')) form.submit();
-	};
+			if (key == 13 && form.hasClass('toolbar')) form.submit();
+		},
+		date_field_light = function() {
+			var $el = this.element,
+				wrapper = this.wrapper,
+				light = function() {
+					if (this.element.val().length == 0) {
+						this.wrapper.addClass('light');
+					} else {
+						this.wrapper.removeClass('light');
+					}
+				};
+
+			if ($el.hasClass('required')) {
+				wrapper.addClass('required')
+					.addClass('light');
+				$el.removeClass('required')
+					.removeClass('light');
+				$el.change(light.bind(this));
+			}
+			light.call(this);
+		};
 
 	$('[data-type=datepicker]').each(function () {
 		$(this).on('keydown', date_field_keydown);
@@ -2783,12 +2803,12 @@ function init_page (options) {
 
 	$('input[mask]').each (init_masked_text_box);
 
-	$('input[type=file]:not([data-upload-url]):not([is-native])').each(function () {
+	$('input[type=file]:not([data-upload-url]):not([is-native]):not(.metrics_file)').each(function () {
 		$(this).kendoUpload({
 			multiple : $(this).attr('data-ken-multiple') == 'true'
 		});
 	});
-	$('input[type=file][data-upload-url]').each(function () {
+	$('input[type=file][data-upload-url]:not(.metrics_file)').each(function () {
 		$(this).kendoUpload({
 			async: {
 				saveUrl: $(this).attr('data-upload-url'),
@@ -2798,14 +2818,15 @@ function init_page (options) {
 			files: $(this).attr('data-files')
 		});
 	});
-
+	try {
+		additional_params_init()
+	} catch(e) {}
 	$("form").on ("submit", function () {
 		$('input[type=file][disabled]', this).each (function () {
 			if ($('input[type=file][name="' + this.name + '"]').length == 1)
 				$(this).removeAttr("disabled");
 		});
 	});
-
 	$('.eludia-chart').each(function () {
 		var options = $(this).data('chart-options');
 		options.dataSource = new kendo.data.DataSource($(this).data('chart-datasource'));
@@ -3024,41 +3045,6 @@ document.queryCommandSupported = function(command) {
 }
 
 parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
-
-var date_field_light = function() {
-	var $el = this.element,
-		wrapper = this.wrapper,
-		light = function() {
-			if (this.element.val().length == 0) {
-				this.wrapper.addClass('light');
-			} else {
-				this.wrapper.removeClass('light');
-			}
-		};
-
-	if ($el.hasClass('required')) {
-		wrapper.addClass('required').addClass('light');
-		$el.removeClass('required').removeClass('light');
-		$el.change(light.bind(this));
-	}
-	light.call(this);
-};
-
-var required_date_field = function($field, required) {
-	var wrapper = $field.closest('.k-widget');
-
-	if (required) { console.log('req');
-		$field.addClass('form-mandatory-inputs');
-		wrapper.addClass('required');
-	} else { console.log('unreq');
-		$field.removeClass('form-mandatory-inputs');
-		wrapper.removeClass('required');
-	}
-	// $field.kendoDatePicker();
-	if (required) {
-		date_field_light.call($field.data('kendoDatePicker'));
-	}
-};
 
 $(document).ready(function() {
 
