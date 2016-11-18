@@ -185,16 +185,15 @@ sub _draw_bottom {
 	my $items = $options -> {menu};
 
 	foreach my $item (@$items) {
-		if ($item -> {is_active}) {
-			$html .='<li class="k-state-active k-item k-tab-on-top k-state-default k-first">
-					<a id="'.$item.'" href="'.$$item{href}.'" class="tab-1 k-link" target="'.$item->{target}.'"><nobr>&nbsp;'.$$item{label}.'&nbsp;</nobr></a>
-				</li>'
-		} else {
-			$html .= '<li class="k-item k-state-default">
-					<a id="'.$item.'" href="'.$$item{href}.'" class="tab-0 k-link" target="'.$item->{target}.'"><nobr>&nbsp;'.$$item{label}.'&nbsp;</nobr></a>
-				</li>'
-		}
+		$html .= $item -> {is_active} ?
+			'<li class="k-state-active k-item k-tab-on-top k-state-default k-first">
+					<a class="tab-1 k-link" ' :
+			'<li class="k-item k-state-default">
+					<a class="tab-0 k-link" ';
 
+		$html .= 'title="' . $$item{title} . '" ' if ($$item{title});
+		$html .= 'id="' . $item . '" href="'.$$item{href}.'" target="' . $item->{target} . '"><nobr>&nbsp;' . $$item{label} . '&nbsp;</nobr></a>
+				</li>';
 	}
 
 	return <<EOH;
@@ -291,6 +290,7 @@ EOH
 	$html .=  <<EOH;
 			<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 EOH
+
 	foreach my $row (@{$options -> {rows}}) {
 
 		my $tr_id = $row -> [0] -> {tr_id};
@@ -438,6 +438,7 @@ sub draw_form_field {
 			class  => join (' ', grep {$_} "form-$$field{state}-banner", $field -> {class}, $field -> {label_class}),
 			nowrap => !$field -> {no_nowrap},
 			align  => 'center',
+			$field -> {label_title} ? (title => $field -> {label_title}) : (),
 			%{$field -> {label_attributes}}
 		};
 
