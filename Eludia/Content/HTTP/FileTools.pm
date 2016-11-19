@@ -60,9 +60,9 @@ sub download_file_header {
 	$r -> content_type ($type);
 	$options -> {file_name} =~ s/\?/_/g unless ($ENV {HTTP_USER_AGENT} =~ /MSIE 7/);
 
-	my $filename = "=" . $options -> {file_name};
+	my $filename = '=' . $options -> {file_name};
 
-	if ($i18n -> {_charset} eq 'UTF-8' || $ENV {HTTP_USER_AGENT} =~ /MSIE (\d+)/ && $1 > 9) {
+	if ($i18n -> {_charset} eq 'UTF-8' || !($ENV {HTTP_USER_AGENT} =~ /MSIE/) || $ENV {HTTP_USER_AGENT} =~ /MSIE (\d+)/ && $1 > 9) {
 
 		$options -> {file_name} = decode ($i18n -> {_charset}, $options -> {file_name})
 			unless Encode::is_utf8 ($options -> {file_name});
@@ -209,11 +209,40 @@ sub upload_file {
 
 	my ($fh, $filename, $file_size, $file_type) = upload_file_dimensions ($upload);
 
+	my $no_limit_param = '_file_no_limit_for_' . $options -> {name};
+	$no_limit_param =~ s/_\d+$//;
+	$options -> {no_limit} = $_REQUEST {$no_limit_param} if exists $_REQUEST {$no_limit_param};
+
+	if (
+		$filename
+		&& !$options -> {no_limit}
+		&& $preconf -> {file_extensions}
+		&& !($filename =~ /\.([^\.]*?)$/ && $1 ~~ $preconf -> {file_extensions})
+	) {
+		my $error = $i18n -> {file_ext_fail} . join ', ', map { '.' . $_ } @{$preconf -> {file_extensions}};
+		if ($_REQUEST {__json_response}) {
+			out_json ({status => 'error', label  => $error});
+		} else {
+			croak "#_$$options{name}#: " . $error;
+		}
+		return undef;
+	};
+
 	unless ($file_size > 0) {
 
 		die "#_$$options{name}#: $i18n->{empty_file}" if $filename;
-
 		return undef;
+
+	} elsif ($filename && !$options -> {no_limit} && $preconf -> {max_file_size} && $file_size > ($preconf -> {max_file_size} << 20)) {
+
+		my $error = sprintf ($i18n -> {max_file_size_fail}, $preconf -> {max_file_size});
+		if ($_REQUEST {__json_response}) {
+			out_json ({status => 'error', label  => $error});
+		} else {
+			croak "#_$$options{name}#: " . $error;
+		}
+		return undef;
+
 	}
 
 	my ($path, $real_path) = upload_path ($filename, $options);

@@ -21,7 +21,7 @@ use Storable;
 
 sub loading_log (@) {
 
-	$ENV {ELUDIA_SILENT} or print STDERR @_;
+	$ENV {ELUDIA_SILENT} or $ENV {ELUDIA_NO_LOADING_LOG} or print STDERR @_;
 
 }
 

@@ -323,6 +323,45 @@ sub merge_cells {
 
 ################################################################################
 
+sub split_string {
+
+	my ($str, $len) = @_;
+
+	return [$str] if length ($str) <= $len;
+
+	my @res;
+	while ($str) {
+
+		my $str1 = substr ($str, 0, $len);
+		my $str2 = substr ($str, $len);
+
+		if (!$str2 || $str2 =~ /^[\s\-]/) {
+			$str1 =~ s/\s+$//;
+			push @res, $str1;
+			$str2 =~ s/^\s+//;
+			$str = $str2;
+			next;
+		}
+
+		if ($str1 =~ /[\s\-]/) {
+			$str1 =~ /([\s\-]+)([^\s\-]*?)$/;
+			$str1 = $` . $1;
+			$str2 = $2 . $str2;
+		}
+
+		$str1 =~ s/\s+$//;
+		push @res, $str1;
+		$str2 =~ s/^\s+//;
+		$str = $str2;
+
+	}
+
+	return \@res;
+
+}
+
+################################################################################
+
 sub defaults {
 
 	my ($data, $context, %vars) = @_;
@@ -340,8 +379,16 @@ sub defaults {
 	}
 
 	my %def = ();
+	my %ids = ();
 
-	sql_select_loop ("SELECT * FROM $conf->{systables}->{__defaults} WHERE fake = 0 AND context = ? AND name IN ($names)", sub {$def {$i -> {name}} = $i -> {value}}, $context);
+	sql_select_loop (
+		"SELECT * FROM $conf->{systables}->{__defaults} WHERE fake = 0 AND context = ? AND name IN ($names)",
+		sub {
+			$def {$i -> {name}} .= $i -> {value};
+			push @{$ids {$i -> {name}}}, $i -> {id};
+		},
+		$context
+	);
 
 	if ($data -> {fake} == $_REQUEST {sid}) {
 
@@ -361,14 +408,24 @@ sub defaults {
 
 			if ($data -> {$key} ne $def {$name}) {
 
-				sql_select_id ($conf -> {systables} -> {__defaults} => {
+				my $values = split_string ($data -> {$key}, 255);
 
-					fake    => 0,
-					context => $context,
-					name    => $name,
-					-value  => $data -> {$key},
+				foreach $value (@$values) {
+					if (@{$ids {$name}} > 0) {
+						my $id = shift @{$ids {$name}};
+						sql_do ("UPDATE $conf->{systables}->{__defaults} SET value = ? WHERE id = ?", $value, $id);
+					} else {
+						sql_do (
+							"INSERT INTO $conf->{systables}->{__defaults} (fake, context, name, value) VALUES (0, ?, ?, ?)",
+							$context, $name, $value
+						);
+					}
+				}
 
-				}, ['context', 'name']);
+				if (@{$ids {$name}} > 0) {
+					my $ids = join ',', -1, @{$ids {$name}};
+					sql_do ("DELETE FROM $conf->{systables}->{__defaults} WHERE id IN ($ids)");
+				}
 
 			}
 
@@ -481,7 +538,7 @@ sub check_dbl_click_start {
 		if !$preconf -> {core_dbl_click_protection}
 			|| substr($_REQUEST {type}, 0, 1) eq '_'
 			|| $r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest'
-			|| $_REQUEST {action} eq 'download';
+			|| $_REQUEST {action} ~~ ['download', 'save_metrics', 'upload_metrics', 'download_metrics'];
 
 	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
 

@@ -172,9 +172,19 @@ sub trunc_string {
 
 	my $has_ext_chars = $s =~ /(\&[a-z]+)|(\&#\d+)/;
 
+	my $encode_table = $has_ext_chars ? {map {decode_entities($_) => $_} $s =~ /(&#\d+;)/g} : {};
+
 	$s = decode_entities ($s) if $has_ext_chars;
+
 	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
-	$s = encode_entities ($s, "<>‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars && $i18n -> {_charset} ne 'UTF-8';
+
+	if ($has_ext_chars && $i18n -> {_charset} ne 'UTF-8') {
+
+		$s = encode_entities ($s, "<>‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
+
+		$s =~ s/(\X)/$encode_table->{$1} || $1/ge;
+
+	}
 
 	$_REQUEST {__trunc_string} -> {$s, $len} = $s;
 
@@ -968,9 +978,9 @@ sub draw_form_field {
 
 	$field -> {colspan} ||= $_REQUEST {__max_cols} - 1;
 
-	$field -> {state}     = $data -> {fake} == -1 ? 'deleted' : $_REQUEST {__read_only} ? 'passive' : 'active';
+	$field -> {state}   ||= $data -> {fake} == -1 ? 'deleted' : $_REQUEST {__read_only} ? 'passive' : 'active';
 
-	$field -> {label_width} = '20%' unless $field -> {is_slave};
+	$field -> {label_width} ||= '20%' unless $field -> {is_slave};
 
 	$_REQUEST {__no_navigation} ||= $_REQUEST {__only_field};
 
@@ -1274,8 +1284,8 @@ sub draw_esc_toolbar {
 		@{$options -> {additional_buttons}},
 		{
 			preset => 'cancel',
-			href => $options -> {href},
-			off  => $options -> {no_esc},
+			href   => $options -> {href},
+			off    => $options -> {no_esc},
 		},
 		@{$options -> {right_buttons}},
 	])
@@ -1305,37 +1315,39 @@ sub draw_ok_esc_toolbar {
 		@{$options -> {left_buttons}},
 		{
 			preset => 'ok',
-			label => $options -> {label_ok},
-			href => $_SKIN -> __submit_href ($name),
-			off  => $_REQUEST {__read_only} || $options -> {no_ok},
+			label  => $options -> {label_ok},
+			href   => $_SKIN -> __submit_href ($name),
+			off    => $_REQUEST {__read_only} || $options -> {no_ok},
 			(exists $options -> {confirm_ok} ? (confirm => $options -> {confirm_ok}) : ()),
 		},
 		{
 			preset => 'edit',
-			label => $options -> {label_edit},
-			href  => create_url (
+			label  => $options -> {label_edit},
+			href   => create_url (
 				__last_query_string         => $_REQUEST {__last_last_query_string},
 				__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
 				__edit                      => 1,
 			),
-			off   => ((!$conf -> {core_auto_edit} && !$_REQUEST{__auto_edit}) || !$_REQUEST{__read_only} || $options -> {no_edit}),
+			off    => ((!$conf -> {core_auto_edit} && !$_REQUEST{__auto_edit}) || !$_REQUEST{__read_only} || $options -> {no_edit}),
 		},
 		{
 			preset => 'choose',
-			label => $options -> {label_choose},
-			href  => js_set_select_option ('', {
+			label  => $options -> {label_choose},
+			href   => js_set_select_option ('', {
 				id       => $data -> {id},
 				label    => $options -> {choose_select_label} || $data -> {label},
 				question => $data -> {question},
 			}),
-			off   => (!$_REQUEST {__read_only} || !$_REQUEST {select}) || $_REQUEST {"__select_type_" . $_REQUEST {select}} ne $_REQUEST {type},
+			off    => (!$_REQUEST {__read_only} || !$_REQUEST {select})
+				|| $_REQUEST {"__select_type_" . $_REQUEST {select}} ne $_REQUEST {type}
+				|| $options -> {no_choose},
 		},
 		@{$options -> {additional_buttons}},
 		{
 			preset => 'cancel',
-			label => $options -> {label_cancel},
-			href => $options -> {href},
-			off  => $options -> {no_esc},
+			label  => $options -> {label_cancel},
+			href   => $options -> {href},
+			off    => $options -> {no_esc},
 		},
 		@{$options -> {right_buttons}},
 	 ])
@@ -1353,7 +1365,7 @@ sub draw_close_toolbar {
 		@{$options -> {additional_buttons}},
 		{
 			preset => 'close',
-			href => 'javascript: window.parent.close()',
+			href   => 'javascript: window.parent.close()',
 		},
 		@{$options -> {right_buttons}},
 	 ])
@@ -1534,6 +1546,7 @@ sub draw_cells {
 		check_href ($options) ;
 		$options -> {a_class} ||= 'row-cell';
 	}
+
 	push @{$i -> {__href}}, $options -> {href};
 	push @{$i -> {__target}}, $options -> {target};
 
@@ -2719,6 +2732,8 @@ sub draw_node {
 
 	my @buttons;
 
+	my $any_buttons = 0;
+
 	foreach my $button (@{$_ [0]}) {
 
 		next if $button -> {off};
@@ -2739,9 +2754,10 @@ sub draw_node {
 
 		push @buttons, $button;
 
+		$any_buttons ||= $button && $button ne 'BREAK';
 	}
 
-	$i -> {__menu} = draw_vert_menu ($i, \@buttons) if ((grep {$_ ne BREAK} @buttons) > 0);
+	$i -> {__menu} = draw_vert_menu ($i, \@buttons) if $any_buttons;
 
 	return 	$_SKIN -> draw_node ($options, $i);
 
@@ -2934,7 +2950,7 @@ sub draw_error_page {
 		if $error -> {label};
 
 	if ($_REQUEST {__lrt_time}) {
-		lrt_finish ($error -> {msg}, create_url (action => undef));
+		lrt_finish ($error -> {label}, create_url (action => undef));
 		return '';
 	}
 
@@ -2968,18 +2984,33 @@ sub draw_redirect_page {
 ################################################################################
 
 sub lrt_print {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_print (@_);
 }
 
 ################################################################################
 
 sub lrt_println {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_println (@_);
 }
 
 ################################################################################
 
 sub lrt_ok {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_ok (@_);
 }
 
@@ -2991,6 +3022,7 @@ sub lrt_start {
 
 	$_REQUEST {__response_started} = 1;
 	$_REQUEST {__response_sent} = 1;
+	$_REQUEST {__lrt_log} = [];
 
 	$_SKIN -> lrt_start (@_);
 
@@ -3030,8 +3062,10 @@ sub lrt_finish {
 
 	}
 
+
 	$_SKIN -> lrt_finish ($banner, $href, $options);
 
+	return delete $_REQUEST {__lrt_log};
 }
 
 ################################################################################

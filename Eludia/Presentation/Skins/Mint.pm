@@ -153,10 +153,20 @@ sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
 
-	return $_REQUEST {select} ? '' : <<EOH;
-		<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="table_title"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
+	if ($_REQUEST {select}) {
+
+		$_REQUEST {__script} .= <<EOJ;
+			top.document.title = '$$options{label}';
+EOJ
+		return '';
+
+	} else {
+
+		return <<EOH
+			<table class="table-title" cellspacing=0 cellpadding=0 width="100%"><tr><td><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td><td class="table-stat"></td></tr></table>
 EOH
 
+}
 }
 
 ################################################################################
@@ -175,16 +185,15 @@ sub _draw_bottom {
 	my $items = $options -> {menu};
 
 	foreach my $item (@$items) {
-		if ($item -> {is_active}) {
-			$html .='<li class="k-state-active k-item k-tab-on-top k-state-default k-first">
-					<a id="'.$item.'" href="'.$$item{href}.'" class="tab-1 k-link" target="'.$item->{target}.'"><nobr>&nbsp;'.$$item{label}.'&nbsp;</nobr></a>
-				</li>'
-		} else {
-			$html .= '<li class="k-item k-state-default">
-					<a id="'.$item.'" href="'.$$item{href}.'" class="tab-0 k-link" target="'.$item->{target}.'"><nobr>&nbsp;'.$$item{label}.'&nbsp;</nobr></a>
-				</li>'
-		}
+		$html .= $item -> {is_active} ?
+			'<li class="k-state-active k-item k-tab-on-top k-state-default k-first">
+					<a class="tab-1 k-link" ' :
+			'<li class="k-item k-state-default">
+					<a class="tab-0 k-link" ';
 
+		$html .= 'title="' . $$item{title} . '" ' if ($$item{title});
+		$html .= 'id="' . $item . '" href="'.$$item{href}.'" target="' . $item->{target} . '"><nobr>&nbsp;' . $$item{label} . '&nbsp;</nobr></a>
+				</li>';
 	}
 
 	return <<EOH;
@@ -213,7 +222,7 @@ sub _draw_input_datetime {
 	$options -> {onChange}   ||= 'null';
 	$options -> {onKeyPress} ||= 'if (event.keyCode != 27) is_dirty=true';
 
-	$options -> {attributes} -> {class} .= ' form-mandatory-inputs'
+	$options -> {attributes} -> {class} .= ' form-mandatory-inputs required light'
 		if $options -> {mandatory} ;
 
 	$options -> {attributes} -> {class} ||= 'form-active-inputs';
@@ -238,8 +247,6 @@ sub _draw_input_datetime {
 	</nobr>
 EOH
 
-	$html .=  ($options -> {label_tail} || '');
-
 	return $html;
 
 }
@@ -255,7 +262,6 @@ sub draw_form {
 	}
 
 	my $html = $options -> {hr};
-
 
 	$html .= $options -> {path};
 
@@ -280,16 +286,20 @@ EOH
 			@{$options -> {keep_params}}
 
 	);
+
 	$html .=  <<EOH;
 			<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 EOH
+
 	foreach my $row (@{$options -> {rows}}) {
+
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
 
 		my $attributes = dump_attributes (draw_form_row_attributes ($row));
+		my $row_class = ($row -> [0] -> {is_grid} == 1) ? 'row_grid' : '';
 
-		$html .= qq{<tr id="$tr_id" $attributes>};
+		$html .= qq{<tr id="$tr_id" $attributes class="$row_class">};
 		foreach (@$row) { $html .= $_ -> {html} };
 		$html .= qq{</tr>};
 	}
@@ -314,7 +324,7 @@ sub draw_form_row_attributes {
 	my $is_any_field_shown = 0 + grep {!$_ -> {off} && !$_ -> {draw_hidden}} @$row;
 
 	if (!$is_any_field_shown) {
-		$attributes -> {class} = 'form-hidden-field';
+		$attributes -> {class} .= 'form-hidden-field';
 	}
 
 	return $attributes;
@@ -418,19 +428,32 @@ EOJS
 
 sub draw_form_field {
 
+
 	my ($_SKIN, $field, $data) = @_;
 
 	if ($field -> {type} eq 'banner') {
+
+		my $a = {
+			colspan => $field -> {colspan} + 1,
+			class  => join (' ', grep {$_} "form-$$field{state}-banner", $field -> {class}, $field -> {label_class}),
+			nowrap => !$field -> {no_nowrap},
+			align  => 'center',
+			$field -> {label_title} ? (title => $field -> {label_title}) : (),
+			%{$field -> {label_attributes}}
+		};
+
+		return dump_tag (td => $a, $field -> {html});
+
+	} elsif ($field -> {type} eq 'article') {
+
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
-		my $class = join ' ', grep {$_} "form-$$field{state}-banner", $field -> {class};
-		return qq{<td class='$class' $colspan nowrap align=center>$$field{html}</td>};
-	}
-	elsif ($field -> {type} eq 'article') {
-		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
+
 		return qq{<td $colspan class='form-article'>$$field{html}</td>};
-	}
-	elsif ($field -> {type} eq 'hidden') {
+
+	} elsif ($field -> {type} eq 'hidden') {
+
 		return $field -> {html};
+
 	}
 
 	if ($field -> {plus}) {
@@ -467,9 +490,10 @@ sub draw_form_field {
 	unless ($field -> {label_off}) {
 
 		my $a = {
-			class  => $class . 'label',
-			nowrap => 1,
+			class  => $class . 'label ' . $field -> {label_class},
+			nowrap => !$field -> {no_nowrap},
 			align  => 'right',
+			%{$field -> {label_attributes}}
 		};
 
 		$a -> {colspan} = $field -> {colspan_label} if $field -> {colspan_label};
@@ -489,9 +513,15 @@ sub draw_form_field {
 	$a -> {colspan} = $field -> {colspan}    if $field -> {colspan};
 	$a -> {width}   = $field -> {cell_width} if $field -> {cell_width};
 
-	$html .= dump_tag (td => $a, $field -> {html});
 
-	return $html . ($options -> {label_tail} || '');
+	if ($field -> {is_grid}) {
+		$a -> {class} .= $field -> {class};
+		$a -> {'data-level'} = $field -> {attributes} -> {'data-level'};
+	}
+
+	$html .= dump_tag (td => $a, $field -> {html} . ($field -> {label_tail} || ''));
+
+	return $html;
 
 }
 
@@ -512,8 +542,7 @@ sub draw_form_field_button {
 
 	my $tabindex = ++ $_REQUEST {__tabindex};
 
-	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">}
-		. ($options -> {label_tail} || '');
+	return qq {<input type="button" class="k-button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">};
 
 }
 
@@ -532,6 +561,7 @@ sub draw_form_field_string {
 	$attributes -> {onBlur}     .= ';stibqif (false);';
 
 	$attributes -> {class}      .= ' k-textbox ';
+	$attributes -> {class}      .= ' required light ' if $options -> {mandatory};
 
 	$attributes -> {type}        = 'text';
 
@@ -546,7 +576,7 @@ sub draw_form_field_string {
 
 	}
 
-	return dump_tag ('input', $attributes) . ($options -> {label_tail} || '');
+	return dump_tag ('input', $attributes);
 
 }
 
@@ -595,8 +625,7 @@ sub draw_form_field_suggest {
 			name     => "_$options->{name}__id",
 			value    => $options -> {value__id},
 			onchange => $options -> {after},
-		})
-		. ($options -> {label_tail} || '');
+		});
 
 
 }
@@ -609,7 +638,7 @@ sub draw_form_field_datetime {
 
 	$options -> {name} = '_' . $options -> {name};
 
-	return $_SKIN -> _draw_input_datetime ($options) . ($options -> {label_tail} || '');
+	return $_SKIN -> _draw_input_datetime ($options);
 
 }
 
@@ -623,7 +652,8 @@ sub draw_form_field_file {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	my $html = "<span id='form_field_file_head_$options->{name}'>";
+	my $html = "<span id='form_field_file_head_$options->{name}'>" .
+		($options -> {no_limit} || !$preconf -> {file_tooltip} ? '' : "<div data-tooltip='$$preconf{file_tooltip}'>");
 
 	$$options{value} ||= $data -> {"$$options{name}_name"};
 
@@ -676,9 +706,17 @@ EOH
 		<input type='hidden' name='_file_clear_flag_for_$$options{name}' id='_file_clear_flag_for_$$options{name}'>
 EOH
 
-	$html .= "</span>";
+	if ($options -> {no_limit}) {
+		$html .= <<EOH;
+		<input type='hidden' name='_file_no_limit_for_$$options{name}' id='_file_no_limit_for_$$options{name}' value='1'>
+EOH
+	} elsif ($preconf -> {file_tooltip}) {
+		$html .= '</div>';
+	}
 
-	return $html . ($options -> {label_tail} || '');
+	$html .= '</span>';
+
+	return $html;
 
 }
 
@@ -702,26 +740,35 @@ EOJS
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return <<EOH . ($options -> {label_tail} || '');
+	my $html;
 
+	$html .=  "<input type='hidden' name='_file_no_limit_for_$$options{name}' id='_file_no_limit_for_$$options{name}' value='1'>"
+		if $options -> {no_limit};
+
+	$html .= <<EOH;
 		<input
 			type="hidden"
 			name="__$$options{name}_file_field"
 			value="$options->{field}"
 		>
-
 		<input
 			type="hidden"
 			name="__$$options{name}_file_no_del"
 			value="$options->{no_del}"
 		>
 		<span id="file_field_$options->{name}">
+EOH
+	$html .= ($options -> {no_limit} || !$preconf -> {file_tooltip} ? '<div>' : "<div data-tooltip='$$preconf{file_tooltip}'>") . <<EOH;
 			<span id="file_field_$options->{name}_head">
 				<input name="_$$options{name}_0" type="file" $attributes />
 			</span>
+			</div>
 		</span>
 
 EOH
+
+	return $html;
+
 
 }
 
@@ -752,7 +799,10 @@ sub draw_form_field_hgroup {
 	foreach my $item (@{$options -> {items}}) {
 		next if $item -> {off};
 		$html .= $item -> {label} if $item -> {label};
-		$html .= $item -> {html};
+		$html .= '<div style="display:inline-block;vertical-align:middle;">'
+			. $item -> {html}
+			. $item -> {label_tail}
+			. '</div>';
 		$html .= '&nbsp;';
 	}
 
@@ -875,7 +925,7 @@ sub draw_form_field_static {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return "<span $attributes>$html</span>" . ($options -> {label_tail} || '');
+	return "<span $attributes>$html</span>";
 
 }
 
@@ -887,8 +937,7 @@ sub draw_form_field_checkbox {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true">}
-		. ($options -> {label_tail} || '');
+	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true">};
 }
 
 ################################################################################
@@ -935,12 +984,18 @@ sub draw_form_field_radio {
 
 		$html .= qq {</td><td class="form-inner" width=1><nobr>&nbsp;<label for="$value">$$value{label}</label></nobr>};
 
+		if ($value -> {type} ne 'static' && $options -> {value_colon}) {
+			$html .= $value -> {label} ? ':' : '&nbsp;';
+		}
+
 		if ($value -> {html}) {
 
 			my $bn = $a -> {checked} ? 'block' : 'none';
 
-			$html .= qq {<td class="form-inner"><div id="radio_div_$value" style="display:$bn">$$value{html}</div>};
+			my $clear_on_hide = $options -> {clear_on_hide}? 'clear-on-hide' : '';
 
+
+			$html .= qq {<td class="form-inner"><div id="radio_div_$value" style="display:$bn" $clear_on_hide>$$value{html}</div>};
 		}
 
 		$options -> {no_br} or ++ $n == @{$options -> {values}} or $html .= qq {<td class="form-inner"><div>&nbsp;</div><tr>};
@@ -975,13 +1030,15 @@ sub draw_form_field_select {
 		$options -> {attributes} -> {'data-ken-autoopen'} = 1;
 	}
 
+	$options -> {attributes} -> {class} .= ' required light ' if $options -> {mandatory};
+
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	if (defined $options -> {other}) {
 
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'dialog_width';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
-		$options -> {other} -> {title}  ||= $i18n->{voc_title};
+		$options -> {other} -> {title}  ||= $i18n -> {voc_title};
 
 		$options -> {onChange} = <<EOJS;
 
@@ -1032,8 +1089,6 @@ EOH
 	}
 
 	$html .= '</select>';
-
-	$html .= $options -> {label_tail} || '';
 
 	return $html;
 
@@ -1097,8 +1152,6 @@ EOH
 	}
 
 	$html .= '</span>';
-
-	$html .= $options -> {label_tail} || '';
 
 	local $conf -> {portion} ||= 50;
 
@@ -1662,7 +1715,7 @@ EOH
 	if (@{$options -> {items}} > 0) {
 
 		$btn_r = <<EOH;
-			<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:top;" border="0" hspace="0">
+			<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:top;" border="0" hspace="0" class="toolbar_button_multi_img">
 EOH
 
 		$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
@@ -1671,7 +1724,7 @@ EOH
 
 		$html .= "<div style='display:none;'>";
 		map { $html .= <<EOH if $_ -> {hotkey};
-			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title=''>
+			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title='' class='toolbar_button'>
 EOH
 		} @{$options -> {items}};
 		$html .= "</div>";
@@ -1691,7 +1744,7 @@ EOH
 
 		$html .= <<EOH;
 
-			<a tabindex=$options->{tabindex} class="k-button" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button toolbar_button_multi" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
 
 			<script>
 
@@ -1701,7 +1754,7 @@ EOH
 EOH
 	} else {
 		$html .= <<EOH;
-			<a tabindex=$options->{tabindex} class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button toolbar_button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
 EOH
 	}
 
@@ -1739,9 +1792,12 @@ sub draw_toolbar_input_tree {
 	my $value = $options -> {label};
 	$value =~ s/\"/\\"/g;
 
+	my $enable = $options -> {attributes} -> {disabled} ? '0' : '1';
+
 	$options -> {height} ||= 400;
 	$options -> {width}  ||= 600;
 	my $dropdown_width = $options -> {max_len} * 3;
+
 	$_REQUEST {__script} .= <<EOJS;
 var ${id}_changed = 0;
 EOJS
@@ -1767,14 +1823,11 @@ require (['/i/mint/libs/kendo.web.ext.js'], function () {
 		}
 	});
 	\$("INPUT[type='checkbox'][name^='${name}_']").change(function () {${id}_changed = 1});
+	${id}_el.data('kendoExtDropDownTreeView').dropDownList().enable(!!$enable);
 });
 EOJS
 
-
 	return qq|<li class="toolbar nowrap"><div id="$id"></div></li>|;
-
-
-
 }
 
 ################################################################################
@@ -1828,15 +1881,17 @@ sub draw_toolbar_input_select {
 				);
 
 			} else {
-
-				if (\$.data (this, 'prev_value') != this.selectedIndex) {
+				if (\$.data (this, 'prev_value') !== this.selectedIndex) {
 					$submit;
 				}
-
 			}
 EOJS
 
 	} # defined $options -> {other}
+
+	if ($options -> {onChange} =~ s/(submit\(\);)$//) {
+		$options -> {onChange} = q|if ($.data(this, 'prev_value') !== this.selectedIndex) submit();|;
+	}
 
 	$options -> {attributes} ||= {};
 
@@ -1998,7 +2053,7 @@ EOH
 
 	my $name = "_$$options{name}_1";
 
-	$options -> {href} = "javascript: \$('input[name=$name]').click()";
+	$options -> {href} = "javascript: \$('input[name=$name]').click(); void(0)";
 
 
 	my $keep_form_params = $options -> {keep_form}? <<EOJS : '';
@@ -2025,6 +2080,8 @@ EOJS
 
 		toolbarFormData.append('action', 'upload');
 
+		blockui ();
+
 		$.ajax ({
 			type: 'POST',
 			url: '/',
@@ -2041,28 +2098,13 @@ EOJS
 				console.log(data);
 			}
 		});
+
+		return blockEvent();
 EOJS
 
 	$html .= <<EOH;
 			<a TABINDEX=-1 class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
 EOH
-
-	$html .= <<EOH;
-				<input
-					type="file"
-					name="$name"
-					$attributes
-					onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
-					onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
-					onChange="is_dirty=true; $$options{onChange}"
-					style="visibility:hidden; width: 1px"
-					multiple="multiple"
-					data-ken-multiple="true"
-					is-native="true"
-				/>
-EOH
-
-
 
 	if ($options -> {icon}) {
 		my $img_path = _icon_path ($options -> {icon});
@@ -2072,6 +2114,18 @@ EOH
 	$html .= <<EOH;
 				$options->{label}</nobr>
 				</a>
+				<input
+					type="file"
+					name="$name"
+					$attributes
+					onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
+					onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
+					onChange="is_dirty=true; $$options{onChange}"
+					style="visibility:hidden; width: 1px; position: absolute; left: -999px"
+					multiple="multiple"
+					data-ken-multiple="true"
+					is-native="true"
+				/>
 		</li>
 
 EOH
@@ -2121,7 +2175,7 @@ sub draw_toolbar_input_text {
 
 	$options -> {attributes} ||= {};
 
-	$options -> {onKeyPress} ||= "if (event.keyCode == 13 || event.keyIdentifier == 'Enter') {form.submit(); blockEvent ()}";
+	$options -> {onKeyPress} ||= "if (event.keyCode == 13 || event.key == 'Enter') {form.submit(); blockEvent ()}";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -2213,7 +2267,9 @@ sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;
 
-	return '<li role="header" class="toolbar_pager"></li>';
+	return <<EOH;
+	<li role="header" class="toolbar_pager" data-table-id="$$options{id_table}"></li>
+EOH
 
 }
 
@@ -2249,7 +2305,7 @@ sub draw_centered_toolbar_button {
 
 		$btn_r = <<EOH;
 			<nobr>
-				<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:middle;" border="0" hspace="0">
+				<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:middle;" border="0" hspace="0" class="toolbar_button_multi_img">
 			</nobr>
 EOH
 
@@ -2270,14 +2326,14 @@ EOH
 
 		$html .= "<div style='display:none;'>";
 		map { $html .= <<EOH if $_ -> {hotkey};
-			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title=''>
+			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title='' class='toolbar_button'>
 EOH
 		} @{$options -> {items}};
 		$html .= "</div>";
 
 		$html .= <<EOH;
 
-			<a tabindex=$options->{tabindex} class="k-button" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button toolbar_button_multi" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
 
 			<script>
 
@@ -2287,8 +2343,9 @@ EOH
 EOH
 
 	} else {
+		my $download = $$options{download} ? "download='$$options{download}'" : "";
 		$html .= <<EOH;
-			<a tabindex=$options->{tabindex} class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button toolbar_button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}" $download><nobr>
 EOH
 	}
 
@@ -2450,14 +2507,17 @@ sub draw_text_cell {
 
 	if (defined $data -> {level}) {
 
-		$data -> {attributes} -> {style} .= ';padding-left:' . ($data -> {level} * 15 + 3);
+		$data -> {attributes} -> {style} .= ';padding-left:' . ($data -> {level} * 15 + 3) . 'px;';
 
 	}
 
 	$data -> {attributes} -> {class} .= ' row-cell-nowrap'
 		if $data -> {attributes} -> {title} =~ /^\d+(\.\d+)?$/ || $data -> {attributes} -> {title} =~ /^\d{2}\.\d{2}\.\d{4} \d{1,2}\:\d{1,2}\:\d{1,2}/;
 
-	$data -> {a_class} and $data -> {attributes} -> {class} .= ' ' . $data -> {a_class};
+	if ($data -> {a_class} && $data -> {a_class} ne 'row-cell') {
+		$data -> {attributes} -> {class} .= ' ' . $data -> {a_class};
+	}
+
 
 	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
 
@@ -2550,7 +2610,7 @@ sub draw_datetime_cell {
 
 	local $options -> {name} = $data -> {name};
 
-	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "$label_tail</td>";
+	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "</td>";
 
 }
 
@@ -2852,7 +2912,7 @@ sub draw_table_header_cell {
 
 	$cell -> {attributes} -> {style} = 'z-index:' . ($cell -> {no_scroll} ? 110 : 100) . ';' . $cell -> {attributes} -> {style};
 
-	!$cell -> {width} or $cell -> {attributes} -> {style} .= " width: $$cell{width}px;";
+	!$cell -> {width} or $cell -> {attributes} -> {style} .= " width:$$cell{width}px;min-width:$$cell{width}px;max-width:$$cell{width}px;";
 	!$cell -> {height} or $cell -> {attributes} -> {style} .= " height: $$cell{height}px;";
 
 	$cell -> {id} ||= &{$_PACKAGE . 'get_super_table_cell_id'} ($cell);
@@ -3118,6 +3178,8 @@ EOJS
 
 	my $script = dump_tag (script => {}, $_REQUEST {__script}) . "\n";
 
+	my $sql_version = ($preconf -> {sql_version} -> {string} . $preconf -> {sql_version} -> {number}) || $$SQL_VERSION{string};
+
 	return <<EOH;
 <html>
 	<head>
@@ -3125,7 +3187,7 @@ EOJS
 
 		<title>$$i18n{_page_title}</title>
 
-		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
+		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $sql_version; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
 		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
 		$script
 	</head>
@@ -3147,7 +3209,15 @@ sub draw_page {
 	$r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' && out_json ($page -> {body} || $page -> {content});
 	$_REQUEST {type} eq '_boot' && return $_SKIN -> draw__boot_page ($page);
 
-	my $body = $page -> {body};
+	my $body = $preconf -> {toggle_in_hidden_form} ? <<EOH : '';
+	<div id="waiting_screen">
+		<div class="content">
+			<img src="$_REQUEST{__static_url}/busy.gif">
+		</div>
+	</div>
+EOH
+
+	$body .= $page -> {body};
 
 	my $body_options = {
 		bgcolor      => 'white',
@@ -3157,11 +3227,15 @@ sub draw_page {
 
 	if ($_REQUEST {__refresh_tree}) {
 
+		my $id_selected_node = $_REQUEST {__refresh_tree} =~ /^\d+$/?
+			0 + $_REQUEST {__refresh_tree} : 0;
+
 		$_REQUEST {__on_load} .= qq{
 			var tree = window.parent.\$('#splitted_tree_window_left');
-
 			if (tree.data ("active") === 2) {
+				tree.data ("selected-node", $id_selected_node);
 				tree = tree.data ("kendoTreeView");
+				tree.bind("dataBound", debounce(window.parent.treeview_select_node, 500));
 				tree.dataSource.read();
 			} else {
 				window.parent.location.reload ();
@@ -3204,12 +3278,24 @@ sub draw_page {
 
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 
-	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">\n}   foreach (@{$_REQUEST {__include_css}});
+	unshift @{$_REQUEST {__include_css}},
+		'mint/libs/jQueryUI/jquery-ui.min',
+		'mint/libs/SuperTable/supertable',
+		'mint/libs/KendoUI/styles/kendo.common.min',
+		'mint/libs/KendoUI/styles/kendo.bootstrap.min',
+	;
+
+	foreach (@{$_REQUEST {__include_css}}) {
+		my @stat = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_site}/i/$_.css");
+		$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css?salt=$stat[9]' type="text/css" rel="stylesheet">\n};
+	}
 
 	$_REQUEST {__head_links} .= dump_tag (style => {}, $_REQUEST {__css}) . "\n" if $_REQUEST {__css};
 
-	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js'>\n</script>"                          foreach (@{$_REQUEST {__include_js}});
-
+	foreach (@{$_REQUEST {__include_js}}) {
+		my @stat = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_site}/i/$_.js");
+		$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?salt=$stat[9]'>\n</script>";
+	}
 
 	foreach (keys %_REQUEST) {
 
@@ -3226,26 +3312,31 @@ sub draw_page {
 
 	$_REQUEST {__head_links} .= dump_tag (script => {}, $_REQUEST {__script}) . "\n";
 
+	my $sql_version = ($preconf -> {sql_version} -> {string} . $preconf -> {sql_version} -> {number}) || $$SQL_VERSION{string};
+
+	my @stat_eludia     = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_url}/eludia.css");
+	my @stat_navigation = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_url}/navigation.js");
+	my @stat_showmodal  = stat ($preconf -> {_} -> {docroot} . "$_REQUEST{__static_url}/jQuery.showModalDialog.js");
+	my @stat_require    = stat ($preconf -> {_} -> {docroot} . "/i/mint/libs/require.min.js");
+	my @stat_jquery     = stat ($preconf -> {_} -> {docroot} . "/i/mint/libs/KendoUI/js/jquery.min.js");
+	my @stat_supertable = stat ($preconf -> {_} -> {docroot} . "/i/mint/libs/SuperTable/supertable.min.js");
+
+
 	$_REQUEST {__head_links}  = qq {
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 		<title>$$i18n{_page_title}</title>
 
-		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
+		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $sql_version; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
 		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
 
-		<link href="$_REQUEST{__static_url}/eludia.css" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/jQueryUI/jquery-ui.min.css" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/SuperTable/supertable.css" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/KendoUI/styles/kendo.common.min.css" type="text/css" rel="stylesheet" />
-		<link href="/i/mint/libs/KendoUI/styles/kendo.bootstrap.min.css" type="text/css" rel="stylesheet" />
+		<link href="$_REQUEST{__static_url}/eludia.css?salt=$stat_eludia[9]" type="text/css" rel="stylesheet" />
 
-		<script src="/i/mint/libs/require.min.js"></script>
-		<script src="/i/mint/libs/KendoUI/js/jquery.min.js"></script>
+		<script src="/i/mint/libs/require.min.js?salt=$stat_require[9]"></script>
+		<script src="/i/mint/libs/KendoUI/js/jquery.min.js?salt=$stat_jquery[9]"></script>
 
-		<script src="$_REQUEST{__static_url}/navigation.js"></script>
-		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js" async></script>
-
+		<script src="$_REQUEST{__static_url}/navigation.js?salt=$stat_navigation[9]"></script>
+		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js?salt=$stat_showmodal[9]" async></script>
 
 	} . $_REQUEST {__head_links};
 
@@ -3275,12 +3366,22 @@ sub draw_page {
 					'$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js' : {
 						deps: ['cultures/kendo.culture.ru-RU.min']
 					},
-					'/i/mint/libs/SuperTable/supertable.min.js' : {}
+					'/i/mint/libs/SuperTable/supertable.min.js?$stat_supertable[9]' : {}
 				}
 			});
 			require([ $kendo_modules ], function () {\$(document).ready (
 				function () {
 					var options = $init_page_options;
+
+					if (typeof kendo.ui.DropDownList === 'function') {
+						kendo.ui.DropDownList.fn.colorize_empty_value = (function(colorize_empty_value) {
+							return function() {
+								var \$label = this.wrapper.find('span.k-input');
+
+								\$label[(this.value() < 1) ? 'addClass' : 'removeClass']('empty');
+							}
+						})(kendo.ui.DropDownList.fn.colorize_empty_value);
+					}
 					options.on_load = function () {
 						$_REQUEST{__on_load};
 					}
@@ -3307,6 +3408,8 @@ EOJS
 			<div style='position:absolute; left:0; top:0; height:4px; width:4px; z-index:101; display:none; border: solid #888888 1px; background-color:white;' id="slider_" ><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=4 id="slider_"></div>
 		};
 		$body .= "<iframe name='$_' src='$_REQUEST{__static_url}/0.html' width=0 height=0 application='yes' style='display:none'>\n</iframe>" foreach (@{$_REQUEST{__invisibles}});
+
+		$body .= "<div id='help_section' style='display:none'>$_REQUEST{__help_section}</div>" if $_REQUEST {__help_section};
 
 		$body  = dump_tag (body => $body_options, $body);
 	}
@@ -3400,14 +3503,30 @@ sub lrt_print {
 
 	my $_SKIN = shift;
 
+	return
+		if $_REQUEST {_lrt_show_time} && int (time() - $_REQUEST {__lrt_show_time}) <= $_REQUEST {_lrt_show_time};
+
+	$_REQUEST {__lrt_show_time} = time();
+
+	my $time = '';
+	unless ($_REQUEST {__lrt_no_time}) {
+		my $sec = int ($_REQUEST {__lrt_show_time} - $_REQUEST {__lrt_time});
+		my $min = int ($sec / 60);
+		$sec -= $min * 60;
+		$time = sprintf ("%02d:%02d - ", $min, $sec);
+	}
+
+	my $id = int ($_REQUEST {__lrt_show_time} * rand);
+
+
 	open  (OUT, '>>' . $_REQUEST {__lrt_filename}) or die "Can't open $_REQUEST{__lrt_filename}:$!\n";
 
 	flock (OUT, LOCK_EX);
 
 	if ($i18n -> {_charset} ne 'UTF-8') {
-		print OUT Encode::decode ('windows-1251', $_) foreach @_
+		print OUT Encode::decode ('windows-1251', $_) foreach ($time, @_)
 	} else {
-		print OUT @_;
+		print OUT ($time, @_);
 	}
 
 	flock (OUT, LOCK_UN);
@@ -3434,6 +3553,8 @@ sub lrt_ok {
 
 	my $_SKIN = shift;
 
+	local $_REQUEST {__lrt_no_time} = 1;
+
 	$_SKIN -> lrt_print ('^:::1:::' . ($_[1] ? $i18n -> {error} : 'OK') . ':::' . ($_[1] || 0) . ':::$');
 
 }
@@ -3448,6 +3569,8 @@ sub lrt_start {
 
 	$r -> content_type ("text/html; charset=$i18n->{_charset}");
 	$r -> send_http_header ();
+
+	$_REQUEST {__lrt_time} = $_REQUEST {__lrt_show_time} = time();
 
 	$_REQUEST {__lrt_id} = rand (100000);
 
@@ -3507,6 +3630,9 @@ sub lrt_finish {
 
 	my ($banner, $href, $options) = @_;
 
+	local $_REQUEST {__lrt_no_time} = 1;
+	local $_REQUEST {_lrt_show_time} = 0;
+
 # 	if ($options -> {kind} eq 'download') {
 
 # 		$r -> print ($options -> {toolbar});
@@ -3534,6 +3660,8 @@ sub lrt_finish {
 
 	}
 
+	delete $_REQUEST {__lrt_time};
+	delete $_REQUEST {__lrt_show_time};
 }
 
 ################################################################################
@@ -3618,7 +3746,7 @@ sub draw_tree {
 
 		};
 
-		return {items => $list};
+		return {items => $list, no_expand_root => $options -> {no_expand_root}};
 	}
 
 	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
@@ -3718,7 +3846,10 @@ EOJS
 						url      : "/?sid=$_REQUEST{sid}&type=$_REQUEST{type}&__ajax_load=1&$keep_params",
 						dataType : "json",
 						cache    : false,
+						data: function () {
+							return window.eludia_tree_filter;
 					}
+				},
 				},
 
 				schema: {
@@ -3732,11 +3863,15 @@ EOJS
 			});
 		};
 	}
-
 	$options -> {expand_on_select} ||= 0;
 
 	$js .= qq {
 
+
+		kendo.ui.TreeView.fn.eludia_filter = function (filter) {
+			window.eludia_tree_filter = filter;
+			this.dataSource.read();
+		};
 
 		\$("#splitted_tree_window_left").data("active", $$options{active}).kendoTreeView({
 			dataSource : dataSource,
@@ -3873,7 +4008,7 @@ sub draw_suggest_page {
 
 	my ($_SKIN, $data) = @_;
 
-	$_REQUEST {__content_type} ||= 'application/json; charset=windows-1251';
+	$_REQUEST {__content_type} ||= 'application/json; charset=' . $i18n -> {_charset};;
 
 	my $a = $_JSON -> encode ([map {{id => $_ -> {id}, label => $_ -> {label}}} @$data]);
 
