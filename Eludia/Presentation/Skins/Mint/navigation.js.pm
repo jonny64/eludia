@@ -3122,7 +3122,10 @@ var open_in_supertable_panel = function(self, url) {
 	if (is_close) {
 		document.location.href = url; 
 	} else {
-		iframe.attr('src', url + '&in_panel=1');
+		if (url !== '/i/empty_object/') {
+			url += '&in_panel=1'
+		} 
+		iframe.attr('src', url);
 	}
 };
 
