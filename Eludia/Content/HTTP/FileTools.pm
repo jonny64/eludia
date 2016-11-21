@@ -217,7 +217,7 @@ sub upload_file {
 		$filename
 		&& !$options -> {no_limit}
 		&& $preconf -> {file_extensions}
-		&& !($filename =~ /\.([^\.]*?)$/ && $1 ~~ $preconf -> {file_extensions})
+		&& !($filename =~ /\.([^\.]*?)$/ && (lc ($1) ~~ $preconf -> {file_extensions} || uc ($1) ~~ $preconf -> {file_extensions}))
 	) {
 		my $error = $i18n -> {file_ext_fail} . join ', ', map { '.' . $_ } @{$preconf -> {file_extensions}};
 		if ($_REQUEST {__json_response}) {
