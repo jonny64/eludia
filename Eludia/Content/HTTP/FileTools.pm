@@ -81,6 +81,12 @@ sub download_file_header {
 		$r -> headers_out -> {'Accept-Ranges'} = 'bytes';
 	}
 
+	if ($preconf -> {core_cors}) {
+		$r -> headers_out -> {'Access-Control-Allow-Origin'} = $preconf -> {core_cors};
+		$r -> headers_out -> {'Access-Control-Allow-Credentials'} = 'true';
+		$r -> headers_out -> {'Access-Control-Allow-Headers'} = 'Origin, X-Requested-With, Content-Type, Accept, Cookie, Authorization';
+	}
+
 	delete $r -> headers_out -> {'Content-Encoding'};
 
 	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
