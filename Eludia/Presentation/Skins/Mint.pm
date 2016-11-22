@@ -3001,7 +3001,7 @@ sub draw_super_table__only_table {
 				$html .= qq { data-target="$i->{__target}->[$tr_cnt]"}
 					if $i -> {__target} -> [$tr_cnt] && $i -> {__target} -> [$tr_cnt] ne '_self';
 
-				if ($i -> {id} == undef) {
+				if ($has_splitter && $i -> {id} == undef) {
 					$html .= qq { data-href="javascript:open_in_supertable_panel(this, \'/i/empty_object/\')" };
 				} elsif ($has_splitter) {
 					$html .= qq { data-href="javascript:open_in_supertable_panel(this, \'$i->{__href}->[$tr_cnt]\')"};
