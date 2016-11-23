@@ -2790,7 +2790,7 @@ function init_page (options) {
 			light.call(this);
 		};
 
-	var required_date_field = function($field, required) {
+	window.required_date_field = function($field, required) {
 		var wrapper = $field.closest('.k-widget');
 
 		if (required) { console.log('req');
