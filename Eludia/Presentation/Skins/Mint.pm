@@ -296,9 +296,14 @@ EOH
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
 
-		my $attributes = dump_attributes (draw_form_row_attributes ($row));
-		my $row_class = ($row -> [0] -> {is_grid} == 1) ? 'row_grid' : '';
+		my $attributes = draw_form_row_attributes($row);
 
+		$attributes -> {'data-row-id'} = $row -> [0] -> {row_id}
+			if $options -> {name} eq 'metrics_form';
+
+		$attributes = dump_attributes ($attributes);
+
+		my $row_class = ($row -> [0] -> {is_grid} == 1) ? 'row_grid' : '';
 		$html .= qq{<tr id="$tr_id" $attributes class="$row_class">};
 		foreach (@$row) { $html .= $_ -> {html} };
 		$html .= qq{</tr>};
