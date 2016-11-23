@@ -1830,6 +1830,11 @@ sub draw_table_header_row {
 
 	my ($cells) = @_;
 
+	if ($_REQUEST {xls}){
+		$_REQUEST {__xl_row} += 1;
+		$_REQUEST {__xl_col} = 0;
+	}
+
 	return $_SKIN -> draw_table_header_row ($rows, [map {
 		ref $_ eq ARRAY ? (join map {draw_table_header_cell ($_)} order_cells (@$_)) : draw_table_header_cell ($_)
 	} order_cells (@$cells)]);
@@ -3309,11 +3314,18 @@ sub setup_skin {
 
 	}
 
-	if ($_REQUEST {xls}) {
+	if ($_REQUEST {xls} || $_REQUEST {xlsx}) {
 
 		$_REQUEST {__core_skin} ||= $_REQUEST {__skin};
 
-		$_REQUEST {__skin} = 'XL';
+		if ($preconf -> {xlsx_print}) {
+
+			$_REQUEST {__skin} = 'XLSX';
+		}
+		else {
+
+			$_REQUEST {__skin} = 'XL';
+		}
 
 	}
 
@@ -3324,6 +3336,8 @@ sub setup_skin {
 	$path    =~ s{\:\:}{/}gsm;
 
 	require $path . '.pm';
+
+	$_REQUEST {xls} ||= $_REQUEST {xlsx};
 
 	$_REQUEST {__static_site} = '';
 
