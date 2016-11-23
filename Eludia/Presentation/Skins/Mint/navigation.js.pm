@@ -2790,6 +2790,22 @@ function init_page (options) {
 			light.call(this);
 		};
 
+	var required_date_field = function($field, required) {
+		var wrapper = $field.closest('.k-widget');
+
+		if (required) { console.log('req');
+			$field.addClass('form-mandatory-inputs');
+			wrapper.addClass('required');
+		} else { console.log('unreq');
+			$field.removeClass('form-mandatory-inputs');
+			wrapper.removeClass('required');
+		}
+		// $field.kendoDatePicker();
+		if (required) {
+			date_field_light.call($field.data('kendoDatePicker'));
+		}
+	};
+
 	$('[data-type=datepicker]').each(function () {
 		$(this).on('keydown', date_field_keydown);
 		$(this).kendoDatePicker();
