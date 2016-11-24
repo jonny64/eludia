@@ -702,6 +702,13 @@ a.hint {
 	display: none;
 }
 
+.k-numerictextbox .k-link {
+	height: 50%!important;
+}
+.k-numerictextbox .k-link .k-icon {
+	position: inherit!important;
+	margin: 3px 0 0 3px!important;
+
 #waiting_screen {
 	position: fixed;
 	top: 0;
