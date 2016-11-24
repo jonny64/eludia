@@ -825,6 +825,7 @@ sub draw_form_field_text {
 	my ($_SKIN, $options, $data) = @_;
 
 	$options -> {attributes} -> {class} .= ' k-textbox ';
+	$options -> {attributes} -> {class} .= ' required ' if $options -> {mandatory};
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
