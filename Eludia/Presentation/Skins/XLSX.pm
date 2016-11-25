@@ -129,6 +129,7 @@ sub draw_form_field {
 
 	if ($field -> {type} eq 'banner') {
 		$format_record -> set_align ('center');
+		$format_record -> set_bold ();
 
 		$field -> {html} = processing_string ($field -> {html});
 
