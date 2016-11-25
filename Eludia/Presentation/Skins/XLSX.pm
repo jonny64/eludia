@@ -842,9 +842,21 @@ sub add_worksheet {
 
 	my ($_SKIN, $sheet_name) = @_;
 
-	$sheet_name = substr ($sheet_name, 0, 31);
+	my $NAME_MAX_WIDTH = 31;
+	$sheet_name = substr ($sheet_name, 0, $NAME_MAX_WIDTH);
 	$sheet_name = decode ($i18n -> {_charset}, $sheet_name);
 	$_REQUEST {__xl_sheet_name} = $sheet_name;
+
+	my $uniq_names = {
+		map {$_ -> get_name () => 1} $_REQUEST {__xl_workbook} -> sheets(),
+	};
+
+	my ($cnt, $uniq_sheet_name) = (0, $sheet_name);
+	while ($uniq_names -> {$uniq_sheet_name}) {
+		$cnt ++;
+		$uniq_sheet_name = substr ($sheet_name, 0, $NAME_MAX_WIDTH - length($cnt) - 1) . '_' . $cnt;
+	}
+	$sheet_name = $uniq_sheet_name;
 
 	my $worksheet = $_REQUEST {__xl_workbook} -> add_worksheet ($sheet_name);
 
