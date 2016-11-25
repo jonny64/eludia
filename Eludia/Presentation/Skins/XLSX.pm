@@ -847,8 +847,15 @@ sub add_worksheet {
 	$sheet_name = decode ($i18n -> {_charset}, $sheet_name);
 	$_REQUEST {__xl_sheet_name} = $sheet_name;
 
+	my @sheets = $_REQUEST {__xl_workbook} -> sheets();
+
+	my $first_sheet = @sheets == 1? $sheets [0] : 0;
+	if ($first_sheet) {
+		write_signature_xl ($first_sheet);
+	}
+
 	my $uniq_names = {
-		map {$_ -> get_name () => 1} $_REQUEST {__xl_workbook} -> sheets(),
+		map {$_ -> get_name () => 1} @sheets,
 	};
 
 	my ($cnt, $uniq_sheet_name) = (0, $sheet_name);
@@ -944,7 +951,11 @@ sub draw_page {
 		}
 	}
 
-	write_signature_xl ($worksheets [-1]);
+	$is_single_sheet = @worksheets == 1;
+
+	if ($is_single_sheet) {
+		write_signature_xl ($worksheets [0]);
+	}
 
 	$_REQUEST {__xl_workbook} -> close ();
 
