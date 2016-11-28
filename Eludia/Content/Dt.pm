@@ -66,7 +66,7 @@ sub dtime_dmyhm {
 	my @ymdhms = map {split /\D+/} @_;
 	my $c = '.';
 
-	return sprintf ("%3\$02d${c}%2\$02d${c}%1\$02d  %4\$02d:%5\$02d", @ymdhms);
+	return sprintf ("%3\$02d${c}%2\$02d${c}%1\$02d %4\$02d:%5\$02d", @ymdhms);
 
 }
 
