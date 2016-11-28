@@ -657,8 +657,11 @@ sub draw_form_field_file {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
+	my $file_tooltip = !$preconf -> {file_tooltip} ? ''
+		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), $options -> {max_filesize} || $preconf -> {max_filesize});
+
 	my $html = "<span id='form_field_file_head_$options->{name}'>" .
-		($options -> {no_limit} || !$preconf -> {file_tooltip} ? '' : "<div data-tooltip='$$preconf{file_tooltip}'>");
+		($options -> {no_limit} || !$file_tooltip ? '' : "<div data-tooltip='$file_tooltip'>");
 
 	$$options{value} ||= $data -> {"$$options{name}_name"};
 
@@ -715,7 +718,7 @@ EOH
 		$html .= <<EOH;
 		<input type='hidden' name='_file_no_limit_for_$$options{name}' id='_file_no_limit_for_$$options{name}' value='1'>
 EOH
-	} elsif ($preconf -> {file_tooltip}) {
+	} elsif ($file_tooltip) {
 		$html .= '</div>';
 	}
 
@@ -763,7 +766,11 @@ EOJS
 		>
 		<span id="file_field_$options->{name}">
 EOH
-	$html .= ($options -> {no_limit} || !$preconf -> {file_tooltip} ? '<div>' : "<div data-tooltip='$$preconf{file_tooltip}'>") . <<EOH;
+
+	my $file_tooltip = !$preconf -> {file_tooltip} ? ''
+		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), options -> {max_filesize} || $preconf -> {max_filesize});
+
+	$html .= ($options -> {no_limit} || !$file_tooltip ? '<div>' : "<div data-tooltip='$file_tooltip'>") . <<EOH;
 			<span id="file_field_$options->{name}_head">
 				<input name="_$$options{name}_0" type="file" $attributes />
 			</span>
