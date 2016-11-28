@@ -2809,7 +2809,7 @@ function init_page (options) {
 			$(this).kendoDatePicker(options);
 		}
 		date_field_light.call($(this).data(
-			select_time ? 'kendoDateTimePicker' : 'kendoDateTimePicker'
+			select_time ? 'kendoDateTimePicker' : 'kendoDatePicker'
 		));
 	});
 
