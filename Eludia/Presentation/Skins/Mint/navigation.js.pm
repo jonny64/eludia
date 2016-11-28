@@ -2806,25 +2806,29 @@ function init_page (options) {
 		}
 	};
 
-	$('[data-type=datepicker]').each(function () {
-		var options = {},
+	$('[data-type=datepicker], [data-type=datetimepicker]').each(function() {
+		var select_time = $(this).attr('data-type') === 'datetimepicker',
+			options = {},
 			min = $(this).attr('min'),
 			max = $(this).attr('max');
 
-		if (min)
+		if (min) {
 			options.min = new Date(min);
-		if (max)
+		}
+		if (max) {
 			options.max = new Date(max);
+		}
+		$(this).on('keydown', date_field_keydown);
+		if (select_time) {
+			$(this).kendoDateTimePicker(options);
+		} else {
+			$(this).kendoDatePicker(options);
+		}
+		date_field_light.call($(this).data(
+			select_time ? 'kendoDateTimePicker' : 'kendoDatePicker'
+		));
+	});
 
-		$(this).on('keydown', date_field_keydown);
-		$(this).kendoDatePicker(options);
-		date_field_light.call($(this).data('kendoDatePicker'));
-	});
-	$('[data-type=datetimepicker]').each(function () {
-		$(this).on('keydown', date_field_keydown);
-		$(this).kendoDateTimePicker();
-		date_field_light.call($(this).data('kendoDateTimePicker'));
-	});
 	$('[data-type="numeric-text-box"]').each(function () {$(this).kendoNumericTextBox({format : $(this).attr('format') || 'n'})});
 
 	$('input[mask]').each (init_masked_text_box);
