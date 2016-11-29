@@ -738,8 +738,20 @@ sub draw_form_field_files {
 
 	$_REQUEST {__script} .= <<'EOJS' if $_REQUEST {__script} !~ /function number_file_fields_for_compatibility/;
 	function number_file_fields_for_compatibility (file_field) {
-		var next_counter = 1 + parseInt(file_field.name.match(/\d+$/)[0]);
-		file_field.name = file_field.name.replace(/\d+$/, next_counter);
+		var wrapper = $(file_field).closest('div'),
+			rename = function() {
+				var files = this.find('input[type=file]'),
+					count = files.length;
+
+				if (count > 1) {
+					var last_file  = files.last(),
+						name = last_file.attr('name').replace(/\d+$/, count - 1);
+
+					last_file.attr('name', name)
+				}
+			};
+
+		setTimeout(rename.bind(wrapper), 1000);
 	}
 EOJS
 
