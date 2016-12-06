@@ -2834,6 +2834,10 @@ function init_page (options) {
 
 			$(document).click (function () {$('UL.menuFonDark').remove ()});
 
+			$('.k-textbox.required').each(function() {
+				textbox_required(this);
+			});
+
 		});
 	}
 
