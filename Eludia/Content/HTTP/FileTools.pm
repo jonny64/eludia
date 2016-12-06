@@ -213,13 +213,15 @@ sub upload_file {
 	$no_limit_param =~ s/_\d+$//;
 	$options -> {no_limit} = $_REQUEST {$no_limit_param} if exists $_REQUEST {$no_limit_param};
 
+	$options -> {file_extensions} ||= $preconf -> {file_extensions};
+
 	if (
 		$filename
 		&& !$options -> {no_limit}
-		&& $preconf -> {file_extensions}
-		&& !($filename =~ /\.([^\.]*?)$/ && (lc ($1) ~~ $preconf -> {file_extensions} || uc ($1) ~~ $preconf -> {file_extensions}))
+		&& $options -> {file_extensions}
+		&& !($filename =~ /\.([^\.]*?)$/ && (grep {lc ($1) eq lc $_} @{$options -> {file_extensions}}))
 	) {
-		my $error = $i18n -> {file_ext_fail} . join ', ', map { '.' . $_ } @{$preconf -> {file_extensions}};
+		my $error = $i18n -> {file_ext_fail} . join ', ', map { '.' . $_ } @{$options -> {file_extensions}};
 		if ($_REQUEST {__json_response}) {
 			out_json ({status => 'error', label  => $error});
 		} else {

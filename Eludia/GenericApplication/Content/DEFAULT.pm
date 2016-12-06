@@ -162,7 +162,11 @@ sub do_create_DEFAULT { # создание
 
 sub do_update_DEFAULT { # запись карточки
 
-	my $type = $_[0] || $_REQUEST {__edited_cells_table} || $_REQUEST {type};
+	my ($options, $id_type, $id_type_field) = @_;
+
+	ref $options eq 'HASH' or $options = {type => $options, id_type => $id_type, id_type_field => $id_type_field};
+
+	my $type = $options -> {type} || $_REQUEST {__edited_cells_table} || $_REQUEST {type};
 
 	my $columns = $model_update -> get_columns ($type);
 
@@ -176,7 +180,7 @@ sub do_update_DEFAULT { # запись карточки
 
 	}
 
-	my $options = {
+	my $up_options = {
 		name => 'file',
 		dir => 'upload/images',
 		table => $type,
@@ -184,11 +188,12 @@ sub do_update_DEFAULT { # запись карточки
 		size_column => 'file_size',
 		type_column => 'file_type',
 		path_column => 'file_path',
+		file_extensions => $options -> {file_extensions},
 	};
 
-	$options -> {body_column} = 'file_body' if $columns -> {file_body};
+	$up_options -> {body_column} = 'file_body' if $columns -> {file_body};
 
-	sql_upload_file ($options);
+	sql_upload_file ($up_options);
 
 	sql_upload_files ({name => 'file'});
 
@@ -202,9 +207,9 @@ sub do_update_DEFAULT { # запись карточки
 
 	if (@fields > 0) {
 
-		my $id = $_[2] || 'id';
+		my $id = $options -> {id_type_field} || 'id';
 
-		sql_do_update ($type, \@fields, {$id => $_[1] || $id_edit});
+		sql_do_update ($type, \@fields, {$id => $options -> {id_type} || $id_edit});
 
 	}
 
