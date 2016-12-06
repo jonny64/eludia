@@ -60,9 +60,9 @@ sub download_file_header {
 	$r -> content_type ($type);
 	$options -> {file_name} =~ s/\?/_/g unless ($ENV {HTTP_USER_AGENT} =~ /MSIE 7/);
 
-	my $filename = "=" . $options -> {file_name};
+	my $filename = '=' . $options -> {file_name};
 
-	if ($i18n -> {_charset} eq 'UTF-8' || !($ENV {HTTP_USER_AGENT} =~ /MSIE (\d+)/ && $1 <= 9)) {
+	if ($i18n -> {_charset} eq 'UTF-8' || !($ENV {HTTP_USER_AGENT} =~ /MSIE/) || $ENV {HTTP_USER_AGENT} =~ /MSIE (\d+)/ && $1 > 9) {
 
 		$options -> {file_name} = decode ($i18n -> {_charset}, $options -> {file_name})
 			unless Encode::is_utf8 ($options -> {file_name});
@@ -79,6 +79,12 @@ sub download_file_header {
 	if ($content_length > 0) {
 		$r -> headers_out -> {'Content-Length'} = $content_length;
 		$r -> headers_out -> {'Accept-Ranges'} = 'bytes';
+	}
+
+	if ($preconf -> {core_cors}) {
+		$r -> headers_out -> {'Access-Control-Allow-Origin'} = $preconf -> {core_cors};
+		$r -> headers_out -> {'Access-Control-Allow-Credentials'} = 'true';
+		$r -> headers_out -> {'Access-Control-Allow-Headers'} = 'Origin, X-Requested-With, Content-Type, Accept, Cookie, Authorization';
 	}
 
 	delete $r -> headers_out -> {'Content-Encoding'};
@@ -217,7 +223,7 @@ sub upload_file {
 		$filename
 		&& !$options -> {no_limit}
 		&& $preconf -> {file_extensions}
-		&& !($filename =~ /\.([^\.]*?)$/ && $1 ~~ $preconf -> {file_extensions})
+		&& !($filename =~ /\.([^\.]*?)$/ && (lc ($1) ~~ $preconf -> {file_extensions} || uc ($1) ~~ $preconf -> {file_extensions}))
 	) {
 		my $error = $i18n -> {file_ext_fail} . join ', ', map { '.' . $_ } @{$preconf -> {file_extensions}};
 		if ($_REQUEST {__json_response}) {

@@ -289,12 +289,12 @@ function open_vocabulary_from_select(s, options) {
 
 					if (result.result == 'ok') {
 						setSelectOption(s, result.id, result.label);
-					} else {			
+					} else {
 						kendo_select.select($s.data('prev_value'));
 						selected_item = kendo_select.wrapper.find('span.k-input');
 						widget = $s.closest('.k-widget');
-						width = selected_item.width() + 35;					
-						widget.width(width);				
+						width = selected_item.width() + 35;
+						widget.width(width);
 						kendo_select.focus();
 					}
 					if (is_dialog_blockui)
@@ -623,7 +623,7 @@ function focus_on_input (__focused_input) {
 	}
 
 	$("FORM:not('.toolbar')").find("INPUT[type='text'],INPUT[type='checkbox'],INPUT[type='radio'],TEXTAREA").each (function () {
-		try { 
+		try {
 			if ($(this).is_on_screen())
 				this.focus ();
 		} catch (e) { return true; } return false;
@@ -633,7 +633,7 @@ function focus_on_input (__focused_input) {
 
 
 function adjust_kendo_selects(top_element) {
-	var setWidth = function (el) { 
+	var setWidth = function (el) {
 			var kendo_select  = el.data("kendoDropDownList"),
 				selected_item = kendo_select.wrapper.find('span.k-input'),
 				widget = el.closest('.k-widget'),
@@ -675,9 +675,9 @@ function adjust_kendo_selects(top_element) {
 					k_items = this.ul.find('li.k-item'),
 					is_empty = (empty_option.length == -1)
 						? false
-						: (empty_option.index() < 1);  
+						: (empty_option.index() < 1);
 
-				if (this.value() > 0 || !is_empty) 
+				if (this.value() > 0 || !is_empty)
 					this.wrapper.removeClass('required');
 
 				this.dataItems().forEach(function(item, index) {
@@ -931,10 +931,6 @@ function table_row_context_menu (e, tr) {
 		dataSource: items,
 		orientation: 'vertical',
 		select: function (event) {
-			var selected_url = items [$(event.item).index()].url;
-			if (selected_url.match(/^javascript:/)) {
-				eval (selected_url);
-			}
 			menuDiv.remove ();
 		}
 	});
@@ -1628,156 +1624,6 @@ TableSlider.prototype.onContextMenu = function (event, self) {
 
 }
 
-TableSlider.prototype.onMouseDown = function (event, self) {
-
-	if (event.target.tagName != 'TD' || event.which != 1)
-		return;
-
-	if (!event.ctrlKey)
-		$(event.currentTarget).find('td').removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
-			$(this).data ('selections', {});
-		});
-
-
-	var selection_id = event.timeStamp,
-		start = self.cell_location (event.target),
-		matrix = self.rows;
-
-	$(event.currentTarget).mouseover(function (event) {
-
-		if (event.target.tagName != 'TD')
-			return;
-
-		self.cell_off ();
-
-		var td = event.target,
-			finish = self.cell_location (td);
-
-		$(this).addClass ('selected');
-
-		var x1 = Math.min(start.x, finish.x);
-		var y1 = Math.min(start.y, finish.y);
-		var x2 = Math.max(start.x + start.colspan - 1, finish.x + finish.colspan - 1);
-		var y2 = Math.max(start.y + start.rowspan - 1, finish.y + finish.rowspan - 1);
-
-		var should_be_restarted;
-
-		do {
-
-			should_be_restarted = false;
-
-TOP:
-			for (var i = y1 > 0 ? y1 - 1 : 0; i <= y2 + 1 && i < matrix.length; i ++) {
-
-				for (var j = x1 > 0 ? x1 - 1 : 0; j <= x2 + 1 && j < matrix [i].length; j ++) {
-
-					if (i < y1 || i > y2 || j < x1 || j > x2) {
-						self.removeSelection (matrix [i][j], selection_id);
-						self.removeSelectClass (matrix [i][j], selection_id);
-
-						continue;
-					}
-
-					self.addSelection (matrix [i][j], selection_id);
-
-					if (i == y1)
-						self.addSelectClass (matrix [i][j], selection_id, 'top');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'top');
-
-					if (i == y2)
-						self.addSelectClass (matrix [i][j], selection_id, 'bottom');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'bottom');
-
-					if (j == x1)
-						self.addSelectClass (matrix [i][j], selection_id, 'left');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'left');
-
-					if (j == x2)
-						self.addSelectClass (matrix [i][j], selection_id, 'right');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'right');
-
-
-					var shift_x_left = 0,
-						shift_x_right = 0,
-						shift_y_up = 0,
-						shift_y_down = 0;
-
-					if ($(matrix [i][j]).prop ('colspan') > 1) {
-
-						for (var k = x1 - 1; k >= 0; k --) {
-							if (matrix [i][j].isSameNode (matrix [i][k]))
-								shift_x_left ++;
-							else {
-								break;
-							}
-						}
-
-						for (var k = x2 + 1; k < matrix [i].length; k ++) {
-							if (matrix [i][j].isSameNode (matrix [i][k]))
-								shift_x_right ++;
-							else {
-								break;
-							}
-						}
-
-
-						for (var k = y1 - 1; k >= 0; k --) {
-							if (matrix [i][j].isSameNode (matrix [k][j]))
-								shift_y_up ++;
-							else {
-								break;
-							}
-						}
-
-						for (var k = y2 + 1; k < matrix.length; k ++) {
-							if (matrix [i][j].isSameNode (matrix [k][j]))
-								shift_y_down ++;
-							else {
-								break;
-							}
-						}
-
-					}
-
-					if (shift_x_left || shift_x_right || shift_y_up || shift_y_down) {
-						x1 = x1 - shift_x_left;
-						x2 = x2 + shift_x_right;
-						y1 = y1 - shift_y_up;
-						y2 = y2 + shift_y_down;
-						should_be_restarted = true;
-
-						break TOP;
-
-					}
-
-				}
-
-			}
-
-		} while (should_be_restarted);
-
-	});
-
-	var table = event.currentTarget;
-
-	$(document).mouseup(function (event) {
-
-		$(table).unbind('mouseover');
-		$(table).removeClass ('selected');
-		$(document).unbind('mouseup');
-
-		self.calculateSelections ();
-
-		return false;
-
-	});
-
-}
-
 TableSlider.prototype.showStat = function (div, text) {
 
 	var title = $(div).closest ('form').prevAll ('.table-title');
@@ -1851,7 +1697,6 @@ TableSlider.prototype.set_row = function (row) {
 
 		}
 
-		$(table).on ('mousedown', function (event) {self.onMouseDown (event, self);});
 		$(table).on ('click', function (event) {self.onClick (event, self);});
 		$(table).on ('contextmenu', function (event) {self.onContextMenu (event, self);});
 
@@ -2850,9 +2695,9 @@ function init_page (options) {
 				}
 			}
 		})
-		require([ "kendo.tooltip.min" ], 
+		require([ "kendo.tooltip.min" ],
 		function() {
-			$(document).ready(function() { 
+			$(document).ready(function() {
    				$('[data-tooltip]').kendoTooltip({
 					content: function(e) {
 						return $(e.target).attr('data-tooltip')
@@ -2949,25 +2794,55 @@ function init_page (options) {
 			light.call(this);
 		};
 
-	$('[data-type=datepicker]').each(function () {
+	window.required_date_field = function($field, required) {
+		var wrapper = $field.closest('.k-widget');
+
+		if (required) { console.log('req');
+			$field.addClass('form-mandatory-inputs');
+			wrapper.addClass('required');
+		} else { console.log('unreq');
+			$field.removeClass('form-mandatory-inputs');
+			wrapper.removeClass('required');
+		}
+		// $field.kendoDatePicker();
+		if (required) {
+			date_field_light.call($field.data('kendoDatePicker'));
+		}
+	};
+
+	$('[data-type=datepicker], [data-type=datetimepicker]').each(function() {
+		var select_time = $(this).attr('data-type') === 'datetimepicker',
+			options = {},
+			min = $(this).attr('min'),
+			max = $(this).attr('max');
+
+		if (min) {
+			options.min = new Date(min);
+		}
+		if (max) {
+			options.max = new Date(max);
+		}
 		$(this).on('keydown', date_field_keydown);
-		$(this).kendoDatePicker();
-		date_field_light.call($(this).data('kendoDatePicker'));
+		if (select_time) {
+			$(this).kendoDateTimePicker(options);
+		} else {
+			$(this).kendoDatePicker(options);
+		}
+		date_field_light.call($(this).data(
+			select_time ? 'kendoDateTimePicker' : 'kendoDatePicker'
+		));
 	});
-	$('[data-type=datetimepicker]').each(function () {
-		$(this).on('keydown', date_field_keydown);
-		$(this).kendoDateTimePicker();
-		date_field_light.call($(this).data('kendoDateTimePicker'));
-	});
+
+	$('[data-type="numeric-text-box"]').each(function () {$(this).kendoNumericTextBox({format : $(this).attr('format') || 'n'})});
 
 	$('input[mask]').each (init_masked_text_box);
 
-	$('input[type=file]:not([data-upload-url]):not([is-native])').each(function () {
+	$('input[type=file]:not([data-upload-url]):not([is-native]):not(.metrics_file)').each(function () {
 		$(this).kendoUpload({
 			multiple : $(this).attr('data-ken-multiple') == 'true'
 		});
 	});
-	$('input[type=file][data-upload-url]').each(function () {
+	$('input[type=file][data-upload-url]:not(.metrics_file)').each(function () {
 		$(this).kendoUpload({
 			async: {
 				saveUrl: $(this).attr('data-upload-url'),
@@ -2977,14 +2852,15 @@ function init_page (options) {
 			files: $(this).attr('data-files')
 		});
 	});
-
+	try {
+		additional_params_init()
+	} catch(e) {}
 	$("form").on ("submit", function () {
 		$('input[type=file][disabled]', this).each (function () {
 			if ($('input[type=file][name="' + this.name + '"]').length == 1)
 				$(this).removeAttr("disabled");
 		});
 	});
-
 	$('.eludia-chart').each(function () {
 		var options = $(this).data('chart-options');
 		options.dataSource = new kendo.data.DataSource($(this).data('chart-datasource'));
@@ -3102,7 +2978,15 @@ function init_page (options) {
 function init_masked_text_box () {
 
 	$(this).kendoMaskedTextBox({
-		mask:$(this).attr('mask')
+		mask:$(this).attr('mask'),
+		culture: "ru-RU",
+		promptChar: " ",
+		rules: {
+			"L": /[a-zA-Zà-ÿÀ-ß¸¨]/,
+			"?": /[a-zA-Zà-ÿÀ-ß¸¨\s]/,
+			"A": /[a-zA-Zà-ÿÀ-ß¸¨\d]/,
+			"a": /[a-zA-Zà-ÿÀ-ß¸¨\d\s]/
+		}
 	});
 
 	if ($(this).data('type') == 'datepicker' || $(this).data('type') == 'datetimepicker') {
@@ -3228,11 +3112,11 @@ var textbox_required = function(el) {
 $(document).ready(function() {
 
 	var is_show_highlight = function(el) {
-		var value = (el[0].tagName == 'SELECT') 
-			? parseInt(el.val()) 
+		var value = (el[0].tagName == 'SELECT')
+			? parseInt(el.val())
 			: el.val().trim();
-		return (typeof value == 'number') 
-			? (value < 1) 
+		return (typeof value == 'number')
+			? (value < 1)
 			: (value.length == 0);
 		};
 
@@ -3249,17 +3133,17 @@ $(window).load(function() {
 });
 
 $.fn.is_on_screen = function() {
-	var win = $(window),	
+	var win = $(window),
 		viewport = {
 			top : win.scrollTop(),
 			left : win.scrollLeft()
 		},
 		bounds = this.offset();
-	
+
 	viewport.right = viewport.left + win.width();
 	viewport.bottom = viewport.top + win.height();
     bounds.right = bounds.left + this.outerWidth();
     bounds.bottom = bounds.top + this.outerHeight();
-	
+
     return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
 };
