@@ -1952,7 +1952,7 @@ function toggle_field (name, is_visible, is_clear_field) {
 		field.val(0);
 	}
 	if (is_visible) {
-		if ($field.hasClass('k-input') || $field.hasClass('k-textbox')) {
+		if (field.hasClass('k-input') || field.hasClass('k-textbox')) {
 			setTimeout(function() {
 				field.trigger('change')
 			}, 300)
