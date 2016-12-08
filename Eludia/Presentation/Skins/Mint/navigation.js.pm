@@ -1951,6 +1951,9 @@ function toggle_field (name, is_visible, is_clear_field) {
 	if (is_clear_field) {
 		field.val(0);
 	}
+	if (is_visible) {
+		field.trigger('change')
+	}
 }
 
 function toggle_field_id (id, is_visible,is_clear_field) {
@@ -2793,10 +2796,10 @@ function init_page (options) {
 	window.required_date_field = function($field, required) {
 		var wrapper = $field.closest('.k-widget');
 
-		if (required) { console.log('req');
+		if (required) { 
 			$field.addClass('form-mandatory-inputs');
 			wrapper.addClass('required');
-		} else { console.log('unreq');
+		} else {
 			$field.removeClass('form-mandatory-inputs');
 			wrapper.removeClass('required');
 		}
