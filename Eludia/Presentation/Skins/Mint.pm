@@ -2815,9 +2815,9 @@ sub draw_input_cell {
 	my $autocomplete;
 	my $attr_input = {
 		onBlur    => 'q_is_focused = false; left_right_blocked = false;',
-		class     => 'k-textbox required',
+		class     => 'k-textbox',
 	};
-	$attr_input -> {class} .= ' table-mandatory-inputs'
+	$attr_input -> {class} .= ' required table-mandatory-inputs'
 		if $data -> {mandatory};
 
 	$attr_input -> {mask}   = $options -> {mask}
