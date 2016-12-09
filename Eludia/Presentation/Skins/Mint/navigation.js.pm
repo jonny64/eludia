@@ -902,7 +902,7 @@ function setup_drop_down_button (id, data) {
 		});
 
 		_.forEach(data, function(item) {
-			item.url = item.url.replace(/'/,'"');
+			item.url = item.url.replace(/'/g,'"')
 		})
 
 		menuDiv.kendoMenu ({
@@ -929,7 +929,7 @@ function table_row_context_menu (e, tr) {
 	var items = $.parseJSON ($(tr).attr ('data-menu'));
 
 	_.forEach(items, function(item) {
-		item.url = item.url.replace(/'/,'"');
+		item.url = item.url.replace(/'/g,'"')
 	})
 
 	menuDiv.kendoMenu ({
