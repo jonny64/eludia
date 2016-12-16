@@ -189,6 +189,7 @@ sub do_update_DEFAULT { # запись карточки
 		type_column => 'file_type',
 		path_column => 'file_path',
 		file_extensions => $options -> {file_extensions},
+		max_file_size   => $options -> {max_file_size},
 	};
 
 	$up_options -> {body_column} = 'file_body' if $columns -> {file_body};

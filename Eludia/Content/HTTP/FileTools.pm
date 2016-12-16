@@ -214,6 +214,7 @@ sub upload_file {
 	$options -> {no_limit} = $_REQUEST {$no_limit_param} if exists $_REQUEST {$no_limit_param};
 
 	$options -> {file_extensions} ||= $preconf -> {file_extensions};
+	$options -> {max_file_size}   ||= $preconf -> {max_file_size};
 
 	if (
 		$filename
@@ -235,9 +236,9 @@ sub upload_file {
 		die "#_$$options{name}#: $i18n->{empty_file}" if $filename;
 		return undef;
 
-	} elsif ($filename && !$options -> {no_limit} && $preconf -> {max_file_size} && $file_size > ($preconf -> {max_file_size} << 20)) {
+	} elsif ($filename && !$options -> {no_limit} && $options -> {max_file_size} && $file_size > ($options -> {max_file_size} << 20)) {
 
-		my $error = sprintf ($i18n -> {max_file_size_fail}, $preconf -> {max_file_size});
+		my $error = sprintf ($i18n -> {max_file_size_fail}, $options -> {max_file_size});
 		if ($_REQUEST {__json_response}) {
 			out_json ({status => 'error', label  => $error});
 		} else {
