@@ -223,7 +223,10 @@ sub upload_file {
 		&& !($filename =~ /\.([^\.]*?)$/ && (grep {lc ($1) eq lc $_} @{$options -> {file_extensions}}))
 	) {
 		my $error = $i18n -> {file_ext_fail} . join ', ', map { '.' . $_ } @{$options -> {file_extensions}};
-		if ($_REQUEST {__json_response}) {
+
+		if ($options -> {error_result}) {
+			return {error => $error};
+		} elsif ($_REQUEST {__json_response}) {
 			out_json ({status => 'error', label  => $error});
 		} else {
 			croak "#_$$options{name}#: " . $error;
@@ -239,7 +242,9 @@ sub upload_file {
 	} elsif ($filename && !$options -> {no_limit} && $options -> {max_file_size} && $file_size > ($options -> {max_file_size} << 20)) {
 
 		my $error = sprintf ($i18n -> {max_file_size_fail}, $options -> {max_file_size});
-		if ($_REQUEST {__json_response}) {
+		if ($options -> {error_result}) {
+			return {error => $error};
+		} elsif ($_REQUEST {__json_response}) {
 			out_json ({status => 'error', label  => $error});
 		} else {
 			croak "#_$$options{name}#: " . $error;
