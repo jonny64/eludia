@@ -216,6 +216,8 @@ sub upload_file {
 	$options -> {file_extensions} ||= $preconf -> {file_extensions};
 	$options -> {max_file_size}   ||= $preconf -> {max_file_size};
 
+	@{$options -> {file_extensions}} > 0 or delete $options -> {file_extensions};
+
 	if (
 		$filename
 		&& !$options -> {no_limit}
