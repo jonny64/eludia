@@ -827,7 +827,10 @@ sub dialog_open {
 ################################################################################
 
 sub xlsx_filename {
-	my $filename = 'eludia_' . $_REQUEST {type};
+
+	my ($options) = @_;
+
+	my $filename = $options -> {filename} || 'eludia_' . $_REQUEST {type};
 
 	if ($conf -> {report_date_in_filename}) {
 		my $generation_date = sprintf ("%04d-%02d-%02d_%02d-%02d", Date::Calc::Today_and_Now);
@@ -936,6 +939,8 @@ sub start_page {
 
 sub draw_page {
 
+	my ($_SKIN, $options) = @_;
+
 	my @worksheets = $_REQUEST {__xl_workbook} -> sheets();
 
 	foreach my $worksheet (@worksheets) {
@@ -965,7 +970,7 @@ sub draw_page {
 
 	&{"${_PACKAGE}download_file"} ({
 		path      => $_REQUEST {__xl_file_name},
-		file_name => @{[xlsx_filename ()]},
+		file_name => xlsx_filename ($options),
 		delete    => 1,
 	});
 }
