@@ -872,6 +872,13 @@ sub draw_form_field_of_type {
 
 ################################################################################
 
+sub file_download_href {
+	my ($field, $data) = @_;
+	return {action => 'download', _name => $field -> {name}};
+}
+
+################################################################################
+
 sub draw_form_field {
 
 	my ($field, $data, $form_options) = @_;
@@ -895,7 +902,7 @@ sub draw_form_field {
 	{
 
 		if ($field -> {type} eq 'file') {
-			$field -> {href}      ||= {action => 'download', _name => $field -> {name}};
+			$field -> {href}      ||= file_download_href ($field, $data);
 			$field -> {file_name} ||= $field -> {name} . '_name';
 			$field -> {name}        = $field -> {file_name};
 			$field -> {target}    ||= 'invisible';
