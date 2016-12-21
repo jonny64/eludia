@@ -658,7 +658,7 @@ sub draw_form_field_file {
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	my $file_tooltip = !$preconf -> {file_tooltip} ? ''
-		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), $options -> {max_filesize} || $preconf -> {max_filesize});
+		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), $options -> {max_file_size} || $preconf -> {max_file_size});
 
 	my $html = "<span id='form_field_file_head_$options->{name}'>" .
 		($options -> {no_limit} || !$file_tooltip ? '' : "<div data-tooltip='$file_tooltip'>");
@@ -780,7 +780,7 @@ EOJS
 EOH
 
 	my $file_tooltip = !$preconf -> {file_tooltip} ? ''
-		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), options -> {max_filesize} || $preconf -> {max_filesize});
+		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), options -> {max_file_size} || $preconf -> {max_file_size});
 
 	$html .= ($options -> {no_limit} || !$file_tooltip ? '<div>' : "<div data-tooltip='$file_tooltip'>") . <<EOH;
 			<span id="file_field_$options->{name}_head">
