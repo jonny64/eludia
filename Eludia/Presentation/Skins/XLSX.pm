@@ -834,14 +834,32 @@ sub xlsx_filename {
 
 ################################################################################
 
-sub add_worksheet {
+sub xlsx_sheetname {
 
-	my ($_SKIN, $sheet_name) = @_;
+	my ($workbook, $sheet_name) = @_;
 
 	my $NAME_MAX_WIDTH = 31;
 	$sheet_name = substr ($sheet_name, 0, $NAME_MAX_WIDTH);
 	$sheet_name = decode ($i18n -> {_charset}, $sheet_name);
-	$_REQUEST {__xl_sheet_name} = $sheet_name;
+
+	my $uniq_names = {
+		map {$_ -> get_name () => 1} $workbook -> sheets(),
+	};
+
+	my ($cnt, $uniq_sheet_name) = (0, $sheet_name);
+	while ($uniq_names -> {$uniq_sheet_name}) {
+		$cnt ++;
+		$uniq_sheet_name = substr ($sheet_name, 0, $NAME_MAX_WIDTH - length($cnt) - 1) . '_' . $cnt;
+	}
+
+	return $uniq_sheet_name;
+}
+
+################################################################################
+
+sub add_worksheet {
+
+	my ($_SKIN, $sheet_name) = @_;
 
 	my @sheets = $_REQUEST {__xl_workbook} -> sheets();
 
@@ -850,17 +868,7 @@ sub add_worksheet {
 		write_signature_xl ($first_sheet);
 	}
 
-	my $uniq_names = {
-		map {$_ -> get_name () => 1} @sheets,
-	};
-
-	my ($cnt, $uniq_sheet_name) = (0, $sheet_name);
-	while ($uniq_names -> {$uniq_sheet_name}) {
-		$cnt ++;
-		$uniq_sheet_name = substr ($sheet_name, 0, $NAME_MAX_WIDTH - length($cnt) - 1) . '_' . $cnt;
-	}
-	$sheet_name = $uniq_sheet_name;
-
+	$_REQUEST {__xl_sheet_name} = $sheet_name = xlsx_sheetname ($_REQUEST {__xl_workbook}, $sheet_name);
 	my $worksheet = $_REQUEST {__xl_workbook} -> add_worksheet ($sheet_name);
 
 	$_REQUEST {__xl_row} = 0;
