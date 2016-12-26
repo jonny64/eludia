@@ -909,6 +909,13 @@ function setup_drop_down_button (id, data) {
 			dataSource: data,
 			orientation: 'vertical',
 			select: function (e) {
+				var item = data [$(e.item).index()];
+
+				if (item.target) {
+					var link = $(e.item).find(".k-link");
+					link.attr("target", item.target);
+				}
+
 				menuDiv.remove ();
 				return true;
 			}

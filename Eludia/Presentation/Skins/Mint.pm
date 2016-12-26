@@ -2344,6 +2344,7 @@ EOH
 					url   => $_ -> {href},
 					imageUrl => $_ -> {imageUrl} || '',
 					confirm => $_ -> {confirm} || '',
+					target   => $_ -> {target} || undef,
 				}
 			} @{$options -> {items}}
 		]);
