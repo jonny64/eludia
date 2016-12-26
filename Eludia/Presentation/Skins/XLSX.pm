@@ -119,13 +119,7 @@ sub draw_form_field {
 
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
-	my $format_record = $_REQUEST {__xl_workbook} -> add_format (
-		text_wrap => 1,
-     	border    => 1,
-     	valign    => 'bottom',
-    	align     => 'left',
-    	font      => $_REQUEST {__xl_font},
-	);
+	my $format_record = $_REQUEST {__xl_format} -> {form_field};
 
 	if ($field -> {type} eq 'banner') {
 		$format_record -> set_align ('center');
@@ -172,7 +166,7 @@ sub draw_form_field {
 
 	$field -> {label} = processing_string ($field -> {label});
 
-	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $field -> {label}, $_REQUEST{__xl_format} -> {form_header});
+	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $field -> {label}, $_REQUEST{__xl_format} -> {form_field_label});
 
 	if ($field -> {label} =~ /\n/) {
 		my $new_length = width_string_with_linebreak ($field -> {label});
@@ -522,11 +516,7 @@ sub draw_text_cell {
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 	my $txt = '';
 
-	my $format = $_REQUEST {__xl_workbook} -> add_format (
-		text_wrap => 1,
-     	border    => 1,
-     	font      => $_REQUEST {__xl_font},
-	);
+	my $format = $_REQUEST {__xl_format} -> {cell};
 
 	foreach (@{$worksheet -> {__united_cells} -> {$_REQUEST {__xl_row}}}) {
 		if ($_ == $_REQUEST {__xl_col}){
@@ -905,33 +895,53 @@ sub start_page {
 	$_REQUEST {__xl_width_ratio} = $_REQUEST {__xl_width_ratio} || $preconf -> {xlsx_width_ratio} || 1.4; # коэффициент для определения ширины столбца (ширина символа в excel-единицах), для шрифта Arial не меньше 1.4
 	$_REQUEST {__xl_coef_autoheight_rows} = $_REQUEST {__xl_coef_autoheight_rows} || $preconf -> {xlsx_coef_autoheight_rows} || 1.1; # коэффициент для определения высоты строки в функции autoheight_rows, больше 1 (чем больше коэффициент, тем больше вероятность появления дополнительных пустых строчек)
 	$_REQUEST {__xl_font} = $_REQUEST {__xl_font} || $preconf -> {xlsx_font} || 'Arial';
+	$_REQUEST {__xl_font_size} ||= 10;
 
-
-	$_REQUEST{__xl_format} -> {table_header} = $workbook -> add_format (
+	$_REQUEST {__xl_format} -> {table_header} = $workbook -> add_format (
 		text_wrap => 1,
      	border    => 1,
      	bold      => 1,
      	valign    => 'vcenter',
     	align     => 'center',
     	font      => $_REQUEST {__xl_font},
+		size      => $_REQUEST {__xl_font_size},
 	);
 
-	$_REQUEST{__xl_format} -> {form_header} = $workbook -> add_format (
+	$_REQUEST {__xl_format} -> {form_field_label} = $workbook -> add_format (
 		text_wrap => 1,
      	border    => 1,
      	bold      => 1,
      	valign    => 'bottom',
     	align     => 'right',
     	font      => $_REQUEST {__xl_font},
+		size      => $_REQUEST {__xl_font_size},
 	);
 
-	$_REQUEST{__xl_format} -> {simple_border} = $workbook -> add_format (
+	$_REQUEST {__xl_format} -> {simple_border} = $workbook -> add_format (
 		border    => 1,
 		font      => $_REQUEST {__xl_font},
+		size      => $_REQUEST {__xl_font_size},
 	);
 
-	$_REQUEST{__xl_format} -> {simple} = $workbook -> add_format (
+	$_REQUEST {__xl_format} -> {simple} = $workbook -> add_format (
 		font      => $_REQUEST {__xl_font},
+		size      => $_REQUEST {__xl_font_size},
+	);
+
+	$_REQUEST {__xl_format} -> {cell} = $workbook -> add_format (
+		text_wrap => 1,
+		border    => 1,
+		font      => $_REQUEST {__xl_font},
+		size      => $_REQUEST {__xl_font_size},
+	);
+
+	$_REQUEST {__xl_format} -> {form_field} = $workbook -> add_format (
+		text_wrap => 1,
+		border    => 1,
+		valign    => 'bottom',
+		align     => 'left',
+		font      => $_REQUEST {__xl_font},
+		size      => $_REQUEST {__xl_font_size},
 	);
 
 	return $options;
