@@ -658,7 +658,7 @@ sub draw_form_field_file {
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	my $file_tooltip = !$preconf -> {file_tooltip} ? ''
-		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), $options -> {max_filesize} || $preconf -> {max_filesize});
+		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), $options -> {max_file_size} || $preconf -> {max_file_size});
 
 	my $html = "<span id='form_field_file_head_$options->{name}'>" .
 		($options -> {no_limit} || !$file_tooltip ? '' : "<div data-tooltip='$file_tooltip'>");
@@ -738,20 +738,8 @@ sub draw_form_field_files {
 
 	$_REQUEST {__script} .= <<'EOJS' if $_REQUEST {__script} !~ /function number_file_fields_for_compatibility/;
 	function number_file_fields_for_compatibility (file_field) {
-		var wrapper = $(file_field).closest('div'),
-			rename = function() {
-				var files = this.find('input[type=file]'),
-					count = files.length;
-
-				if (count > 1) {
-					var last_file  = files.last(),
-						name = last_file.attr('name').replace(/\d+$/, count - 1);
-
-					last_file.attr('name', name)
-				}
-			};
-
-		setTimeout(rename.bind(wrapper), 1000);
+		var next_counter = 1 + parseInt(file_field.name.match(/\d+$/)[0]);
+		file_field.name = file_field.name.replace(/\d+$/, next_counter);
 	}
 EOJS
 
@@ -780,7 +768,7 @@ EOJS
 EOH
 
 	my $file_tooltip = !$preconf -> {file_tooltip} ? ''
-		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), options -> {max_filesize} || $preconf -> {max_filesize});
+		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), options -> {max_file_size} || $preconf -> {max_file_size});
 
 	$html .= ($options -> {no_limit} || !$file_tooltip ? '<div>' : "<div data-tooltip='$file_tooltip'>") . <<EOH;
 			<span id="file_field_$options->{name}_head">

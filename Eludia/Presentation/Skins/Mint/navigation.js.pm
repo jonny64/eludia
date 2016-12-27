@@ -1957,6 +1957,13 @@ function toggle_field (name, is_visible, is_clear_field) {
 	if (is_clear_field) {
 		field.val(0);
 	}
+	if (is_visible) {
+		if (field.hasClass('k-input') || field.hasClass('k-textbox')) {
+			setTimeout(function() {
+				field.trigger('change')
+			}, 300)
+		}
+	}
 }
 
 function toggle_field_id (id, is_visible,is_clear_field) {
@@ -1980,6 +1987,15 @@ function toggle_field_id (id, is_visible,is_clear_field) {
 		document.getElementById(full_id).value = 0;
 	else if (is_clear_field == 1)
 		document.getElementById(full_id).value = "";
+	if (is_visible) {
+		var $field = $('#' + full_id);
+
+		if ($field.hasClass('k-input') || $field.hasClass('k-textbox')) {
+			setTimeout(function() {
+				$field.trigger('change')
+			}, 300)
+		}
+	}
 }
 
 function toggle_field_and_row (td_field, is_visible) {
@@ -2848,10 +2864,10 @@ function init_page (options) {
 	window.required_date_field = function($field, required) {
 		var wrapper = $field.closest('.k-widget');
 
-		if (required) { console.log('req');
+		if (required) { 
 			$field.addClass('form-mandatory-inputs');
 			wrapper.addClass('required');
-		} else { console.log('unreq');
+		} else {
 			$field.removeClass('form-mandatory-inputs');
 			wrapper.removeClass('required');
 		}
