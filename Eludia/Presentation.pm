@@ -1139,6 +1139,7 @@ sub draw_toolbar {
 			}
 
 			$button -> {type} ||= 'button';
+			$button -> {id_table} ||= $options -> {id_table};
 
 			$_REQUEST {__toolbar_inputs} .= "$button->{name}," if $button -> {type} =~ /^input_/;
 
@@ -2387,6 +2388,7 @@ EOJS
 	if (ref $options -> {top_toolbar} eq ARRAY) {
 
 		$options -> {top_toolbar} -> [0] -> {_list} = $list;
+		$options -> {top_toolbar} -> [0] -> {id_table} = $options -> {id_table};
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
 	}
 

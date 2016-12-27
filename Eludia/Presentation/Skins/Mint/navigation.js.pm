@@ -1576,15 +1576,21 @@ TableSlider.prototype.removeSelection = function (td, selection_id) {
 
 TableSlider.prototype.onClick = function (event, self) {
 
-	if (event.target.tagName != 'TD' || !event.ctrlKey)
+	if (event.target.tagName != 'TD')
 		return;
 
 	self.cell_off ();
 
 	var selection_id = event.timeStamp,
 		start = self.cell_location (event.target),
-		matrix = self.rows;
+		matrix = self.rows,
+		tds = $('td.selected', event.currentTarget);
 
+	if (tds.length) {
+		tds.removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
+			$(this).data ('selections', {});
+		});
+	}
 	if (!$(matrix [start.y][start.x]).hasClass ('selected')) {
 
 		self.addSelectClass (matrix [start.y][start.x], selection_id);
@@ -1660,8 +1666,8 @@ TableSlider.prototype.clear_rows = function (row) {
 }
 
 TableSlider.prototype.set_row = function (row) {
-
 	self = this;
+
 	var matrix = self.rows;
 
 	$('div.st-table-right-viewport table.st-fixed-table-right').each (function (n) {
@@ -2678,23 +2684,72 @@ function init_page (options) {
 			});
 
 			options.on_load ();
-
 			tableSlider = new TableSlider ();
 			tableSlider.set_row (parseInt (options.__scrollable_table_row));
-
 			$('body').scroll(function() {
 				$(document.body).find("[data-role=popup]").each(function() {
 					var popup = $(this).data("kendoPopup");
 					popup.close();
 				});
 			});
-
 			if (typeof tableSlider.row === 'number' && tableSlider.rows.length > tableSlider.row) {
 				tableSlider.scrollCellToVisibleTop ();
 			}
-
 			$(document).click (function () {$('UL.menuFonDark').remove ()});
 
+			var splitter = table_containers.closest('.supertable_with_panels');
+
+			if (splitter.length !== 0) {
+				splitter.kendoSplitter({
+					panes: [
+						{
+							collapsible: true,
+							size: (typeof window.top.localStorage.passport_splitter_width === 'undefined') 
+								? '90%'
+								: window.top.localStorage.passport_splitter_width + '%',
+						},
+						{
+							collapsible: true,
+							size: (typeof window.top.localStorage.passport_splitter_width === 'undefined') 
+								? '10%'
+								: (100 - window.top.localStorage.passport_splitter_width) + '%'
+						}
+					],
+					resize: function(e) {
+						var size = parseInt(this.options.panes[0].size),
+							in_percent = (_.indexOf(this.options.panes[0].size, '%') !== -1),
+							is_close = in_percent 
+								? (100 - size) <= 3
+								: (parseInt(this.wrapper.width()) - size) <= 30,
+							iframe = this.wrapper.find('iframe');
+
+						if (!in_percent) {
+							size = Math.round(size / (e.width / 100))
+						}
+						window.top.localStorage.passport_splitter_width = size;
+						if (iframe.attr('src') === '/i/empty_object/' && !is_close) {
+							var selected_row = $(tableSlider.get_cell()).closest('tr'), 
+								data_href = selected_row.attr('data-href') || null;
+
+							if (
+								data_href !== null 
+								&& /open_in_supertable_panel/.test(data_href)
+							) {
+								open_in_supertable_panel(
+									selected_row[0], 
+									data_href.slice(_.indexOf(data_href, '\'') + 1, _.lastIndexOf(data_href, '\''))
+								)
+							}
+						}
+						$(window).trigger('resize');
+						setTimeout(function() {
+							var view_port_height = parseInt(document.documentElement.clientHeight) - parseInt(splitter.offset().top);
+
+							splitter.data('kendoSplitter').wrapper.height(view_port_height)
+						}, 1000)
+					}
+				})
+			}
 		});
 	}
 
@@ -3099,6 +3154,31 @@ document.queryCommandSupported = function(command) {
 }
 
 parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
+
+var open_in_supertable_panel = function(self, url) {
+	var splitter = $(self).closest('.supertable_with_panels').data('kendoSplitter'),
+		iframe = splitter.wrapper.find('iframe');
+
+	if (
+		typeof iframe[0].contentWindow.is_dirty !== 'undefined'
+		&& iframe[0].contentWindow.is_dirty
+		&& !confirm('”йти без сохранени€ данных?')
+	) { return }
+
+	var size = parseInt(splitter.options.panes[1].size),
+		is_close = (_.indexOf(splitter.options.panes[1].size, '%') === -1)
+			? size <= 30
+			: size <= 3;
+
+	if (is_close) {
+		document.location.href = url; 
+	} else {
+		if (url !== '/i/empty_object/') {
+			url += '&in_panel=1'
+		} 
+		iframe.attr('src', url);
+	}
+};
 
 $(document).ready(function() {
 
