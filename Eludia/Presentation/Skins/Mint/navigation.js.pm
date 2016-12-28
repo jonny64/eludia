@@ -3157,11 +3157,12 @@ parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf
 
 var open_in_supertable_panel = function(self, url) {
 	var splitter = $(self).closest('.supertable_with_panels').data('kendoSplitter'),
-		iframe = splitter.wrapper.find('iframe');
+		iframe = splitter.wrapper.find('iframe'),
+		_is_dirty = iframe[0].contentWindow.is_dirty;
 
 	if (
-		typeof iframe[0].contentWindow.is_dirty !== 'undefined'
-		&& iframe[0].contentWindow.is_dirty
+		typeof _is_dirty === 'boolean'
+		&& _is_dirty
 		&& !confirm('”йти без сохранени€ данных?')
 	) { return }
 
