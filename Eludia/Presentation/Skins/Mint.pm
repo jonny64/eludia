@@ -3066,6 +3066,13 @@ sub draw_super_table__only_table {
 		script      => $_REQUEST {__only_table} ? $_REQUEST {__script} . ';' . $_REQUEST {__on_load} : '',
 		table_url   => $_SKIN -> table_url () . ($options -> {is_not_first_table_on_page} ? '&is_not_first_table_on_page=1' : ''),
 		firts_href  => $firts_href,
+		config      => {
+			scrollHeight => defined $options -> {scroll_height}
+				? $options -> {scroll_height}
+					? $_JSON -> true
+					: $_JSON -> false
+				: $_JSON -> true,
+		},
 	};
 
 	return $_JSON -> encode ($table);
