@@ -979,7 +979,7 @@ sub draw_form_field {
 	$conf -> {kb_options_focus} ||= $conf -> {kb_options_buttons};
 	$conf -> {kb_options_focus} ||= {ctrl => 1, alt => 1};
 
-	register_hotkey ($field, 'focus', '_' . $field -> {name}, $conf -> {kb_options_focus});
+	# register_hotkey ($field, 'focus', '_' . $field -> {name}, $conf -> {kb_options_focus});
 
 	$field -> {label} .= $field -> {label} ? ':' : '&nbsp;';
 
