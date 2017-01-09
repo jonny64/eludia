@@ -2650,6 +2650,7 @@ function init_page (options) {
 					initial_data : tables_data [that.id],
 					el: $(that),
 					columns_draggable: tables_data[that.id]['disable_reorder_columns'],
+					config: tables_data[that.id].config,
 					containerRender : function(model) {
 						$(that).find('tr[data-menu],td[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);
@@ -2677,8 +2678,6 @@ function init_page (options) {
 							tableSlider.clear_rows ();
 							tableSlider.set_row (0);
 						}
-
-
 					}
 				}))
 			});
