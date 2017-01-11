@@ -1003,9 +1003,11 @@ sub write_signature_xl {
 
 	my ($worksheet) = @_;
 
+	$_REQUEST {__xl_row} ++;
+
 	$worksheet -> write ($_REQUEST {__xl_row}, 0, $_USER -> {label}, $_REQUEST{__xl_format} -> {simple});
 
-	$_REQUEST {__xl_row} += 2;
+	$_REQUEST {__xl_row} ++;
 
 	$worksheet -> write (
 		$_REQUEST {__xl_row},
