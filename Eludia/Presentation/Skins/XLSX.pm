@@ -119,16 +119,16 @@ sub draw_form_field {
 
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
-	my $format_record = $_REQUEST {__xl_format} -> {form_field};
+	my $format = {};
 
 	if ($field -> {type} eq 'banner') {
-		$format_record -> set_align ('center');
-		$format_record -> set_bold ();
+		$format -> {align} = 'center';
+		$format -> {bold} = 1;
 
 		$field -> {html} = processing_string ($field -> {html});
 
 		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
-		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan},  $field -> {html}, $format_record);
+		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan},  $field -> {html}, $_REQUEST {__xl_format} -> {form_field_label});
 		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 
 		if ($field -> {html} =~ /\n/) {
@@ -146,22 +146,22 @@ sub draw_form_field {
 
 	if ($field -> {picture}) {
 		my $picture = $_SKIN -> _picture ($field -> {picture});
-		$format_record -> set_num_format ($picture);
+		$format -> {num_format} = $picture;
 	}
 	elsif ($field -> {html} =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
-		$format_record -> set_num_format ('m/d/yy');
-		$format_record -> set_align ('right');
+		$format -> {num_format} = 'm/d/yy';
+		$format -> {align} = 'right';
 	}
-	elsif ($field -> {html} =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:?\d?\d?$/) {
-		$format_record -> set_num_format ('m/d/yy h:mm');
-		$format_record -> set_align ('right');
+	elsif ($field -> {html} =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d(:\d\d)?$/) {
+		$format -> {num_format} = 'm/d/yy h:mm';
+		$format -> {align} = 'right';
 	}
 	elsif (!$field -> {no_nobr}) {
-		$format_record -> set_num_format ('@');
+		$format -> {num_format} = '@';
 	}
 
 	if ($field -> {html} =~ /^\-?\d+\.\d+$/) {
-		$format_record -> set_align ('right');
+		$format -> {align} = 'right';
 	}
 
 	$field -> {label} = processing_string ($field -> {label});
@@ -178,18 +178,21 @@ sub draw_form_field {
 	$_REQUEST {__xl_col}++;
 
 	if ($field -> {bold} || $field -> {html} =~ /bold/ || $field -> {html} =~ /<b>/) {
-		$format_record -> set_bold ();
 		$field -> {bold} ||= 1;
 	}
 	if ($field -> {italic} || $field -> {html} =~ /<i>/) {
-		$format_record -> set_italic ();
+		$field -> {italic} ||= 1;
 	}
 
-	# if ($field -> {font_size}) {
-	# 	$format_record -> set_size($field -> {font_size});
-	# }
-
 	$field -> {html} = processing_string ($field -> {html});
+
+	my $format_record = $_REQUEST {__xl_format} -> {form_field};
+
+	if (keys %$format) {
+		$format_record = $_REQUEST {__xl_workbook} -> add_format ();
+		$format_record -> copy ($_REQUEST {__xl_format} -> {form_field});
+		$format_record -> set_format_properties (%$format);
+	}
 
 	if (($field -> {colspan}) > 1){
 		push_info_row ($field -> {html}, $field -> {colspan}, $field -> {bold});
