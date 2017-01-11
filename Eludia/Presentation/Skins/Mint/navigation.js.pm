@@ -289,12 +289,12 @@ function open_vocabulary_from_select(s, options) {
 
 					if (result.result == 'ok') {
 						setSelectOption(s, result.id, result.label);
-					} else {			
+					} else {
 						kendo_select.select($s.data('prev_value'));
 						selected_item = kendo_select.wrapper.find('span.k-input');
 						widget = $s.closest('.k-widget');
-						width = selected_item.width() + 35;					
-						widget.width(width);				
+						width = selected_item.width() + 35;
+						widget.width(width);
 						kendo_select.focus();
 					}
 					if (is_dialog_blockui)
@@ -623,7 +623,7 @@ function focus_on_input (__focused_input) {
 	}
 
 	$("FORM:not('.toolbar')").find("INPUT[type='text'],INPUT[type='checkbox'],INPUT[type='radio'],TEXTAREA").each (function () {
-		try { 
+		try {
 			if ($(this).is_on_screen())
 				this.focus ();
 		} catch (e) { return true; } return false;
@@ -633,7 +633,7 @@ function focus_on_input (__focused_input) {
 
 
 function adjust_kendo_selects(top_element) {
-	var setWidth = function (el) { 
+	var setWidth = function (el) {
 			var kendo_select  = el.data("kendoDropDownList"),
 				selected_item = kendo_select.wrapper.find('span.k-input'),
 				widget = el.closest('.k-widget'),
@@ -675,9 +675,9 @@ function adjust_kendo_selects(top_element) {
 					k_items = this.ul.find('li.k-item'),
 					is_empty = (empty_option.length == -1)
 						? false
-						: (empty_option.index() < 1);  
+						: (empty_option.index() < 1);
 
-				if (this.value() > 0 || !is_empty) 
+				if (this.value() > 0 || !is_empty)
 					this.wrapper.removeClass('required');
 
 				this.dataItems().forEach(function(item, index) {
@@ -1576,15 +1576,21 @@ TableSlider.prototype.removeSelection = function (td, selection_id) {
 
 TableSlider.prototype.onClick = function (event, self) {
 
-	if (event.target.tagName != 'TD' || !event.ctrlKey)
+	if (event.target.tagName != 'TD')
 		return;
 
 	self.cell_off ();
 
 	var selection_id = event.timeStamp,
 		start = self.cell_location (event.target),
-		matrix = self.rows;
+		matrix = self.rows,
+		tds = $('td.selected', event.currentTarget);
 
+	if (tds.length) {
+		tds.removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
+			$(this).data ('selections', {});
+		});
+	}
 	if (!$(matrix [start.y][start.x]).hasClass ('selected')) {
 
 		self.addSelectClass (matrix [start.y][start.x], selection_id);
@@ -1660,8 +1666,8 @@ TableSlider.prototype.clear_rows = function (row) {
 }
 
 TableSlider.prototype.set_row = function (row) {
-
 	self = this;
+
 	var matrix = self.rows;
 
 	$('div.st-table-right-viewport table.st-fixed-table-right').each (function (n) {
@@ -1951,6 +1957,13 @@ function toggle_field (name, is_visible, is_clear_field) {
 	if (is_clear_field) {
 		field.val(0);
 	}
+	if (is_visible) {
+		if (field.hasClass('k-input') || field.hasClass('k-textbox')) {
+			setTimeout(function() {
+				field.trigger('change')
+			}, 300)
+		}
+	}
 }
 
 function toggle_field_id (id, is_visible,is_clear_field) {
@@ -1974,6 +1987,15 @@ function toggle_field_id (id, is_visible,is_clear_field) {
 		document.getElementById(full_id).value = 0;
 	else if (is_clear_field == 1)
 		document.getElementById(full_id).value = "";
+	if (is_visible) {
+		var $field = $('#' + full_id);
+
+		if ($field.hasClass('k-input') || $field.hasClass('k-textbox')) {
+			setTimeout(function() {
+				$field.trigger('change')
+			}, 300)
+		}
+	}
 }
 
 function toggle_field_and_row (td_field, is_visible) {
@@ -2628,6 +2650,7 @@ function init_page (options) {
 					initial_data : tables_data [that.id],
 					el: $(that),
 					columns_draggable: tables_data[that.id]['disable_reorder_columns'],
+					config: tables_data[that.id].config,
 					containerRender : function(model) {
 						$(that).find('tr[data-menu],td[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);
@@ -2655,30 +2678,77 @@ function init_page (options) {
 							tableSlider.clear_rows ();
 							tableSlider.set_row (0);
 						}
-
-
 					}
 				}))
 			});
 
 			options.on_load ();
-
 			tableSlider = new TableSlider ();
 			tableSlider.set_row (parseInt (options.__scrollable_table_row));
-
 			$('body').scroll(function() {
 				$(document.body).find("[data-role=popup]").each(function() {
 					var popup = $(this).data("kendoPopup");
 					popup.close();
 				});
 			});
-
 			if (typeof tableSlider.row === 'number' && tableSlider.rows.length > tableSlider.row) {
 				tableSlider.scrollCellToVisibleTop ();
 			}
-
 			$(document).click (function () {$('UL.menuFonDark').remove ()});
 
+			var splitter = table_containers.closest('.supertable_with_panels');
+
+			if (splitter.length !== 0) {
+				splitter.kendoSplitter({
+					panes: [
+						{
+							collapsible: true,
+							size: (typeof window.top.localStorage.passport_splitter_width === 'undefined') 
+								? '90%'
+								: window.top.localStorage.passport_splitter_width + '%',
+						},
+						{
+							collapsible: true,
+							size: (typeof window.top.localStorage.passport_splitter_width === 'undefined') 
+								? '10%'
+								: (100 - window.top.localStorage.passport_splitter_width) + '%'
+						}
+					],
+					resize: function(e) {
+						var size = parseInt(this.options.panes[0].size),
+							in_percent = (_.indexOf(this.options.panes[0].size, '%') !== -1),
+							is_close = in_percent 
+								? (100 - size) <= 3
+								: (parseInt(this.wrapper.width()) - size) <= 30,
+							iframe = this.wrapper.find('iframe');
+
+						if (!in_percent) {
+							size = Math.round(size / (e.width / 100))
+						}
+						window.top.localStorage.passport_splitter_width = size;
+						if (iframe.attr('src') === '/i/empty_object/' && !is_close) {
+							var selected_row = $(tableSlider.get_cell()).closest('tr'), 
+								data_href = selected_row.attr('data-href') || null;
+
+							if (
+								data_href !== null 
+								&& /open_in_supertable_panel/.test(data_href)
+							) {
+								open_in_supertable_panel(
+									selected_row[0], 
+									data_href.slice(_.indexOf(data_href, '\'') + 1, _.lastIndexOf(data_href, '\''))
+								)
+							}
+						}
+						$(window).trigger('resize');
+						setTimeout(function() {
+							var view_port_height = parseInt(document.documentElement.clientHeight) - parseInt(splitter.offset().top);
+
+							splitter.data('kendoSplitter').wrapper.height(view_port_height)
+						}, 1000)
+					}
+				})
+			}
 		});
 	}
 
@@ -2691,9 +2761,9 @@ function init_page (options) {
 				}
 			}
 		})
-		require([ "kendo.tooltip.min" ], 
+		require([ "kendo.tooltip.min" ],
 		function() {
-			$(document).ready(function() { 
+			$(document).ready(function() {
    				$('[data-tooltip]').kendoTooltip({
 					content: function(e) {
 						return $(e.target).attr('data-tooltip')
@@ -2790,16 +2860,46 @@ function init_page (options) {
 			light.call(this);
 		};
 
-	$('[data-type=datepicker]').each(function () {
+	window.required_date_field = function($field, required) {
+		var wrapper = $field.closest('.k-widget');
+
+		if (required) { 
+			$field.addClass('form-mandatory-inputs');
+			wrapper.addClass('required');
+		} else {
+			$field.removeClass('form-mandatory-inputs');
+			wrapper.removeClass('required');
+		}
+		// $field.kendoDatePicker();
+		if (required) {
+			date_field_light.call($field.data('kendoDatePicker'));
+		}
+	};
+
+	$('[data-type=datepicker], [data-type=datetimepicker]').each(function() {
+		var select_time = $(this).attr('data-type') === 'datetimepicker',
+			options = {},
+			min = $(this).attr('min'),
+			max = $(this).attr('max');
+
+		if (min) {
+			options.min = new Date(min);
+		}
+		if (max) {
+			options.max = new Date(max);
+		}
 		$(this).on('keydown', date_field_keydown);
-		$(this).kendoDatePicker();
-		date_field_light.call($(this).data('kendoDatePicker'));
+		if (select_time) {
+			$(this).kendoDateTimePicker(options);
+		} else {
+			$(this).kendoDatePicker(options);
+		}
+		date_field_light.call($(this).data(
+			select_time ? 'kendoDateTimePicker' : 'kendoDatePicker'
+		));
 	});
-	$('[data-type=datetimepicker]').each(function () {
-		$(this).on('keydown', date_field_keydown);
-		$(this).kendoDateTimePicker();
-		date_field_light.call($(this).data('kendoDateTimePicker'));
-	});
+
+	$('[data-type="numeric-text-box"]').each(function () {$(this).kendoNumericTextBox({format : $(this).attr('format') || 'n'})});
 
 	$('input[mask]').each (init_masked_text_box);
 
@@ -2944,7 +3044,15 @@ function init_page (options) {
 function init_masked_text_box () {
 
 	$(this).kendoMaskedTextBox({
-		mask:$(this).attr('mask')
+		mask:$(this).attr('mask'),
+		culture: "ru-RU",
+		promptChar: " ",
+		rules: {
+			"L": /[a-zA-Zà-ÿÀ-ß¸¨]/,
+			"?": /[a-zA-Zà-ÿÀ-ß¸¨\s]/,
+			"A": /[a-zA-Zà-ÿÀ-ß¸¨\d]/,
+			"a": /[a-zA-Zà-ÿÀ-ß¸¨\d\s]/
+		}
 	});
 
 	if ($(this).data('type') == 'datepicker' || $(this).data('type') == 'datetimepicker') {
@@ -3046,14 +3154,40 @@ document.queryCommandSupported = function(command) {
 
 parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
 
+var open_in_supertable_panel = function(self, url) {
+	var splitter = $(self).closest('.supertable_with_panels').data('kendoSplitter'),
+		iframe = splitter.wrapper.find('iframe'),
+		_is_dirty = iframe[0].contentWindow.is_dirty;
+
+	if (
+		typeof _is_dirty === 'boolean'
+		&& _is_dirty
+		&& !confirm('Óéòè áåç ñîõðàíåíèÿ äàííûõ?')
+	) { return }
+
+	var size = parseInt(splitter.options.panes[1].size),
+		is_close = (_.indexOf(splitter.options.panes[1].size, '%') === -1)
+			? size <= 30
+			: size <= 3;
+
+	if (is_close) {
+		document.location.href = url; 
+	} else {
+		if (url !== '/i/empty_object/') {
+			url += '&in_panel=1'
+		} 
+		iframe.attr('src', url);
+	}
+};
+
 $(document).ready(function() {
 
 	var is_show_highlight = function(el) {
-		var value = (el[0].tagName == 'SELECT') 
-			? parseInt(el.val()) 
+		var value = (el[0].tagName == 'SELECT')
+			? parseInt(el.val())
 			: el.val().trim();
-		return (typeof value == 'number') 
-			? (value < 1) 
+		return (typeof value == 'number')
+			? (value < 1)
 			: (value.length == 0);
 		};
 
@@ -3086,17 +3220,17 @@ $(window).load(function() {
 });
 
 $.fn.is_on_screen = function() {
-	var win = $(window),	
+	var win = $(window),
 		viewport = {
 			top : win.scrollTop(),
 			left : win.scrollLeft()
 		},
 		bounds = this.offset();
-	
+
 	viewport.right = viewport.left + win.width();
 	viewport.bottom = viewport.top + win.height();
     bounds.right = bounds.left + this.outerWidth();
     bounds.bottom = bounds.top + this.outerHeight();
-	
+
     return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
 };
