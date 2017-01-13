@@ -901,14 +901,14 @@ function setup_drop_down_button (id, data) {
 			left: a_offset.left,
 		});
 
+		_.forEach(data, function(item) {
+			item.url = item.url.replace(/'/g,'"')
+		})
+
 		menuDiv.kendoMenu ({
 			dataSource: data,
 			orientation: 'vertical',
 			select: function (e) {
-				var selected_url = data [$(e.item).index()].url;
-				if (selected_url.match(/^javascript:/)) {
-					eval (selected_url);
-				}
 				menuDiv.remove ();
 				return true;
 			}
@@ -927,6 +927,11 @@ function table_row_context_menu (e, tr) {
 	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap;top:0;left:0" />').appendTo (document.body);
 
 	var items = $.parseJSON ($(tr).attr ('data-menu'));
+
+	_.forEach(items, function(item) {
+		item.url = item.url.replace(/'/g,'"')
+	})
+
 	menuDiv.kendoMenu ({
 		dataSource: items,
 		orientation: 'vertical',
