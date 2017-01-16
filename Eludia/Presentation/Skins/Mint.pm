@@ -185,16 +185,15 @@ sub _draw_bottom {
 	my $items = $options -> {menu};
 
 	foreach my $item (@$items) {
-		if ($item -> {is_active}) {
-			$html .='<li class="k-state-active k-item k-tab-on-top k-state-default k-first">
-					<a id="'.$item.'" href="'.$$item{href}.'" class="tab-1 k-link" target="'.$item->{target}.'"><nobr>&nbsp;'.$$item{label}.'&nbsp;</nobr></a>
-				</li>'
-		} else {
-			$html .= '<li class="k-item k-state-default">
-					<a id="'.$item.'" href="'.$$item{href}.'" class="tab-0 k-link" target="'.$item->{target}.'"><nobr>&nbsp;'.$$item{label}.'&nbsp;</nobr></a>
-				</li>'
-		}
+		$html .= $item -> {is_active} ?
+			'<li class="k-state-active k-item k-tab-on-top k-state-default k-first">
+					<a class="tab-1 k-link" ' :
+			'<li class="k-item k-state-default">
+					<a class="tab-0 k-link" ';
 
+		$html .= 'title="' . $$item{title} . '" ' if ($$item{title});
+		$html .= 'id="' . $item . '" href="'.$$item{href}.'" target="' . $item->{target} . '"><nobr>&nbsp;' . $$item{label} . '&nbsp;</nobr></a>
+				</li>';
 	}
 
 	return <<EOH;
@@ -291,14 +290,20 @@ EOH
 	$html .=  <<EOH;
 			<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 EOH
+
 	foreach my $row (@{$options -> {rows}}) {
 
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
 
-		my $attributes = dump_attributes (draw_form_row_attributes ($row));
-		my $row_class = ($row -> [0] -> {is_grid} == 1) ? 'row_grid' : '';
+		my $attributes = draw_form_row_attributes($row);
 
+		$attributes -> {'data-row-id'} = $row -> [0] -> {row_id}
+			if $options -> {name} eq 'metrics_form';
+
+		$attributes = dump_attributes ($attributes);
+
+		my $row_class = ($row -> [0] -> {is_grid} == 1) ? 'row_grid' : '';
 		$html .= qq{<tr id="$tr_id" $attributes class="$row_class">};
 		foreach (@$row) { $html .= $_ -> {html} };
 		$html .= qq{</tr>};
@@ -438,6 +443,7 @@ sub draw_form_field {
 			class  => join (' ', grep {$_} "form-$$field{state}-banner", $field -> {class}, $field -> {label_class}),
 			nowrap => !$field -> {no_nowrap},
 			align  => 'center',
+			$field -> {label_title} ? (title => $field -> {label_title}) : (),
 			%{$field -> {label_attributes}}
 		};
 
@@ -564,8 +570,16 @@ sub draw_form_field_string {
 
 	$attributes -> {type}        = 'text';
 
-	$attributes -> {mask}        = $options -> {mask}
-		if $options -> {mask};
+	map {
+		$attributes -> {$_}        ||= $options -> {$_}
+			if $options -> {$_};
+	} qw (mask min max format);
+
+	if ($attributes -> {min} || $attributes -> {max} || $attributes -> {format} || $attributes -> {decimals}) {
+		$attributes -> {"data-type"} = "numeric-text-box";
+		$_REQUEST {__libs} -> {kendo} -> {numerictextbox} = 1;
+
+	}
 
 	return dump_tag ('input', $attributes);
 
@@ -643,8 +657,11 @@ sub draw_form_field_file {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
+	my $file_tooltip = !$preconf -> {file_tooltip} ? ''
+		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), $options -> {max_file_size} || $preconf -> {max_file_size});
+
 	my $html = "<span id='form_field_file_head_$options->{name}'>" .
-		($options -> {no_limit} || !$preconf -> {file_tooltip} ? '' : "<div data-tooltip='$$preconf{file_tooltip}'>");
+		($options -> {no_limit} || !$file_tooltip ? '' : "<div data-tooltip='$file_tooltip'>");
 
 	$$options{value} ||= $data -> {"$$options{name}_name"};
 
@@ -701,7 +718,7 @@ EOH
 		$html .= <<EOH;
 		<input type='hidden' name='_file_no_limit_for_$$options{name}' id='_file_no_limit_for_$$options{name}' value='1'>
 EOH
-	} elsif ($preconf -> {file_tooltip}) {
+	} elsif ($file_tooltip) {
 		$html .= '</div>';
 	}
 
@@ -749,7 +766,11 @@ EOJS
 		>
 		<span id="file_field_$options->{name}">
 EOH
-	$html .= ($options -> {no_limit} || !$preconf -> {file_tooltip} ? '<div>' : "<div data-tooltip='$$preconf{file_tooltip}'>") . <<EOH;
+
+	my $file_tooltip = !$preconf -> {file_tooltip} ? ''
+		: sprintf ($preconf -> {file_tooltip}, join (', ', @{$preconf -> {file_extensions}}), options -> {max_file_size} || $preconf -> {max_file_size});
+
+	$html .= ($options -> {no_limit} || !$file_tooltip ? '<div>' : "<div data-tooltip='$file_tooltip'>") . <<EOH;
 			<span id="file_field_$options->{name}_head">
 				<input name="_$$options{name}_0" type="file" $attributes />
 			</span>
@@ -811,6 +832,7 @@ sub draw_form_field_text {
 	my ($_SKIN, $options, $data) = @_;
 
 	$options -> {attributes} -> {class} .= ' k-textbox ';
+	$options -> {attributes} -> {class} .= ' required ' if $options -> {mandatory};
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -2960,7 +2982,7 @@ sub rebuild_supertable_columns {
 
 sub draw_super_table__only_table {
 
-	my ($_SKIN, $tr_callback, $list, $options) = @_;
+	my ($_SKIN, $tr_callback, $list, $options, $has_splitter) = @_;
 
 	if ($_REQUEST {__only_table} && $_REQUEST {__only_table} ne $options -> {id_table}) {
 		return '';
@@ -3001,8 +3023,15 @@ sub draw_super_table__only_table {
 				$html .= qq { data-target="$i->{__target}->[$tr_cnt]"}
 					if $i -> {__target} -> [$tr_cnt] && $i -> {__target} -> [$tr_cnt] ne '_self';
 
+				if ($has_splitter) {
+					if ($i -> {__href} -> [$tr_cnt] =~ /javascript/) {
+						$html .= qq { data-href="javascript:open_in_supertable_panel(this, \'/i/empty_object/\');$i->{__href}->[$tr_cnt]" };
+					} else {
+						$html .= qq { data-href="javascript:open_in_supertable_panel(this, \'$i->{__href}->[$tr_cnt]\')"};
+					}
+				} else {
 				$html .= qq { data-href="$i->{__href}->[$tr_cnt]"};
-
+				}
 			}
 
 			$html .= '>';
@@ -3036,6 +3065,14 @@ sub draw_super_table__only_table {
 		},
 		script      => $_REQUEST {__only_table} ? $_REQUEST {__script} . ';' . $_REQUEST {__on_load} : '',
 		table_url   => $_SKIN -> table_url () . ($options -> {is_not_first_table_on_page} ? '&is_not_first_table_on_page=1' : ''),
+		firts_href  => $firts_href,
+		config      => {
+			scrollHeight => defined $options -> {scroll_height}
+				? $options -> {scroll_height}
+					? $_JSON -> true
+					: $_JSON -> false
+				: $_JSON -> true,
+		},
 	};
 
 	return $_JSON -> encode ($table);
@@ -3048,11 +3085,17 @@ sub draw_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
 
-	my $data_json = $_SKIN -> draw_super_table__only_table ($tr_callback, $list, $options);
+	# my @screen_with_splitter = ('building_passports', 'okii_passports', 'uo_passports', 'rso_passports', 'yard_passports',
+	# 	'overhaul_passports', 'licenses', 'contracts', 'avr_passports', 'cp_passports', 'infrastructures', 'voc_agents');
+
+	my @screen_with_splitter = ('building_passports');
+
+	my $has_splitter = $_REQUEST {type} ~~ @screen_with_splitter;
+
+	my $data_json = $_SKIN -> draw_super_table__only_table ($tr_callback, $list, $options, $has_splitter);
 
 	return $data_json
 		if $_REQUEST {__only_table};
-
 	$_REQUEST {__script} = <<EOJS . $_REQUEST {__script};
 		window.tables_data = window.tables_data || {};
 		window.tables_data ['$options->{id_table}'] = $data_json;
@@ -3071,8 +3114,13 @@ EOJS
 
 	my $html;
 
-	$html = qq {<div $attributes></div>\n}
+	$_REQUEST {__libs} -> {kendo} -> {splitter} = 1 if $has_splitter;
+
+	$html = qq { <div $attributes></div>\n }
 		unless index ($data_json, '<tr') == -1;
+
+	$html = qq { <div class="supertable_with_panels" style="border:0">$html<div class="iframe_panel"><iframe src="/i/empty_object/"></iframe></div></div>\n }
+		if $has_splitter;
 
 	my %hidden = ();
 

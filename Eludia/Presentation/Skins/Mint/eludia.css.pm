@@ -410,13 +410,11 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 	FONT-SIZE: 11pt;
 	COLOR: #2f3237;
 	background-color: #f2f2f2;
-
 	padding: 10px 10px;
-
 	border-color: #d6d3ce;
 	border-style:solid;
-
 	border-width: 0 1px 1px 0;
+	white-space: pre-wrap;
 }
 
 .form-deleted-banner {
@@ -573,7 +571,6 @@ A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, 
 }
 
 .form-very-active-inputs {
-	background-color: #fff!important;
 	font-size: 13px!important;
 	font-weight: bold;
 }
@@ -635,7 +632,7 @@ input.form-active-deleted, select.form-active-deleted, textarea.form-active-dele
 input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandatory-inputs {
 	FONT-SIZE: 13px;
 	COLOR: #000000;
-	background-color: #f7f7ad !important;
+	background-color: #f7f7ad;
 	border: 1px #7f9db9 solid;
 	padding-left: 3px;
 	padding-right: 3px;
@@ -704,6 +701,13 @@ a.hint {
 .k-grid a.k-button.k-button-icontext.k-grid-delete .k-icon {
 	display: none;
 }
+
+.k-numerictextbox .k-link {
+	height: 50%!important;
+}
+.k-numerictextbox .k-link .k-icon {
+	position: inherit!important;
+	margin: 3px 0 0 3px!important;
 
 #waiting_screen {
 	position: fixed;
