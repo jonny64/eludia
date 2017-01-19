@@ -647,7 +647,7 @@ sub draw_form {
 
 	}
 
-	$options -> {no_esc}    = 1 if $apr -> param ('__last_query_string') < 0 && !$_REQUEST {__edit};
+	$options -> {no_esc}    = 1 if $apr && $apr -> param ('__last_query_string') < 0 && !$_REQUEST {__edit};
 	$options -> {target}  ||= 'invisible';
 	$options -> {method}  ||= 'post';
 	$options -> {target}  ||= 'invisible';
