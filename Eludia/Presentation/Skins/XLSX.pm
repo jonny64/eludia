@@ -898,12 +898,15 @@ sub add_worksheet {
 sub start_page {
 
 	$_REQUEST {__salt} ||= int(rand () * time ());
-	$_REQUEST {__xl_file_name} = File::Spec -> tmpdir() . "/eludia_$_REQUEST{type}_$_REQUEST{sid}_$_REQUEST{__salt}.xlsx";
+
+	my $tmpdir = File::Spec -> tmpdir();
+	$_REQUEST {__xl_file_name} = "$tmpdir/eludia_$_REQUEST{type}_$_REQUEST{sid}_$_REQUEST{__salt}.xlsx";
 
 	open (OUT, '>' . $_REQUEST {__xl_file_name}) or die "Can't open $_REQUEST{__file_name}: $!\n";
 	binmode OUT;
 	flock (OUT, LOCK_EX);
 
+	chdir $tmpdir; # HACK: offline Can't cd to /root
 	my $workbook = Excel::Writer::XLSX -> new (\*OUT);
 	$_REQUEST {__xl_workbook}  = $workbook;
 
