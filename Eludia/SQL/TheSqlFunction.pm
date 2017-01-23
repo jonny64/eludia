@@ -189,6 +189,8 @@ sub _sql_filters {
 
 		my ($field, $values) = @$filter;
 
+		ref $values eq ARRAY and $values = [@$values];
+
 		if ($field eq 'DELETE') {
 			$delete = 1;
 			next;
