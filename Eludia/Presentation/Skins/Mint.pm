@@ -3620,6 +3620,7 @@ sub lrt_start {
 	$|=1;
 
 	$r -> content_type ("text/html; charset=$i18n->{_charset}");
+	$r -> headers_out -> {'X-Accel-Buffering'} = "no";
 	$r -> send_http_header ();
 
 	$_REQUEST {__lrt_time} = $_REQUEST {__lrt_show_time} = time();
