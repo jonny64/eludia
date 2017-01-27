@@ -2754,7 +2754,11 @@ function init_page (options) {
 						}
 						$(window).trigger('resize');
 						setTimeout(function() {
-							var view_port_height = parseInt(document.documentElement.clientHeight) - parseInt(splitter.offset().top);
+							var view_port_height = Math.floor(
+									parseInt(document.documentElement.clientHeight)
+									- parseInt(splitter.offset().top)
+									- window.devicePixelRatio
+								);
 
 							splitter.data('kendoSplitter').wrapper.height(view_port_height)
 						}, 1000)
