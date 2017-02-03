@@ -23,7 +23,7 @@ sub vld_snils {
 
 	local $SIG {__DIE__} = 'DEFAULT';
 
-	$value + 0 == 0 and $name1 ? die "#$name1#:$i18n->{snils_incorrect}" : return $i18n -> {snils_incorrect};
+	$value + 0 != 0 or $name1 ? die "#$name1#:$i18n->{snils_incorrect}" : return $i18n -> {snils_incorrect};
 
 	substr ($value, 0, 9) gt '001001998' or return undef;
 
