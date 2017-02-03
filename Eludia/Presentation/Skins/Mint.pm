@@ -3817,6 +3817,7 @@ sub draw_tree {
 			<div id="splitted_tree_window_left" data-selected-node="$$options{selected_node}">
 			</div>
 			<div id="splitted_tree_window_right" style="$content_div_style" data-name="$$options{name}">
+				<iframe onload="this.style.visibility='visible'" style="visibility: hidden;" width=100% height=100% name="$$options{name}" id="__content_iframe" application=yes scroll=no>
 			</div>
 		</div>
 	};

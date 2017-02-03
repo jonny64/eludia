@@ -929,7 +929,9 @@ function setup_drop_down_button (id, data) {
 	});
 }
 
-function table_row_context_menu (e, tr) {
+function table_row_context_menu(e, tr) {
+	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap;top:0;left:0" />').appendTo(document.body),
+		items = $.parseJSON($(tr).attr('data-menu'));
 
 	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap;top:0;left:0" />').appendTo (document.body);
 
@@ -947,36 +949,32 @@ function table_row_context_menu (e, tr) {
 		}
 	});
 
-	var tr_offset = $(tr).offset ();
-	var tr_height = $(tr).height ();
+	var tr_offset = $(tr).offset(),
+		tr_height = $(tr).height(),
+		menu_top  = e.pageY >= tr_offset.top && e.pageY <= tr_offset.top + tr_height ? e.pageY - 5 : e.clientY - 5,
+		menu_left = e.pageX - 5,
+		is_offscreen = menu_top + $(menuDiv).height() > $(window).height();
 
-	var menu_top  = e.pageY >= tr_offset.top && e.pageY <= tr_offset.top + tr_height ? e.pageY - 5 : e.clientY - 5;
-	var menu_left = e.pageX - 5;
-
-	var is_offscreen = menu_top + $(menuDiv).height() > $(window).height();
 	if (is_offscreen) {
 		menu_top = menu_top - $(menuDiv).height();
 	}
-
-
-	menuDiv.css ({
+	menuDiv.css({
 		top:  menu_top,
 		left: menu_left
 	});
 
-	var width = menuDiv.width ();
+	var width = menuDiv.width();
 
-	window.setTimeout (function () {
-		menuDiv.width (width);
+	window.setTimeout(function() {
+		menuDiv.width(width);
 	}, 100);
-
-	menuDiv.hover (
-		function () {
-			menuDiv.width (width);
+	menuDiv.hover(
+		function() {
+			menuDiv.width(width);
 		},
-		function () {
-			window.setTimeout (function () {
-				menuDiv.remove ()
+		function() {
+			window.setTimeout (function() {
+				menuDiv.remove()
 			}, 500);
 		}
 	);
@@ -2287,17 +2285,15 @@ function treeview_onexpand (e) {
 
 
 function treeview_onselect_node (node, expand_on_select, e) {
-
 	var treeview = $("#splitted_tree_window_left").data ("kendoTreeView");
 
 	if (expand_on_select == 1)
 		treeview.expand(node);
-
 	node = treeview.dataItem (node);
 	if (!node || !node.href) return false;
-	var href = node.href;
 
-	var right_div = $("#splitted_tree_window_right"),
+	var href = node.href,
+		right_div = $("#splitted_tree_window_right"),
 		content_iframe = $('#__content_iframe', right_div);
 
 	if (content_iframe.length && content_iframe.get(0).contentWindow && content_iframe.get(0).contentWindow.is_dirty && !confirm (i18n.F5)) {
@@ -2306,10 +2302,13 @@ function treeview_onselect_node (node, expand_on_select, e) {
 	}
 
 	var name = right_div.data('name');
-	right_div.html ("<iframe onload='this.style.visibility="+'"visible"'+"' style='visibility: hidden;' width=100% height=100% src='" + href + "' name='" + name + "' id='__content_iframe' application=yes scroll=no>");
+
+	content_iframe.attr('src', href);
+	content_iframe.attr('name', name);
 
 	/************************* add height in iframe *************************/
 	var heghtstr = $(window.parent.document.getElementById( "tabstrip" )).height();
+
 	if (heghtstr > 100){
 		$('#__content_iframe').css('height', heghtstr - 36);
 	}
@@ -3018,31 +3017,16 @@ function init_page (options) {
 		});
 	}
 
-	$(document).on ('keydown', function (event) {
-		if (event.keyCode == 112) {
-			event.preventDefault();
-			var url = 'https://eias-gkh.reginc.ru/docs/index.php?title=∆ ’#';
-			url += parseURL(document.location.href).type || '';
-			nope(url, '_bloank', 'toolbar=no,resizable=yes');
-		} else {
+	$(document).on('keydown', function(event) {
 			lastKeyDownEvent = event;
-			return handle_basic_navigation_keys ();
-		}
+		
+		return handle_basic_navigation_keys();
 	});
 
 	$(document).on ('keypress', function (event) {
 		if (!browser_is_msie && event.keyCode == 27)
 			return false;
 	});
-
-	/*
-	if (options.help_url) {
-		$(document).on ('help', function (event) {
-			nope (options.help_url, '_blank', 'toolbar=no,resizable=yes');
-			blockEvent ();
-		});
-	}
-	*/
 
 	$(window).on ('beforeunload', function (event) {
 		setCursor (window, 'wait');
