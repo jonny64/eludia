@@ -871,6 +871,7 @@ $sql =~ s/([^\W]\s*\b)user\b(?!\.)/\1RewbfhHHkgkglld/igsm;
 #$sql =~ s/([^\W]\s*\b)level\b(?!\.)/\1NbhcQQehgdfjfxf/igsm;
 ############### Вырезаем и запоминаем все что внутри кавычек, помечая эти места.
 $sql =~ s/\"/\'/igsm;
+$sql =~ s/\`//igsm;
 while ($sql =~ /(''|'.*?[^\\]')/ism)
 {
 	my $temp = $1;
@@ -930,6 +931,12 @@ if ($sql =~ /(\s+ORDER\s+BY\s+)(.*?)(\sLIMIT\s.*)?/igsm) {
 if ($sql =~ /SELECT.+LIMIT/ism) {
 	$sql =~ s{LIMIT\s+(\d+)\s*\,\s*(\d+).*}{LIMIT $2 OFFSET $1}ism;
 }
+############### Вставляем AS перед алиасами (на случай совпадения их с ключевыми словами)
+if ($sql =~ m/.*SELECT\s*(DISTINCT\s*)?(.+)\s*\bFROM\b.*/ims) {
+	my $str = $2;
+	$str =~ s/(\w+)\b(\s+AS\s*)?\s+\b(\w+)/$1 AS $3/igms;
+	$sql =~ s/(.*SELECT\s*(DISTINCT\s*)?).+(\s*\bFROM\b.*)/$1$str$3/igms
+}
 
 
 #$need_group_by=1 if ( $sql =~ m/\s+GROUP\s+BY\s+/igsm);
@@ -974,8 +981,9 @@ for(my $i = $#items; $i >= 1; $i--) {
 	$items[$i] =~ s/\bSUBSTR\((.+?),(.+?),(.+?)\)/SUBSTRING\(\1,\2,\3\)/igsm;
 	$items[$i] =~ s/\bLEFT\((.+?),(.+?)\)/SUBSTRING\(\1,1,\2\)/igsm;
 	$items[$i] =~ s/\bRIGHT\((.+?),(.+?)\)/SUBSTRING\(\1,LENGTH\(\1\)-\(\2\)+1,LENGTH\(\1\)\)/igsm;
-	$items[$i] =~ s/(\bSUBDATE|\bDATE_SUB)\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/$1 - interval '$2 $3'/igsm;
-	$items[$i] =~ s/(\bADDDATE|\bDATE_ADD)\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/$1 + interval '$2 $3'/igsm;
+	$items[$i] =~ s/\bSUBDATE|\bDATE_SUB\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/$1 - interval '$2 $3'/igsm;
+	$items[$i] =~ s/\bADDDATE|\bDATE_ADD\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/$1 + interval '$2 $3'/igsm;
+	$items[$i] =~ s/\bGROUP_CONCAT\((.*?)\)/ARRAY_AGG($1)/igsm;
 
 #	if ($model_update -> {characterset} =~ /UTF/i) {
 #		$items[$i] =~ s/\bHEX(\(.*?\))/RAWTONHEX\1/igsm;
@@ -1014,6 +1022,14 @@ for(my $i = $#items; $i >= 1; $i--) {
 	}
 	######## IF()
 	$items[$i] =~ s/\bIF\((.+?),(.+?),(.+?)\)/(CASE WHEN \1 THEN \2 ELSE \3 END)/igms;
+	# $items[$i] =~ s/\bIF\((.+?),(.+?),(.+?)\)/IF $1 THEN $2 ELSE $3 END IF/igsm;
+
+############### В подзапросах и функциях Вставляем AS перед алиасами (на случай совпадения их с ключевыми словами)
+if ($items[$i] =~ m/.*SELECT\s*(DISTINCT\s*)?(.+)\s*\bFROM\b.*/ims) {
+	my $str = $2;
+	$str =~ s/(\w+)\b(\s+AS\s*)?\s+\b(\w+)/$1 AS $3/igms;
+	$items[$i] =~ s/(.*SELECT\s*(DISTINCT\s*)?).+(\s*\bFROM\b.*)/$1$str$3/igms
+}
 	##############################################################################
 	# Заполняем шаблон верхнего уровня ранее запомненными и измененными items
 	# в помеченных местах
@@ -1029,7 +1045,6 @@ for(my $i = $#items; $i >= 1; $i--) {
 	}
 }
 
-$items[$i] =~ s/\bIF\((.+?),(.+?),(.+?)\)/IF $1 THEN $2 ELSE $3 END IF/igsm;
 
 ################ Меняем GROUP BY 1,2,3 ...
 
@@ -1099,6 +1114,8 @@ $sql =~ s/TO_TIMESTAMP\(CURRENT_TIMESTAMP,'YYYY-MM-DD HH24:MI:SS'\)/CURRENT_TIME
 #}
 
 #warn "ORACLE OUT: <$sql>\n";
+
+$sql =~ s/\s*ORDER\s+BY\s+NULL\s*//igsm;
 
 $mysql_to_postgresql_cache -> {$src_sql} = $sql if ($src_sql !~ /\bIF\((.+?),(.+?),(.+?)\)/igsm);
 

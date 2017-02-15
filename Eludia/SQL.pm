@@ -410,7 +410,7 @@ sub sql_reconnect {
 
 	unless ($preconf -> {no_model_update}) {
 
-		if ($model_update) {
+		if (0 && !$model_update) {
 
 			$model_update -> {db} = $db;
 
