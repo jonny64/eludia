@@ -934,8 +934,14 @@ if ($sql =~ /SELECT.+LIMIT/ism) {
 ############### Вставляем AS перед алиасами (на случай совпадения их с ключевыми словами)
 if ($sql =~ m/.*SELECT\s*(DISTINCT\s*)?(.+)\s*\bFROM\b.*/ims) {
 	my $str = $2;
+	my $case_end = [];
+	my $csi=0;
+	while ($str =~ s/CASE.*?END/CSNDcsnd$csi/ims) {
+		$case_end[$csi++]=$&;
+	}
 	$str =~ s/(\w+)\b(\s+AS\s*)?\s+\b(\w+)/$1 AS $3/igms;
-	$sql =~ s/(.*SELECT\s*(DISTINCT\s*)?).+(\s*\bFROM\b.*)/$1$str$3/igms
+	$str =~ s/CSNDcsnd(\d+)/$case_end[$1]/igsm;
+	$sql =~ s/(.*SELECT\s*(DISTINCT\s*)?).+(\s*\bFROM\b.*)/$1$str$3/igms;
 }
 
 
@@ -950,6 +956,7 @@ if ($sql =~ m/.*SELECT\s*(DISTINCT\s*)?(.+)\s*\bFROM\b.*/ims) {
 #		my @group_by_values = split(',',$1);
 #		$group_by_values_ref[$sc++]=\@group_by_values;
 #	}
+
 
 #	my $sc=0;
 	# Разбиваем шаблон от SELECT до FROM на поля для дальнейшего раздельного наполнения
@@ -1008,6 +1015,7 @@ for(my $i = $#items; $i >= 1; $i--) {
 
 	######## CURDATE()
 	$items[$i] =~ s/\bCURDATE\(.*?\)/CURRENT_DATE/igsm;
+	$items[$i] =~ s/\bCURRENT_DATE\(\)/CURRENT_DATE/igsm;
 	######## YEAR, MONTH, DAY
 	$items[$i] =~ s/(\bYEAR\b|\bMONTH\b|\bDAY\b)\((.*?)\)/EXTRACT\(\1 FROM \2\)/igsm;
 	######## TO_DAYS()
@@ -1027,9 +1035,16 @@ for(my $i = $#items; $i >= 1; $i--) {
 ############### В подзапросах и функциях Вставляем AS перед алиасами (на случай совпадения их с ключевыми словами)
 if ($items[$i] =~ m/.*SELECT\s*(DISTINCT\s*)?(.+)\s*\bFROM\b.*/ims) {
 	my $str = $2;
+	my $case_end = [];
+	my $csi=0;
+	while ($str =~ s/CASE.*?END/CSNDcsnd$csi/ims) {
+		$case_end[$csi++]=$&;
+	}
 	$str =~ s/(\w+)\b(\s+AS\s*)?\s+\b(\w+)/$1 AS $3/igms;
-	$items[$i] =~ s/(.*SELECT\s*(DISTINCT\s*)?).+(\s*\bFROM\b.*)/$1$str$3/igms
+	$str =~ s/CSNDcsnd(\d+)/$case_end[$1]/igsm;
+	$items[$i] =~ s/(.*SELECT\s*(DISTINCT\s*)?).+(\s*\bFROM\b.*)/$1$str$3/igms;
 }
+
 	##############################################################################
 	# Заполняем шаблон верхнего уровня ранее запомненными и измененными items
 	# в помеченных местах

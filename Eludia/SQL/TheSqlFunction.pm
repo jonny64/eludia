@@ -291,11 +291,17 @@ sub _sql_filters {
 					$$buffer .= "\n  AND ($field ($values->[0]";
 
 				} else {
+						$field =~ m/^(\w+)\.(\w+).*$/;
+						my $table = $1;
+						my $column = $2;
 
-					$$buffer .= "\n  AND ($field (-1";
-
-					foreach (grep {/\d/} @$values) { $where .= ", $_"}
-
+						if (($DB_MODEL -> {tables} -> {$table} -> {columns} -> {$column} -> {TYPE_NAME} ne 'int') && ($preconf -> {postgresql})) {
+							$$buffer .= "\n  AND ($field ('-1'";
+							foreach (grep {/\d/} @$values) { $where .= ", '$_'"}
+						} else {
+							$$buffer .= "\n  AND ($field (-1";
+							foreach (grep {/\d/} @$values) { $where .= ", $_"}
+						}
 				}
 
 				$$buffer .= "))";
