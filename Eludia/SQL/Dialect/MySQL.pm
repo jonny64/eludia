@@ -857,9 +857,12 @@ sub sql_select_loop {
 	my ($sql, $coderef, @params) = @_;
 	$sql =~ s{^\s+}{};
 
+	$sql = sql_processing_string ($sql);
+
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
+
 	sql_safe_execute ($st, \@params);
 
 	local $i;
@@ -871,6 +874,16 @@ sub sql_select_loop {
 
 	$st -> finish ();
 
+}
+
+################################################################################
+
+sub sql_processing_string {
+	my ($sql) = @_;
+
+	$sql =~ s/(CAST\(.+?\s*AS\s*)(text)\s*\)/$1char)/igm;
+
+	return $sql;
 }
 
 ################################################################################
