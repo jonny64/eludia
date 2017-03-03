@@ -12,7 +12,7 @@ sub wish_to_schedule_modifications_for_table_data {
 
 sub wish_to_actually_create_table_data {
 
-	wish_to_actually_modify_table_data (@_, 'INSERT INTO');
+	wish_to_actually_modify_table_data (@_, 'INSERT INTO', 0);
 
 }
 
@@ -20,7 +20,7 @@ sub wish_to_actually_create_table_data {
 
 sub wish_to_actually_replace_table_data {
 
-	wish_to_actually_modify_table_data (@_, 'REPLACE');
+	wish_to_actually_modify_table_data (@_, 'INSERT INTO', 1);
 
 }
 
@@ -28,7 +28,7 @@ sub wish_to_actually_replace_table_data {
 
 sub wish_to_actually_modify_table_data {
 
-	my ($items, $options, $statement) = @_;
+	my ($items, $options, $statement, $upsert) = @_;
 
 	@$items > 0 or return;
 
@@ -54,9 +54,22 @@ sub wish_to_actually_modify_table_data {
 
 		foreach my $i (@{$packages_by_column_set->{$key}}) { push @values, '(' . (join ',', map {$db -> quote ($i -> {$_})} @cols) . ')' }
 
-		my $sql = "$statement $options->{table} (" . (join ',', @cols) . ")VALUES" . (join ',', @values);
+		if ($upsert) {
 
-		sql_do ($sql);
+			foreach my $i (@values) {
+
+				my $sql = "$statement $options->{table} (" . (join ',', @cols) . ") VALUES " . $i ." ON CONFLICT(id) DO UPDATE SET (" . (join ',', @cols) . ")=" . $i;
+
+				sql_do ($sql);
+
+			}
+
+		} else {
+
+			my $sql = "$statement $options->{table} (" . (join ',', @cols) . ")VALUES" . (join ',', @values);
+
+			sql_do ($sql);
+		}
 
 	}
 

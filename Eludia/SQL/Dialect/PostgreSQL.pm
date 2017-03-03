@@ -870,8 +870,9 @@ my $sc_in_quotes=0;
 $sql =~ s/([^\W]\s*\b)user\b(?!\.)/\1RewbfhHHkgkglld/igsm;
 #$sql =~ s/([^\W]\s*\b)level\b(?!\.)/\1NbhcQQehgdfjfxf/igsm;
 ############### ¬ырезаем и запоминаем все что внутри кавычек, помеча€ эти места.
-$sql =~ s/\"/\'/igsm;
+# $sql =~ s/\"/\'/igsm;
 $sql =~ s/\`//igsm;
+
 while ($sql =~ /(''|'.*?[^\\]')/ism)
 {
 	my $temp = $1;
@@ -944,6 +945,13 @@ if ($sql =~ m/.*SELECT\s*(DISTINCT\s*)?(.+)\s*\bFROM\b.*/ims) {
 	$sql =~ s/(.*SELECT\s*(DISTINCT\s*)?).+(\s*\bFROM\b.*)/$1$str$3/igms;
 }
 
+############### ќбработка UPDATE...JOIN... (работает только дл€ 1 join, возможно убрать в дальнейшем)
+if ($sql =~ m/\bUPDATE\s+(\w+)\s+(LEFT|RIGHT|INNER|FULL)?\s*(OUTER)?\s*JOIN\s*(\w+)\s*ON(.*)SET(.*)WHERE(.*)/igsm) {
+	my $target_table = $1;
+	my $set_constr = $6;
+	$set_constr =~ s/$target_table\.//igsm;
+	$sql =~ s/\bUPDATE\s+(\w+)\s+(LEFT|RIGHT|INNER|FULL)?\s*(OUTER)?\s*JOIN\s*(\w+)\s*ON(.*)SET(.*)WHERE(.*)/UPDATE $1 SET $set_constr FROM $4 WHERE$7AND$5/igsm;
+}
 
 #$need_group_by=1 if ( $sql =~ m/\s+GROUP\s+BY\s+/igsm);
 
