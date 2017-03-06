@@ -476,6 +476,12 @@ sub sql_select_subtree {
 
 ################################################################################
 
+sub sql_last_insert_id {
+	return $__last_insert_id || sql_select_scalar ("SELECT lastval()") || 0;
+}
+
+################################################################################
+
 sub sql_do_update {
 
 	my ($table_name, $field_list, $options) = @_;
@@ -870,7 +876,7 @@ my $sc_in_quotes=0;
 $sql =~ s/([^\W]\s*\b)user\b(?!\.)/\1RewbfhHHkgkglld/igsm;
 #$sql =~ s/([^\W]\s*\b)level\b(?!\.)/\1NbhcQQehgdfjfxf/igsm;
 ############### Вырезаем и запоминаем все что внутри кавычек, помечая эти места.
-# $sql =~ s/\"/\'/igsm;
+$sql =~ s/\"/\'/igsm;
 $sql =~ s/\`//igsm;
 
 while ($sql =~ /(''|'.*?[^\\]')/ism)
@@ -1037,8 +1043,18 @@ for(my $i = $#items; $i >= 1; $i--) {
 #		$items[$i] =~ s/\bPOSITION\((.+?)\s+IN\s+(.+?)\)/INSTR\(\2,\1\)/igsm;
 	}
 	######## IF()
-	$items[$i] =~ s/\bIF\((.+?),(.+?),(.+?)\)/(CASE WHEN \1 THEN \2 ELSE \3 END)/igms;
+	$items[$i] =~ s/\bIF\((.+?),(.+?),(.+?)\)/(CASE WHEN $1 THEN $2 ELSE $3 END)/igms;
 	# $items[$i] =~ s/\bIF\((.+?),(.+?),(.+?)\)/IF $1 THEN $2 ELSE $3 END IF/igsm;
+
+	if ($items[$i] =~ m/(CASE WHEN\s*(.+?) THEN\s*(.+?) ELSE\s*(.+?) END)/igms) {
+		### замена булевых выражений
+		my @b = ($2, $3, $4);
+		foreach my $i (0..$#b) {
+			if ($b[$i] eq '1') { $b[$i] = 'TRUE';}
+			if ($b[$i] eq '0') { $b[$i] = 'FALSE';}
+		}
+		$items[$i] =~ s/CASE WHEN\s*(.+?) THEN\s*(.+?) ELSE\s*(.+?) END/CASE WHEN $b[0] THEN $b[1] ELSE $b[2] END/igms
+	}
 
 ############### В подзапросах и функциях Вставляем AS перед алиасами (на случай совпадения их с ключевыми словами)
 if ($items[$i] =~ m/.*SELECT\s*(DISTINCT\s*)?(.+)\s*\bFROM\b.*/ims) {
