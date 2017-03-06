@@ -542,9 +542,15 @@ sub check_dbl_click_start {
 
 	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
 
-	sql_do ("DELETE FROM $conf->{systables}->{__action_log} WHERE id_session NOT IN ($ids) OR ts < DATE_SUB(NOW(), INTERVAL ? MINUTE)",
-		$preconf -> {core_dbl_click_protection} + 0 || 2
-	);
+	if ($preconf -> {postgresql}) {
+		sql_do ("DELETE FROM $conf->{systables}->{__action_log} WHERE id_session NOT IN ($ids) OR ts < NOW() - CAST(? AS INTERVAL)",
+			$preconf -> {core_dbl_click_protection} + 0 || 2 . " MINUTE"
+		);
+	} else {
+		sql_do ("DELETE FROM $conf->{systables}->{__action_log} WHERE id_session NOT IN ($ids) OR ts < DATE_SUB(NOW(), INTERVAL ? MINUTE)",
+			$preconf -> {core_dbl_click_protection} + 0 || 2
+		);
+	}
 
 	my %r = (%_REQUEST_VERBATIM);
 
@@ -569,9 +575,9 @@ EOS
 			$params,
 			$_REQUEST {__redirect_alert}
 		);
-
+warn "$_REQUEST{sid}, $_REQUEST{_id_log}, $$, $params, $_REQUEST{__redirect_alert}";
 		$_REQUEST {_id___action_log} = sql_last_insert_id ();
-
+warn $_REQUEST {_id___action_log};
 		return;
 	}
 
