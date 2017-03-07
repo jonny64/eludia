@@ -483,6 +483,8 @@ sub sql_select_scalar {
 
 	}
 
+	$sql = sql_processing_string ($sql);
+
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
@@ -880,9 +882,7 @@ sub sql_select_loop {
 
 sub sql_processing_string {
 	my ($sql) = @_;
-
 	$sql =~ s/(CAST\(.+?\s*AS\s*)(text)\s*\)/$1char)/igm;
-
 	return $sql;
 }
 

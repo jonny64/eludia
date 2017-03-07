@@ -1154,7 +1154,10 @@ $sql =~ s/TO_TIMESTAMP\(CURRENT_TIMESTAMP,'YYYY-MM-DD HH24:MI:SS'\)/CURRENT_TIME
 
 #warn "ORACLE OUT: <$sql>\n";
 
+######## ORDER BY
 $sql =~ s/\s*ORDER\s+BY\s+NULL\s*//igsm;
+######## Обработка ORDER BY(... + 0)
+$sql =~ s/ORDER BY\((\b.+\b)\s*\+\s*0\)/ORDER BY(CAST($1 AS INTEGER))/igms;
 
 $mysql_to_postgresql_cache -> {$src_sql} = $sql if ($src_sql !~ /\bIF\((.+?),(.+?),(.+?)\)/igsm);
 
