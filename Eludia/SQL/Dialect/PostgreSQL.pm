@@ -67,6 +67,8 @@ sub sql_prepare {
 
 	$sql =~ s{^\s+}{};
 
+if ($preconf -> {query_output}) { warn '1: ', $sql; } # mysql-запрос
+
 	if ($sql =~ /\bIF\s*\((.+?),(.+?),(.+?)\s*\)/igsm) {
 
 		$sql = mysql_to_postgresql ($sql) if $conf -> {core_auto_postgresql};
@@ -80,6 +82,8 @@ sub sql_prepare {
 		$sql = mysql_to_postgresql ($sql) if $conf -> {core_auto_postgresql};
 
 	}
+
+if ($preconf -> {query_output}) { warn '2: ', $sql; } # postgresql-запрос
 
 	my $st;
 
@@ -918,23 +922,6 @@ while ($sql =~m/((\b\w+\((?!.*\().*?)\))/igsm)
 
 $pattern = $sql;
 
-if ($sql =~ /(\s+ORDER\s+BY\s+)(.*?)(\sLIMIT\s.*)?/igsm) {
-
-	my $old_order_by = $1 . $2;
-
-	my @order_by = split ',', $2;
-
-	foreach my $field (@order_by) {
-		next if ($field =~ m/\bNULLS\s+(FIR|LA)ST\b/igsm);
-		$field .= ($field =~ m/\bDESC\b/igsm) ? ' NULLS LAST ' : ' NULLS FIRST ';
-	}
-
-	$new_order_by = join ',', @order_by;
-
-	$sql =~ s/$old_order_by/ ORDER BY $new_order_by/igsm;
-
-}
-
 if ($sql =~ /SELECT.+LIMIT/ism) {
 	$sql =~ s{LIMIT\s+(\d+)\s*\,\s*(\d+).*}{LIMIT $2 OFFSET $1}ism;
 }
@@ -957,6 +944,25 @@ if ($sql =~ m/\bUPDATE\s+(\w+)\s+(LEFT|RIGHT|INNER|FULL)?\s*(OUTER)?\s*JOIN\s*(\
 	my $set_constr = $6;
 	$set_constr =~ s/$target_table\.//igsm;
 	$sql =~ s/\bUPDATE\s+(\w+)\s+(LEFT|RIGHT|INNER|FULL)?\s*(OUTER)?\s*JOIN\s*(\w+)\s*ON(.*)SET(.*)WHERE(.*)/UPDATE $1 SET $set_constr FROM $4 WHERE$7AND$5/igsm;
+}
+
+############### ORDER BY
+$sql =~ s/\s*ORDER\s+BY\s+NULL(\W\s*|$)//igsm; ### \W - для обработки случаев типа ORDER BY NULLIF(...)
+
+if ($sql =~ m/(\s*ORDER\s+BY\s*)(.*?)(\sLIMIT.*)/igsm) { # изначально было с ? на конце, но так не работает
+	my $old_order_by = $1 . $2;
+	my @order_by = split ',', $2;
+
+	foreach my $field (@order_by) {
+		$field =~ s/(\b.+\b)\s*\+\s*0/CAST($1 AS INTEGER)/igms; ######## Обработка ORDER BY(... + 0)
+		next if ($field =~ m/\bNULLS\s+(FIR|LA)ST\b/igsm);
+		$field .= ($field =~ m/\bDESC\b/igsm) ? ' NULLS LAST ' : ' NULLS FIRST ';
+	}
+
+	$new_order_by = join ',', @order_by;
+	$old_order_by =~ s/([+.()])/\\$1/igsm;
+
+	$sql =~ s/$old_order_by/ ORDER BY $new_order_by/igsm;
 }
 
 #$need_group_by=1 if ( $sql =~ m/\s+GROUP\s+BY\s+/igsm);
@@ -995,7 +1001,7 @@ for(my $i = $#items; $i >= 1; $i--) {
 	# Восстанавливаем то что было внутри кавычек в аргументах функций
 	$items[$i] =~ s/POJJNBhvtgfckjh(\d+)/$in_quotes[$1]/igsm;
 	######################### Блок замен SQL синтаксиса #########################
-	$items[$i] =~ s/\bIFNULL(\(.*?\))/NULLIF\1/igsm;
+	$items[$i] =~ s/\bIFNULL(\(.*?\))/COALESCE\1/igsm;
 	$items[$i] =~ s/\bRAND(\(.*?\))/RANDOM\1/igsm;
 	$items[$i] =~ s/\b(?:OLD_)?PASSWORD(\(.*?\))/MD5\1/igsm;
 	$items[$i] =~ s/\bCONCAT\((.*?)\)/join('||',split(',',$1))/iegsm;
@@ -1153,11 +1159,6 @@ $sql =~ s/TO_TIMESTAMP\(CURRENT_TIMESTAMP,'YYYY-MM-DD HH24:MI:SS'\)/CURRENT_TIME
 #}
 
 #warn "ORACLE OUT: <$sql>\n";
-
-######## ORDER BY
-$sql =~ s/\s*ORDER\s+BY\s+NULL\s*//igsm;
-######## Обработка ORDER BY(... + 0)
-$sql =~ s/ORDER BY\((\b.+\b)\s*\+\s*0\)/ORDER BY(CAST($1 AS INTEGER))/igms;
 
 $mysql_to_postgresql_cache -> {$src_sql} = $sql if ($src_sql !~ /\bIF\((.+?),(.+?),(.+?)\)/igsm);
 
