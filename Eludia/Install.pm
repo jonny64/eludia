@@ -1735,7 +1735,14 @@ sub test {
 
 	}
 
-	my $cmd = qq {perl -I"$core_path" -MTest::Harness -MFile::Find::Rule -MTest::Harness -e"runtests (File::Find::Rule->name('*.t')->in('.'))"};
+# warn Dumper \@ARGV;
+	my $template = '*.t';
+	if ($ARGV[0]) {
+		# $template = "_core_" . $ARGV[0] . ".t"; # ядерный
+		$template = $ARGV[0] . ".t";
+	}
+	my $cmd = qq {perl -I"$core_path" -MTest::Harness -MFile::Find::Rule -MTest::Harness -e"runtests (File::Find::Rule->name('$template')->in('.'))"};
+# warn Dumper $cmd;
 
 	use IPC::Open3;
 
