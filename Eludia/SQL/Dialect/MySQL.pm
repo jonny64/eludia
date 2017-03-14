@@ -132,6 +132,8 @@ sub sql_do {
 
 	}
 
+	$sql = sql_processing_string ($sql); #
+
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
@@ -154,7 +156,7 @@ sub sql_do {
 	sql_safe_execute ($st, \@params);
 
 	$st -> finish ();
-
+if ($preconf -> {query_output}) { warn 'SQL: ', $sql; } # mysql-запрос
 	if ($conf -> {'db_temporality'} && $_REQUEST {_id_log}) {
 
 		my $insert_sql = '';
@@ -241,6 +243,8 @@ sub sql_select_all_cnt {
 		$sql =~ s{SELECT}{SELECT SQL_CALC_FOUND_ROWS}i;
 	}
 
+	$sql = sql_processing_string ($sql);
+
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
@@ -310,6 +314,8 @@ sub sql_select_all {
 
 	}
 
+	$sql = sql_processing_string ($sql); #
+
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
@@ -359,6 +365,8 @@ sub sql_select_all_hash {
 
 	my $result = {};
 
+	$sql = sql_processing_string ($sql); #
+
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
@@ -381,6 +389,8 @@ sub sql_select_col {
 	my ($sql, @params) = @_;
 
 	$sql =~ s{^\s+}{};
+
+	$sql = sql_processing_string ($sql); #
 
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
@@ -428,6 +438,8 @@ sub sql_select_hash {
 
 	}
 
+	$sql_or_table_name = sql_processing_string ($sql_or_table_name); #
+
 	$sql_or_table_name .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql_or_table_name);
@@ -445,6 +457,8 @@ sub sql_select_array {
 
 	my ($sql, @params) = @_;
 	$sql =~ s{^\s+}{};
+
+	$sql = sql_processing_string ($sql); #
 
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
