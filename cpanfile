@@ -5,3 +5,5 @@ requires "Number::Format";
 requires "Date::Calc";
 requires "DBD::mysql";
 requires "CGI::Simple";
+requires "HTTP::Date";
+requires "URI::Escape";
