@@ -26,7 +26,7 @@ sub start {
 	require Eludia::Loader;
 	
 	Eludia::Loader -> import (Cwd::abs_path ('lib'), 'APP', $o -> {app});
-		
+
 	APP::require_config ();
 	APP::sql_reconnect  ();
 	APP::require_model  ();		
